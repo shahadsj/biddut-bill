@@ -845,3 +845,31 @@ function loadAdminUsers() {
         document.getElementById("adminContent").innerHTML = "<p>" + countText + "</p>" + html;
     });
 }
+
+
+// ==================== SESSION RESTORE ====================
+(function() {
+    var session = JSON.parse(localStorage.getItem("currentUser") || "null");
+    if (session && session.loginTime) {
+        var elapsed = Date.now() - session.loginTime;
+        if (elapsed < 7 * 24 * 60 * 60 * 1000) {
+            window._savedSession = session;
+        }
+    }
+})();
+
+function restoreSavedSession() {
+    if (window._savedSession && APP) {
+        var s = window._savedSession;
+        APP.currentUser = {id: s.userId, email: s.email, name: s.name, role: s.role};
+        document.getElementById("authPage").style.display = "none";
+        document.getElementById("appPage").style.display = "block";
+        if (s.role === "admin") document.getElementById("adminNav").style.display = "block";
+        updateSidebarUserInfo();
+        if (typeof loadFromCloud === "function") loadFromCloud().then(function() { navigateTo("dashboard"); });
+        else navigateTo("dashboard");
+        window._savedSession = null;
+        return true;
+    }
+    return false;
+}
