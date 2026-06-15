@@ -719,3 +719,48 @@ document.getElementById('modal').addEventListener('click', function(e) {
 });
 
 init();
+
+// ==================== FALLBACK ADMIN PANEL ====================
+// This ensures showAdminPanel works even if admin.js has cache issues
+
+function showAdminPanel() {
+    var L = APP.language;
+    var html = "";
+    html += '<div class="card">';
+    html += '  <h2>Admin Panel</h2>';
+    html += '  <p>Welcome, ' + (APP.currentUser ? APP.currentUser.name : "Admin") + '</p>';
+    html += '  <div id="adminContent">Loading users from Firebase...</div>';
+    html += '</div>';
+    
+    document.getElementById("pageContent").innerHTML = html;
+    
+    // Load users from Firebase
+    if (typeof database !== "undefined" && database) {
+        loadAdminUsers();
+    } else {
+        document.getElementById("adminContent").innerHTML = "Firebase not available";
+    }
+}
+
+function loadAdminUsers() {
+    database.ref("users").once("value").then(function(snapshot) {
+        var usersData = snapshot.val();
+        var html = '<table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>';
+        var count = 0;
+        
+        if (usersData) {
+            Object.keys(usersData).forEach(function(key) {
+                var u = usersData[key];
+                count++;
+                html += "<tr><td>" + count + "</td><td>" + (u.name || "-") + "</td><td>" + (u.email || "-") + "</td><td><span class=\"badge " + (u.role === "admin" ? "badge-warning" : "badge-success") + "\">" + (u.role === "admin" ? "Admin" : "User") + "</span></td></tr>";
+            });
+        } else {
+            html += "<tr><td colspan='4'>No users found</td></tr>";
+        }
+        
+        html += "</tbody></table>";
+        
+        var countText = count + " user" + (count !== 1 ? "s" : "") + " found";
+        document.getElementById("adminContent").innerHTML = "<p>" + countText + "</p>" + html;
+    });
+}
