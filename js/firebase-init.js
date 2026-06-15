@@ -122,114 +122,64 @@ function syncAllToCloud() {
 
 // ==================== LOAD FROM CLOUD ====================
 function loadFromCloud() {
-    if (!isFirebaseReady || !APP.currentUser) {
-        return Promise.resolve(false);
-    }
-    
-    return new Promise(function(resolve) {
-        var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
-        var changed = false;
-        
-        // Load app data
-        database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
-            var appData = snapshot.val();
-            if (appData) {
-                // Merge settings
-                if (appData.settings) {
-                    var oldLang = APP.language;
-                    APP.settings = Object.assign({}, APP.settings, appData.settings);
-                }
-                if (appData.tariffRates) APP.tariffRates = appData.tariffRates;
-                if (appData.language) APP.language = appData.language;
-                APP.savingsGoal = appData.savingsGoal || 0;
-                APP.badges = appData.badges || [];
-                
-                // Merge meters list
-                if (appData.meters && Array.isArray(appData.meters)) {
-                    appData.meters.forEach(function(cloudMeter) {
-                        var exists = APP.meters.some(function(lm) { return lm.id === cloudMeter.id; });
-                        if (!exists) {
-                            APP.meters.push(cloudMeter);
-                            changed = true;
-                        }
-                    });
-                }
+    return new Promise(function(resolve, reject) {
+        try {
+            if (typeof APP === 'undefined' || !APP) {
+                console.warn('APP not ready, retrying in 1s');
+                setTimeout(function() {
+                    loadFromCloud().then(resolve).catch(function(){resolve(false)});
+                }, 1000);
+                return;
             }
             
-            // Load each meter's data
-            return database.ref('users/' + userEmail + '/meters').once('value');
-        }).then(function(metersSnapshot) {
-            var metersData = metersSnapshot.val();
-            if (metersData) {
-                Object.keys(metersData).forEach(function(key) {
-                    var cloudMeterData = metersData[key];
-                    var cloudMeterId = cloudMeterData.meterInfo ? cloudMeterData.meterInfo.id : null;
-                    if (!cloudMeterId) return;
-                    
-                    // Find or create local meter
-                    var localMeter = APP.meters.find(function(m) { return m.id === cloudMeterId; });
-                    if (!localMeter && cloudMeterData.meterInfo) {
-                        APP.meters.push(cloudMeterData.meterInfo);
-                        localMeter = cloudMeterData.meterInfo;
-                        changed = true;
-                    }
-                    
-                    if (!localMeter) return;
-                    
-                    // Merge transactions
-                    var localData = APP.metersData[cloudMeterId];
-                    if (!localData) {
-                        APP.metersData[cloudMeterId] = {
-                            transactions: cloudMeterData.transactions || [],
-                            monthlyRecharges: cloudMeterData.monthlyRecharges || [],
-                            currentBalance: cloudMeterData.currentBalance || 0,
-                            totalRecharge: cloudMeterData.totalRecharge || 0,
-                            totalExpended: cloudMeterData.totalExpended || 0,
-                            lastDemandChargeMonth: cloudMeterData.lastDemandChargeMonth || "",
-                            initialBalance: cloudMeterData.initialBalance || 0,
-                            meterInfo: localMeter,
-                            lastUpdated: new Date().toISOString()
-                        };
-                        changed = true;
-                    } else {
-                        // Merge new cloud transactions
-                        (cloudMeterData.transactions || []).forEach(function(cloudTx) {
-                            var exists = localData.transactions.some(function(localTx) {
-                                return localTx.id === cloudTx.id;
-                            });
-                            if (!exists) {
-                                localData.transactions.push(cloudTx);
-                                changed = true;
-                            }
-                        });
-                        
-                        // Update balances
-                        if (cloudMeterData.currentBalance !== undefined) {
-                            localData.currentBalance = cloudMeterData.currentBalance;
-                        }
-                        if (cloudMeterData.totalRecharge !== undefined) {
-                            localData.totalRecharge = cloudMeterData.totalRecharge;
-                        }
-                        if (cloudMeterData.totalExpended !== undefined) {
-                            localData.totalExpended = cloudMeterData.totalExpended;
-                        }
-                    }
-                });
+            if (typeof database === 'undefined' || !database) {
+                resolve(false);
+                return;
             }
             
-            if (changed) {
-                saveData();
+            var userId = APP.currentUser ? APP.currentUser.id : localStorage.getItem('currentUserId');
+            if (!userId) {
+                resolve(false);
+                return;
             }
-            resolve(changed);
-        }).catch(function(error) {
-            console.error('❌ Cloud load error:', error);
+            
+            var email = APP.currentUser ? APP.currentUser.email : '';
+            if (!email) {
+                resolve(false);
+                return;
+            }
+            
+            var key = email.replace(/[.#$\/\[\]]/g, '_');
+            
+            // Load meters
+            database.ref('meters/' + key).once('value').then(function(snap) {
+                var data = snap.val();
+                if (data) {
+                    if (data.meters) APP.meters = data.meters || [];
+                    if (data.metersData) APP.metersData = data.metersData || {};
+                    if (data.tariffRates) APP.tariffRates = data.tariffRates;
+                    if (data.settings) Object.assign(APP.settings, data.settings);
+                }
+                resolve(true);
+            }).catch(function(err) {
+                console.warn('Error loading from cloud:', err);
+                resolve(false);
+            });
+        } catch (e) {
+            console.warn('loadFromCloud error:', e);
             resolve(false);
-        });
+        }
     });
 }
 
 // ==================== REAL-TIME LISTENER ====================
 function startFirebaseSync() {
+
+    if (typeof APP === 'undefined' || !APP) {
+        setTimeout(startFirebaseSync, 2000);
+        return;
+    }
+
     if (typeof APP === 'undefined' || !APP) {
         console.warn('APP not ready yet, will retry');
         setTimeout(startFirebaseSync, 1000);
