@@ -266,6 +266,65 @@ const APP = {
         }
     }
 };
+// ==================== SESSION RESTORE ON LOAD ====================
+// Check for saved session
+if (window.__savedSession) {
+    var s = window.__savedSession;
+    APP.currentUser = {
+        id: s.userId || "unknown",
+        email: s.email || "",
+        name: s.name || "",
+        role: s.role || "user"
+    };
+    window.__savedSession = null;
+    
+    // Show app immediately
+    document.getElementById("authPage").style.display = "none";
+    document.getElementById("appPage").style.display = "block";
+    
+    if (APP.currentUser.role === "admin") {
+        document.getElementById("adminNav").style.display = "block";
+    }
+    
+    // Wait for DOM to be ready
+    if (document.readyState === "complete") {
+        updateSidebarUserInfo();
+        if (typeof loadFromCloud === "function") {
+            loadFromCloud().then(function() {
+                navigateTo(APP.currentPage || "dashboard");
+            });
+        } else {
+            navigateTo(APP.currentPage || "dashboard");
+        }
+    } else {
+        window.addEventListener("load", function() {
+            setTimeout(function() {
+                updateSidebarUserInfo();
+                if (typeof loadFromCloud === "function") {
+                    loadFromCloud().then(function() {
+                        navigateTo(APP.currentPage || "dashboard");
+                    });
+                } else {
+                    navigateTo(APP.currentPage || "dashboard");
+                }
+            }, 100);
+        });
+    }
+}
+
+// Also fix logout to clear session
+var _originalLogout = window.logout || function(){};
+var _newLogout = function() {
+    localStorage.removeItem("biddut_session");
+    APP.currentUser = null;
+    localStorage.removeItem("currentUserId");
+    document.getElementById("adminNav").style.display = "none";
+    document.getElementById("appPage").style.display = "none";
+    document.getElementById("authPage").style.display = "block";
+    showToast("Logged out", "success");
+    showLoginPage();
+};
+
 
 // ==================== LANGUAGE SYSTEM ====================
 function __(key) {
