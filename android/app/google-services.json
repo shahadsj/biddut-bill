@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "992860752434",
+    "project_id": "biddutbill-360dd",
+    "storage_bucket": "biddutbill-360dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:992860752434:android:e32e16e29c7d5b528b4a2b",
+        "android_client_info": {
+          "package_name": "biddutbill.example.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_obnK5oEENVsumhRIq3qcbhiMzDKtvXI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
