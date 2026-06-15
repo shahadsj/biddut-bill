@@ -1,5 +1,61 @@
 
 // ==================== GLOBAL UTILITY FUNCTIONS ====================
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// ==================== APP STATE & INITIALIZATION ====================
+const APP = {
+    currentUser: null,
+    activeMeterId: null,
+    meters: [],
+    metersData: {},
+    settings: {
+        vatRate: 5,
+        rebateRate: 0.85,
+        demandCharge: 294,
+        darkMode: false,
+        highContrast: false,
+        fontSize: 14,
+        autoBackupTime: '02:00',
+        retentionDays: 30
+    },
+    tariffRates: [
+        { range: [0, 50], rate: 3.5, name: "Lifeline" },
+        { range: [51, 75], rate: 4, name: "1st Slab" },
+        { range: [76, 200], rate: 5.45, name: "2nd Slab" },
+        { range: [201, 300], rate: 5.7, name: "3rd Slab" },
+        { range: [301, 400], rate: 6.02, name: "4th Slab" },
+        { range: [401, 600], rate: 9.3, name: "5th Slab" },
+        { range: [601, null], rate: 10.7, name: "6th Slab" }
+    ],
+    savingsGoal: 0,
+    badges: [],
+    currentPage: 'dashboard',
+    language: 'bn', // 'bn' or 'en'
+        translations: {
+        bn: {
+            sidebarDashboard: 'ড্যাশবোর্ড',
+            sidebarMeters: 'মিটার ম্যানেজমেন্ট',
+            sidebarTransactions: 'ট্রানজেকশন',
+            sidebarCalculator: 'ক্যালকুলেটর',
+            sidebarReports: 'রিপোর্ট',
+            sidebarAnalytics: 'এনালিটিক্স',
+            sidebarSettings: 'সেটিংস',
+            sidebarBackup: 'ব্যাকআপ',
+            sidebarProfile: 'প্রোফাইল',
+            sidebarAdmin: 'অ্যাডমিন প্যানেল',
+            sidebarLogout: 'লগআউট',
+            currentMeter: 'বর্তমান মিটার:',
+            langLabel: 'EN',
+            langBtn: 'বাংলা',
+            dashboard: 'ড্যাশবোর্ড',
+            balance: 'বর্তমান ব্যালেন্স',
+            totalRecharge: 'মোট রিচার্জ',
+            totalExpense: 'মোট খরচ',
+      
+// ==================== SESSION MANAGEMENT ====================
 function restoreSession() {
     var sessionData = JSON.parse(localStorage.getItem("currentUser") || "null");
     
@@ -299,6 +355,7 @@ document.addEventListener("scroll", resetInactivityTimer);
     }
 };
 
+// ==================== LANGUAGE SYSTEM ====================
 function __(key) {
     const lang = APP.language || 'bn';
     return APP.translations[lang][key] || APP.translations['bn'][key] || key;
@@ -787,32 +844,4 @@ function loadAdminUsers() {
         var countText = count + " user" + (count !== 1 ? "s" : "") + " found";
         document.getElementById("adminContent").innerHTML = "<p>" + countText + "</p>" + html;
     });
-}
-
-
-// ==================== SESSION RESTORE ====================
-(function() {
-    var session = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (session && session.loginTime) {
-        var elapsed = Date.now() - session.loginTime;
-        if (elapsed < 7 * 24 * 60 * 60 * 1000) {
-            window._savedSession = session;
-        }
-    }
-})();
-
-function restoreSavedSession() {
-    if (window._savedSession && APP) {
-        var s = window._savedSession;
-        APP.currentUser = {id: s.userId, email: s.email, name: s.name, role: s.role};
-        document.getElementById("authPage").style.display = "none";
-        document.getElementById("appPage").style.display = "block";
-        if (s.role === "admin") document.getElementById("adminNav").style.display = "block";
-        updateSidebarUserInfo();
-        if (typeof loadFromCloud === "function") loadFromCloud().then(function() { navigateTo("dashboard"); });
-        else navigateTo("dashboard");
-        window._savedSession = null;
-        return true;
-    }
-    return false;
 }
