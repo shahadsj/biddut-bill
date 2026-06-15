@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-<script>function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
+<!-- escapeHtml removed -->(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
 
 <script>
 // Global utility functions
@@ -33,6 +33,11 @@ function escapeHtml(s) { if (!s) return ""; return s.replace(/</g,"&lt;").replac
         }
     } catch(e) {}
 })();
+</script>
+
+<script>
+function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
+(function(){try{var s=JSON.parse(localStorage.getItem("biddut_session")||"null");if(s&&s.loginTime&&Date.now()-s.loginTime<604800000){window.__savedSession=s;}else{localStorage.removeItem("biddut_session");}}catch(e){}})();
 </script>
 </head>
 <body>
@@ -137,6 +142,8 @@ function escapeHtml(s) { if (!s) return ""; return s.replace(/</g,"&lt;").replac
     <script src="js/backup.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/profile.js"></script>
+    <script src="js/firebase-init.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
     <script src="js/firebase-init.js"></script>
 
@@ -195,6 +202,10 @@ function escapeHtml(s) { if (!s) return ""; return s.replace(/</g,"&lt;").replac
         setTimeout(tryFirebaseInit, 1000);
     }
 })();
+</script>
+
+<script>
+(function(){if(window.__savedSession&&typeof APP!=='undefined'&&APP){var s=window.__savedSession;APP.currentUser={id:s.userId||'1',email:s.email||'',name:s.name||'User',role:s.role||'user'};window.__savedSession=null;setTimeout(function(){var e=document.getElementById('authPage');if(e)e.style.display='none';e=document.getElementById('appPage');if(e)e.style.display='block';e=document.getElementById('adminNav');if(e&&APP.currentUser.role==='admin')e.style.display='block';if(typeof updateSidebarUserInfo==='function')updateSidebarUserInfo();if(typeof loadFromCloud==='function')loadFromCloud().then(function(){navigateTo('dashboard');});else if(typeof navigateTo==='function')navigateTo('dashboard');},300);}})();
 </script>
 </body>
 </html>
