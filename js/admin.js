@@ -84,7 +84,7 @@ function loadUsersFromFirebase() {
                 html += '  <td style="text-align: center; white-space: nowrap;">';
                 
                 if (u.role !== "admin" && u.email !== "k.m.abubakkarsiddek@gmail.com") {
-                    html += '    <button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser('' + key + '')" style="padding: 4px 10px; font-size: 14px;">Delete</button>';
+                    html += '    <button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser('" + key + "')" style="padding: 4px 10px; font-size: 14px;">Delete</button>';
                 } else {
                     html += '    <span class="badge badge-warning">Admin</span>';
                 }
