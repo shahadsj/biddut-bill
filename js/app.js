@@ -27,7 +27,7 @@ const APP = {
     badges: [],
     currentPage: 'dashboard',
     language: 'bn', // 'bn' or 'en'
-        translations: {
+    translations: {
         bn: {
             sidebarDashboard: 'ড্যাশবোর্ড',
             sidebarMeters: 'মিটার ম্যানেজমেন্ট',
