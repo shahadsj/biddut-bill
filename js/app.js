@@ -54,7 +54,88 @@ const APP = {
             balance: 'বর্তমান ব্যালেন্স',
             totalRecharge: 'মোট রিচার্জ',
             totalExpense: 'মোট খরচ',
-            lastExpense: 'সর্বশেষ খরচ',
+      
+// ==================== SESSION MANAGEMENT ====================
+function restoreSession() {
+    var sessionData = JSON.parse(localStorage.getItem("currentUser") || "null");
+    
+    // Check if session exists and is not expired (7 days)
+    if (sessionData && sessionData.loginTime) {
+        var elapsed = Date.now() - sessionData.loginTime;
+        var maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+        
+        if (elapsed < maxAge) {
+            // Restore session
+            APP.currentUser = {
+                id: sessionData.userId,
+                email: sessionData.email,
+                name: sessionData.name,
+                role: sessionData.role
+            };
+            
+            document.getElementById("authPage").style.display = "none";
+            document.getElementById("appPage").style.display = "block";
+            
+            if (sessionData.role === "admin") {
+                document.getElementById("adminNav").style.display = "block";
+            }
+            
+            updateSidebarUserInfo();
+            
+            if (typeof loadFromCloud === "function") {
+                loadFromCloud().then(function() {
+                    navigateTo(APP.currentPage || "dashboard");
+                });
+            } else {
+                navigateTo(APP.currentPage || "dashboard");
+            }
+            
+            // Start inactivity timer
+            startInactivityTimer();
+            
+            return true;
+        } else {
+            // Session expired
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("currentUserId");
+        }
+    }
+    return false;
+}
+
+// Inactivity timer - 5 minutes (300 seconds)
+var inactivityTimer = null;
+var INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+function startInactivityTimer() {
+    // Clear existing timer
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    
+    // Set new timer
+    inactivityTimer = setTimeout(function() {
+        // Session timeout due to inactivity
+        showToast("Session expired due to inactivity", "error");
+        logout();
+    }, INACTIVITY_TIMEOUT);
+}
+
+function resetInactivityTimer() {
+    if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(function() {
+            showToast("Session expired due to inactivity", "error");
+            logout();
+        }, INACTIVITY_TIMEOUT);
+    }
+}
+
+// Track user activity
+document.addEventListener("click", resetInactivityTimer);
+document.addEventListener("keypress", resetInactivityTimer);
+document.addEventListener("mousemove", resetInactivityTimer);
+document.addEventListener("touchstart", resetInactivityTimer);
+document.addEventListener("scroll", resetInactivityTimer);
+      lastExpense: 'সর্বশেষ খরচ',
             noTransactions: 'কোন ট্রানজেকশন নেই',
             recentTransactions: 'সর্বশেষ ট্রানজেকশন',
             recharge: 'রিচার্জ',
