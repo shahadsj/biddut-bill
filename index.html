@@ -15,23 +15,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
+
 <script>
-// Session restore - runs before any other script
+// Global utility functions
+function escapeHtml(s) { if (!s) return ""; return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;"); }
+
+// Session restore
 (function() {
     try {
         var session = JSON.parse(localStorage.getItem("biddut_session") || "null");
-        if (session && session.loginTime) {
-            var elapsed = Date.now() - session.loginTime;
-            if (elapsed < 7 * 24 * 60 * 60 * 1000) {
-                window.__savedSession = session;
-            } else {
-                localStorage.removeItem("biddut_session");
-            }
+        if (session && session.loginTime && Date.now() - session.loginTime < 7 * 24 * 60 * 60 * 1000) {
+            window.__savedSession = session;
+        } else {
+            localStorage.removeItem("biddut_session");
         }
     } catch(e) {}
 })();
 </script>
-<script>function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
 </head>
 <body>
     <!-- Auth Container (Login/Register) - Only visible when not logged in -->
@@ -168,5 +170,31 @@
             }, 3000);
         });
     </script>
+
+    <script>
+// Initialize app - restore session and init Firebase
+(function() {
+    // Restore session if exists
+    if (window.__savedSession && typeof APP !== "undefined") {
+        var s = window.__savedSession;
+        APP.currentUser = {id: s.userId, email: s.email, name: s.name, role: s.role || "user"};
+        window.__savedSession = null;
+        
+        setTimeout(function() {
+            document.getElementById("authPage").style.display = "none";
+            document.getElementById("appPage").style.display = "block";
+            if (APP.currentUser.role === "admin") document.getElementById("adminNav").style.display = "block";
+            if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
+            if (typeof loadFromCloud === "function") loadFromCloud().then(function() { navigateTo("dashboard"); });
+            else if (typeof navigateTo === "function") navigateTo("dashboard");
+        }, 200);
+    }
+    
+    // Init Firebase
+    if (typeof tryFirebaseInit === "function") {
+        setTimeout(tryFirebaseInit, 1000);
+    }
+})();
+</script>
 </body>
 </html>
