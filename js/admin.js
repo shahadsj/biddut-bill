@@ -82,9 +82,9 @@ function loadUsersFromFirebase() {
                 html += '  <td>' + escapeHtml(u.email || "-") + '</td>';
                 html += '  <td><span class="badge ' + roleColor + '">' + roleText + '</span></td>';
                 html += '  <td style="text-align: center;">';
-                html += '    <button class="btn btn-sm" onclick="viewUserLogs('' + key + '')" title="View Logs" style="background: #3498db; padding: 4px 8px; font-size: 12px;"> Logs</button>';
+                html += '    <button class="btn btn-sm" onclick="viewUserLogs(' + key + ')" title="View Logs" style="background: #3498db; padding: 4px 8px; font-size: 12px;"> Logs</button>';
                 if (u.role !== "admin") {
-                    html += '    <button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser('' + key + '')" title="Delete" style="padding: 4px 8px; font-size: 12px;"> Delete</button>';
+                    html += '    <button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser(' + key + ')" title="Delete" style="padding: 4px 8px; font-size: 12px;"> Delete</button>';
                 }
                 html += '  </td></tr>';
             });
