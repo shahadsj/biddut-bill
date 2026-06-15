@@ -15,7 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script>function escapeHtml(str){if(!str)return "";return str.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}</script>
+
+<script>function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
 </head>
 <body>
     <!-- Auth Container (Login/Register) - Only visible when not logged in -->
@@ -154,5 +155,6 @@
             }, 3000);
         });
     </script>
+    <script>setTimeout(function(){if(typeof tryFirebaseInit==="function")tryFirebaseInit();},500);</script>
 </body>
 </html>
