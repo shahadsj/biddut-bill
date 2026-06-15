@@ -230,6 +230,12 @@ function loadFromCloud() {
 
 // ==================== REAL-TIME LISTENER ====================
 function startFirebaseSync() {
+    if (typeof APP === 'undefined' || !APP) {
+        console.warn('APP not ready yet, will retry');
+        setTimeout(startFirebaseSync, 1000);
+        return;
+    }
+
     if (!isFirebaseReady || !APP.currentUser) return;
     
     stopFirebaseSync();
