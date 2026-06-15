@@ -105,6 +105,15 @@ function login() {
 
             if (user && user.password === password) {
                 APP.currentUser = user;
+                // Save session for persistence
+                var sessionData = {
+                    userId: user.id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    loginTime: Date.now()
+                };
+                localStorage.setItem("biddut_session", JSON.stringify(sessionData));
                 localStorage.setItem("currentUserId", user.id);
 
                 document.getElementById("authPage").style.display = "none";
