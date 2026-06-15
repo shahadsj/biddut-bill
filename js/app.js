@@ -1,3 +1,4 @@
+// ==================== APP STATE & INITIALIZATION ====================
 const APP = {
     currentUser: null,
     activeMeterId: null,
@@ -46,11 +47,225 @@ const APP = {
             balance: 'বর্তমান ব্যালেন্স',
             totalRecharge: 'মোট রিচার্জ',
             totalExpense: 'মোট খরচ',
-      
-// ==================== SESSION MANAGEMENT ====================
+            lastExpense: 'সর্বশেষ খরচ',
+            noTransactions: 'কোন ট্রানজেকশন নেই',
+            recentTransactions: 'সর্বশেষ ট্রানজেকশন',
+            recharge: 'রিচার্জ',
+            bill: 'বিল',
+            taka: '৳',
+            addMeter: 'মিটার যোগ করুন',
+            welcome: 'স্বাগতম!',
+            welcomeMsg: 'প্রথমে একটি মিটার যোগ করুন',
+            login: 'লগইন',
+            register: 'রেজিস্টার',
+            email: 'ইমেইল',
+            password: 'পাসওয়ার্ড',
+            name: 'নাম',
+            loginBtn: 'লগইন',
+            registerBtn: 'রেজিস্টার',
+            haveAccount: 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
+            noAccount: 'অ্যাকাউন্ট নেই?',
+            logoutSuccess: 'সফলভাবে লগআউট হয়েছে',
+            loginSuccess: 'স্বাগতম',
+            registerSuccess: 'রেজিস্ট্রেশন সফল হয়েছে! এখন লগইন করুন',
+            fillAllFields: 'সব ফিল্ড পূরণ করুন',
+            passwordLength: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে',
+            emailExists: 'এই ইমেইল ইতিমধ্যে রেজিস্টার্ড',
+            invalidCred: 'ইমেইল বা পাসওয়ার্ড ভুল',
+            save: 'সংরক্ষণ',
+            cancel: 'বাতিল',
+            edit: 'এডিট',
+            delete: 'ডিলিট',
+            description: 'বিবরণ',
+            date: 'তারিখ',
+            type: 'ধরন',
+            amount: 'পরিমাণ',
+            units: 'ইউনিট',
+            actions: 'অ্যাকশন',
+                        adminPanel: 'অ্যাডমিন প্যানেল',
+            totalUsers: 'মোট রেজিস্টার্ড ইউজার',
+            totalMeters: 'মোট মিটার',
+            totalTransactions: 'মোট ট্রানজেকশন',
+            userList: 'রেজিস্টার্ড ইউজার তালিকা',
+            nameCol: 'নাম',
+            emailCol: 'ইমেইল',
+            roleCol: 'রোল',
+            ipCol: 'IP ঠিকানা',
+            deviceCol: 'ডিভাইস',
+            regDateCol: 'রেজিস্ট্রেশন তারিখ',
+            actionCol: 'অ্যাকশন',
+            statusCol: 'স্ট্যাটাস',
+                        userRole: 'ইউজার',
+            adminRole: 'অ্যাডমিন',
+            you: 'আপনি',
+            current: 'বর্তমান',
+            noUsers: 'কোন রেজিস্টার্ড ইউজার নেই',
+            deleteUser: 'ডিলিট',
+            makeAdmin: 'অ্যাডমিন বানান',
+            makeUser: 'ইউজার বানান',
+            appDataOverview: 'অ্যাপ ডাটা ওভারভিউ',
+            meterName: 'মিটারের নাম',
+            meterNo: 'মিটার নং',
+            balanceCol: 'ব্যালেন্স',
+            totalRechargeCol: 'মোট রিচার্জ',
+            totalExpenseCol: 'মোট খরচ',
+            lastUpdate: 'শেষ আপডেট',
+                        noMeters: 'কোন মিটার নেই',
+            activityLog: 'ইউজার অ্যাক্টিভিটি লগ',
+            allActivity: 'সকল',
+            loginActivity: 'লগইন',
+            registerActivity: 'রেজিস্টার',
+            rechargeActivity: 'রিচার্জ',
+            billActivity: 'বিল',
+            logoutActivity: 'লগআউট',
+            meterActivity: 'মিটার',
+            noActivity: 'কোন অ্যাক্টিভিটি নেই',
+                        systemLogs: 'সিস্টেম লগস',
+            settingsTitle: 'সেটিংস',
+            billSettings: 'বিল সেটিংস',
+            displaySettings: 'ডিসপ্লে সেটিংস',
+            backupSettings: 'ব্যাকআপ সেটিংস',
+            darkMode: 'ডার্ক মোড',
+            highContrast: 'হাই কনট্রাস্ট মোড',
+            fontSizeLabel: 'ফন্ট সাইজ',
+            dangerZone: 'ডেঞ্জার জোন',
+            resetData: 'সমস্ত ডাটা রিসেট করুন',
+            resetDataMsg: 'ফ্যাক্টরি ডিফল্টে ফিরে যান। সমস্ত মিটার, ট্রানজেকশন এবং কাস্টম সেটিংস স্থায়ীভাবে মুছে যাবে।',
+            clearAll: 'সব ক্লিয়ার করুন',
+            profile: 'প্রোফাইল',
+            newPassword: 'নতুন পাসওয়ার্ড (পরিবর্তন না করতে চাইলে খালি রাখুন)',
+            updateProfile: 'আপডেট প্রোফাইল',
+            badges: 'অর্জিত ব্যাজ',
+            noBadges: 'এখনও কোন ব্যাজ অর্জিত হয়নি।',
+            badgeHint: '৫টি বিল যোগ করে প্রথম ব্যাজ অর্জন করুন!',
+            savingsGoal: 'সেভিংস গোল',
+            savingsGoalInput: 'মাসিক সেভিংস টার্গেট (টাকা)',
+            setGoal: 'সেভিংস গোল সেট করুন',
+            dataSaved: 'ডাটা সেভ হয়েছে',
+            settingsSaved: 'সেটিংস সংরক্ষিত হয়েছে',
+            profileUpdated: 'প্রোফাইল আপডেট হয়েছে',
+            goalSaved: 'সেভিংস গোল সংরক্ষিত হয়েছে',
+        },
+                en: {
+            sidebarDashboard: 'Dashboard',
+            sidebarMeters: 'Meters',
+            sidebarTransactions: 'Transactions',
+            sidebarCalculator: 'Calculator',
+            sidebarReports: 'Reports',
+            sidebarAnalytics: 'Analytics',
+            sidebarSettings: 'Settings',
+            sidebarBackup: 'Backup',
+            sidebarProfile: 'Profile',
+            sidebarAdmin: 'Admin Panel',
+            sidebarLogout: 'Logout',
+            currentMeter: 'Current Meter:',
+            langLabel: 'BN',
+            langBtn: 'English',
+            dashboard: 'Dashboard',
+            balance: 'Current Balance',
+            totalRecharge: 'Total Recharge',
+            totalExpense: 'Total Expense',
+            lastExpense: 'Last Expense',
+            noTransactions: 'No transactions found',
+            recentTransactions: 'Recent Transactions',
+            recharge: 'Recharge',
+            bill: 'Bill',
+            taka: '৳',
+            addMeter: 'Add Meter',
+            welcome: 'Welcome!',
+            welcomeMsg: 'Please add a meter first',
+            login: 'Login',
+            register: 'Register',
+            email: 'Email',
+            password: 'Password',
+            name: 'Name',
+            loginBtn: 'Login',
+            registerBtn: 'Register',
+            haveAccount: 'Already have an account?',
+            noAccount: "Don't have an account?",
+            logoutSuccess: 'Successfully logged out',
+            loginSuccess: 'Welcome',
+            registerSuccess: 'Registration successful! Please login now',
+            fillAllFields: 'Please fill all fields',
+            passwordLength: 'Password must be at least 6 characters',
+            emailExists: 'This email is already registered',
+            invalidCred: 'Invalid email or password',
+            save: 'Save',
+            cancel: 'Cancel',
+            edit: 'Edit',
+            delete: 'Delete',
+            description: 'Description',
+            date: 'Date',
+            type: 'Type',
+            amount: 'Amount',
+            units: 'Units',
+            actions: 'Actions',
+                        adminPanel: 'Admin Panel',
+            totalUsers: 'Total Registered Users',
+            totalMeters: 'Total Meters',
+            totalTransactions: 'Total Transactions',
+            userList: 'Registered Users List',
+            nameCol: 'Name',
+            emailCol: 'Email',
+            roleCol: 'Role',
+            ipCol: 'IP Address',
+            deviceCol: 'Device',
+            regDateCol: 'Registration Date',
+            actionCol: 'Actions',
+            statusCol: 'Status',
+                        userRole: 'User',
+            adminRole: 'Admin',
+            you: 'You',
+            current: 'Current',
+            noUsers: 'No registered users found',
+            deleteUser: 'Delete',
+            makeAdmin: 'Make Admin',
+            makeUser: 'Make User',
+            appDataOverview: 'App Data Overview',
+            meterName: 'Meter Name',
+            meterNo: 'Meter No',
+            balanceCol: 'Balance',
+            totalRechargeCol: 'Total Recharge',
+            totalExpenseCol: 'Total Expense',
+            lastUpdate: 'Last Update',
+                        noMeters: 'No meters found',
+            activityLog: 'User Activity Log',
+            allActivity: 'All',
+            loginActivity: 'Login',
+            registerActivity: 'Register',
+            rechargeActivity: 'Recharge',
+            billActivity: 'Bill',
+            logoutActivity: 'Logout',
+            meterActivity: 'Meter',
+            noActivity: 'No activity found',
+                        systemLogs: 'System Logs',
+            settingsTitle: 'Settings',
+            billSettings: 'Bill Settings',
+            displaySettings: 'Display Settings',
+            backupSettings: 'Backup Settings',
+            darkMode: 'Dark Mode',
+            highContrast: 'High Contrast Mode',
+            fontSizeLabel: 'Font Size',
+            dangerZone: 'Danger Zone',
+            resetData: 'Reset All Data',
+            resetDataMsg: 'Reset to factory defaults. All meters, transactions and custom settings will be permanently deleted.',
+            clearAll: 'Clear All',
+            profile: 'Profile',
+            newPassword: 'New Password (leave blank to keep current)',
+            updateProfile: 'Update Profile',
+            badges: 'Earned Badges',
+            noBadges: 'No badges earned yet.',
+            badgeHint: 'Add 5 bills to earn your first badge!',
+            savingsGoal: 'Savings Goal',
+            savingsGoalInput: 'Monthly Savings Target (Taka)',
+            setGoal: 'Set Savings Goal',
+            dataSaved: 'Data saved',
+            settingsSaved: 'Settings saved',
+            profileUpdated: 'Profile updated',
+            goalSaved: 'Savings goal saved',
+        }
+    }
 };
-
-
 
 // ==================== LANGUAGE SYSTEM ====================
 function __(key) {
@@ -497,48 +712,3 @@ document.getElementById('modal').addEventListener('click', function(e) {
 });
 
 init();
-
-// ==================== FALLBACK ADMIN PANEL ====================
-// This ensures showAdminPanel works even if admin.js has cache issues
-
-function showAdminPanel() {
-    var L = APP.language;
-    var html = "";
-    html += '<div class="card">';
-    html += '  <h2>Admin Panel</h2>';
-    html += '  <p>Welcome, ' + (APP.currentUser ? APP.currentUser.name : "Admin") + '</p>';
-    html += '  <div id="adminContent">Loading users from Firebase...</div>';
-    html += '</div>';
-    
-    document.getElementById("pageContent").innerHTML = html;
-    
-    // Load users from Firebase
-    if (typeof database !== "undefined" && database) {
-        loadAdminUsers();
-    } else {
-        document.getElementById("adminContent").innerHTML = "Firebase not available";
-    }
-}
-
-function loadAdminUsers() {
-    database.ref("users").once("value").then(function(snapshot) {
-        var usersData = snapshot.val();
-        var html = '<table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>';
-        var count = 0;
-        
-        if (usersData) {
-            Object.keys(usersData).forEach(function(key) {
-                var u = usersData[key];
-                count++;
-                html += "<tr><td>" + count + "</td><td>" + (u.name || "-") + "</td><td>" + (u.email || "-") + "</td><td><span class=\"badge " + (u.role === "admin" ? "badge-warning" : "badge-success") + "\">" + (u.role === "admin" ? "Admin" : "User") + "</span></td></tr>";
-            });
-        } else {
-            html += "<tr><td colspan='4'>No users found</td></tr>";
-        }
-        
-        html += "</tbody></table>";
-        
-        var countText = count + " user" + (count !== 1 ? "s" : "") + " found";
-        document.getElementById("adminContent").innerHTML = "<p>" + countText + "</p>" + html;
-    });
-}
