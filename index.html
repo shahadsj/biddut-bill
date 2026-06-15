@@ -15,6 +15,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// Session restore - runs before any other script
+(function() {
+    try {
+        var session = JSON.parse(localStorage.getItem("biddut_session") || "null");
+        if (session && session.loginTime) {
+            var elapsed = Date.now() - session.loginTime;
+            if (elapsed < 7 * 24 * 60 * 60 * 1000) {
+                window.__savedSession = session;
+            } else {
+                localStorage.removeItem("biddut_session");
+            }
+        }
+    } catch(e) {}
+})();
+</script>
+<script>function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
 </head>
 <body>
     <!-- Auth Container (Login/Register) - Only visible when not logged in -->
