@@ -126,7 +126,9 @@ function loadFromCloud() {
         try {
             if (typeof APP === 'undefined' || !APP) {
                 console.warn('APP not ready, retrying in 1s');
-                setTimeout(function() {
+                window._loadRetry = (window._loadRetry || 0) + 1;
+            if (window._loadRetry > 5) { resolve(false); return; }
+            setTimeout(function() {
                     loadFromCloud().then(resolve).catch(function(){resolve(false)});
                 }, 1000);
                 return;
