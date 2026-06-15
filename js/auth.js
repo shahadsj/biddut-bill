@@ -95,22 +95,31 @@ function register() {
 function login() {
     var email = document.getElementById("loginEmail").value;
     var password = document.getElementById("loginPassword").value;
-
+    
     if (typeof database !== "undefined" && database) {
         var key = email.replace(/[.#$\/\[\]]/g, "_");
         var ref = database.ref("users/" + key);
-
+        
         ref.once("value").then(function(snapshot) {
             var user = snapshot.val();
-
+            
             if (user && user.password === password) {
                 APP.currentUser = user;
-                localStorage.setItem("currentUserId", user.id);
-
+                
+                // Save login session with expiry (7 days)
+                var sessionData = {
+                    userId: user.id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    loginTime: Date.now()
+                };
+                localStorage.setItem("currentUser", JSON.stringify(sessionData));
+                
                 document.getElementById("authPage").style.display = "none";
                 document.getElementById("appPage").style.display = "block";
-
-                // Admin check: ONLY k.m.abubakkarsiddek@gmail.com
+                
+                // Admin check
                 if (email === "k.m.abubakkarsiddek@gmail.com") {
                     user.role = "admin";
                     APP.currentUser.role = "admin";
@@ -119,9 +128,9 @@ function login() {
                 } else {
                     document.getElementById("adminNav").style.display = "none";
                 }
-
+                
                 updateSidebarUserInfo();
-
+                
                 if (typeof loadFromCloud === "function") {
                     loadFromCloud().then(function() {
                         navigateTo("dashboard");
@@ -129,7 +138,7 @@ function login() {
                 } else {
                     navigateTo("dashboard");
                 }
-
+                
                 showToast("Welcome " + user.name + "!", "success");
             } else {
                 showToast("Invalid email or password", "error");
@@ -137,7 +146,6 @@ function login() {
         });
     }
 }
-
 function logout() {
     APP.currentUser = null;
     localStorage.removeItem("currentUserId");
