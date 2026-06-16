@@ -364,3 +364,20 @@ function updateSidebarUserInfo() {
         roleEl.className = 'badge ' + (APP.currentUser.role === 'admin' ? 'badge-warning' : 'badge-success');
     }
 }
+
+
+// ==================== INIT ====================
+// Show login page or restore session
+(function() {
+    // If session was restored, app is already showing
+    if (window.__sessionRestored) {
+        console.log('Session restored');
+    } else {
+        // Show login page
+        document.getElementById('authPage').style.display = 'block';
+        document.getElementById('appPage').style.display = 'none';
+        if (typeof showLoginPage === 'function') {
+            showLoginPage();
+        }
+    }
+})();
