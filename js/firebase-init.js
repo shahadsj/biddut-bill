@@ -122,6 +122,7 @@ function syncAllToCloud() {
 
 // ==================== LOAD FROM CLOUD ====================
 function loadFromCloud() {
+    if (typeof APP === "undefined" || !APP) { console.warn("APP not ready"); return Promise.resolve(false); }
     if (!isFirebaseReady || !APP.currentUser) {
         return Promise.resolve(false);
     }
