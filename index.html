@@ -20,20 +20,7 @@
 
 <script>
 // Global utility functions
-function escapeHtml(s) { if (!s) return ""; return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;"); }
-
-// Session restore
-(function() {
-    try {
-        var session = JSON.parse(localStorage.getItem("biddut_session") || "null");
-        if (session && session.loginTime && Date.now() - session.loginTime < 7 * 24 * 60 * 60 * 1000) {
-            window.__savedSession = session;
-        } else {
-            localStorage.removeItem("biddut_session");
-        }
-    } catch(e) {}
-})();
-</script>
+function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace('/'/g,"&#039;").replace(/"/g,"&quot;");}</script>
 
 
 </head>
