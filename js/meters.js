@@ -173,3 +173,7 @@ function deleteMeter(meterId) {
     showMeterManagement();
     showToast(L==='en'?'Meter deleted':'মিটার ডিলিট করা হয়েছে', 'success');
 }
+
+
+// Alias for app.js compatibility
+function showMeters() { showMeterManagement(); }
