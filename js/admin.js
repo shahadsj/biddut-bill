@@ -6,13 +6,21 @@ function showAdminPanel() {
         return;
     }
 
-    var totalUsers = APP.users ? (APP.users.length || Object.keys(APP.users).length) : 0;
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    var totalUsers = users.length;
     var totalMeters = APP.meters.length;
     var totalTransactions = 0;
     Object.values(APP.metersData).forEach(function(md) {
         totalTransactions += (md.transactions || []).length;
     });
     var currentUser = APP.currentUser;
+
+    var activities = getActivityLogs('all', 200);
+    var loginCount = activities.filter(function(a) { return a.type === 'login'; }).length;
+    var registerCount = activities.filter(function(a) { return a.type === 'register'; }).length;
+    var rechargeCount = activities.filter(function(a) { return a.type === 'recharge'; }).length;
+    var billCount = activities.filter(function(a) { return a.type === 'bill'; }).length;
+    var logoutCount = activities.filter(function(a) { return a.type === 'logout'; }).length;
 
     var bal = (APP.activeMeterId && APP.metersData[APP.activeMeterId]) ? (APP.metersData[APP.activeMeterId].currentBalance || 0).toFixed(2) : '0.00';
 
@@ -34,51 +42,90 @@ function showAdminPanel() {
     html += '    <div class="stat-card" style="background: var(--gradient-4);"><div class="label">'+t('balance')+'</div><div class="value">'+t('taka')+' ' + bal + '</div></div>';
     html += '  </div>';
     
+    // Activity Stats
+    html += '  <div class="activity-stats">';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + loginCount + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + registerCount + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + rechargeCount + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + billCount + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + logoutCount + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
+    html += '  </div>';
+
     // Users Table
     html += '  <h3 style="margin-top: 30px; margin-bottom: 15px;">'+t('userList')+'</h3>';
     html += '  <div class="table-container"><table><thead><tr>';
-    html += '    <th>#</th><th>'+t('nameCol')+'</th><th>'+t('emailCol')+'</th><th>'+t('roleCol')+'</th><th style="text-align: center;">'+t('actionCol')+'</th>';
+    html += '    <th>#</th><th>'+t('nameCol')+'</th><th>'+t('emailCol')+'</th><th>'+t('statusCol')+'</th><th>'+t('roleCol')+'</th><th style="text-align: center;">'+t('actionCol')+'</th>';
     html += '  </tr></thead><tbody>';
     
-    // Get users from Firebase via loadUsersFromFirebase
-    var userList = APP.users ? (Array.isArray(APP.users) ? APP.users : Object.values(APP.users)) : [];
-    
-    if (userList.length > 0) {
-        for (var i = 0; i < userList.length; i++) {
-            var u = userList[i];
-            var isCurrent = (u.id === currentUser.id || u.email === currentUser.email);
+    if (users.length > 0) {
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            var isCurrent = (u.id === currentUser.id);
             
             html += '<tr>';
             html += '  <td>' + (i + 1) + '</td>';
-            html += '  <td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === 'admin' ? '\ud83d\udc51' : '\ud83d\udc64') + '</span> ' + escapeHtml(u.name || u.displayName || '-') + (isCurrent ? ' <span class="badge badge-success" style="margin-left: 5px; font-size: 10px;">'+t('you')+'</span>' : '') + '</td>';
-            html += '  <td>' + escapeHtml(u.email || '-') + '</td>';
+            html += '  <td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === 'admin' ? '&#x1F451;' : '&#x1F464;') + '</span> ' + escapeHtml(u.name) + (isCurrent ? ' <span class="badge badge-success" style="margin-left: 5px; font-size: 10px;">'+t('you')+'</span>' : '') + '</td>';
+            html += '  <td>' + escapeHtml(u.email) + '</td>';
+            html += '  <td><span class="badge" style="background: #27ae60; color: white; font-size: 11px;">'+getActiveText()+'</span></td>';
             html += '  <td><span class="badge ' + (u.role === 'admin' ? 'badge-warning' : 'badge-success') + '">' + (u.role === 'admin' ? t('adminRole') : t('userRole')) + '</span></td>';
             html += '  <td style="text-align: center; white-space: nowrap;">';
-            html += '    <button class="btn btn-sm" onclick="viewUserLogs(\'' + (u.id || u.email) + '\')" title="'+(L==='en'?'View Logs':'লগস')+'" style="background: #3498db; padding: 4px 10px; min-width: 36px; font-size: 14px;">\ud83d\udc41\ufe0f</button>';
-            if (u.role !== 'admin' && !isCurrent) {
-                html += '    <button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser(\'' + (u.id || u.email) + '\')" title="'+(L==='en'?'Delete':'মুছুন')+'" style="padding: 4px 10px; min-width: 36px; font-size: 14px;">\ud83d\uddd1\ufe0f</button>';
+            
+            // View icon
+            html += '    <button class="btn btn-sm" onclick="viewUserLogs(\'' + u.id + '\')" title="'+(L==='en'?'View Activity Logs':'কার্যকলাপ দেখুন')+'" style="background: #3498db; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x1F441;&#xFE0F;</button>';
+            
+            // Edit icon - ALL users
+            html += '    <button class="btn btn-sm" onclick="editUser(\'' + u.id + '\')" title="'+(L==='en'?'Edit User Info':'তথ্য সম্পাদনা')+'" style="background: #2ecc71; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x270F;&#xFE0F;</button>';
+            
+            // Promote/Demote/Delete
+            if (u.role === 'admin' && u.id !== currentUser.id) {
+                html += '    <button class="btn btn-sm" onclick="demoteToUser(\'' + u.id + '\')" title="'+(L==='en'?'Demote to User':'ইউজার করুন')+'" style="background: #f39c12; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x2B07;&#xFE0F;</button>';
             }
+            if (u.role !== 'admin') {
+                html += '    <button class="btn btn-sm" onclick="promoteToAdmin(\'' + u.id + '\')" title="'+(L==='en'?'Promote to Admin':'অ্যাডমিন করুন')+'" style="background: #9b59b6; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x2B06;&#xFE0F;</button>';
+                html += '    <button class="btn btn-sm btn-danger" onclick="deleteUser(\'' + u.id + '\')" title="'+(L==='en'?'Delete User':'মুছে ফেলুন')+'" style="padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x1F5D1;&#xFE0F;</button>';
+            }
+            if (isCurrent) {
+                html += '    <span class="badge badge-warning" style="font-size: 10px;">'+t('current')+'</span>';
+            }
+            
             html += '  </td></tr>';
         }
     } else {
-        html += '<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text-light);"><p>'+t('noUsers')+'</p><button class="btn" onclick="loadUsersFromFirebase()" style="margin-top: 10px;">'+(L==='en'?'Load Users from Firebase':'Firebase থেকে ইউজার লোড করুন')+'</button></td></tr>';
+        html += '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--text-light);"><p>'+t('noUsers')+'</p></td></tr>';
     }
     
     html += '  </tbody></table></div>';
     
-    // Activity Logs Section
-    html += '  <h3 style="margin-top: 30px; margin-bottom: 15px;">'+t('recentActivities')+'</h3>';
-    html += '  <div id="adminActivityLogs" style="max-height: 400px; overflow-y: auto;">';
-    html += '    <div style="text-align: center; padding: 20px; color: var(--text-light);">'+(L==='en'?'Loading activity logs...':'কার্যকলাপ লোড হচ্ছে...')+'</div>';
-    html += '  </div>';
+    // App Data Overview
+    html += '  <h3 style="margin-top: 30px; margin-bottom: 15px;">'+t('appDataOverview')+'</h3>';
+    html += '  <div class="table-container"><table><thead><tr>';
+    html += '    <th>'+t('meterName')+'</th><th>'+t('meterNo')+'</th><th>'+t('totalTransactions')+'</th><th>'+t('balanceCol')+'</th><th>'+t('totalRechargeCol')+'</th><th>'+t('totalExpenseCol')+'</th>';
+    html += '  </tr></thead><tbody>';
+    
+    if (APP.meters.length > 0) {
+        for (var j = 0; j < APP.meters.length; j++) {
+            var m = APP.meters[j];
+            var md = APP.metersData[m.id] || {};
+            var itemsText = L==='en'?'items':'টি';
+            html += '<tr>';
+            html += '  <td><strong>' + escapeHtml(m.name) + '</strong></td>';
+            html += '  <td>' + (m.meterNumber || m.meterNo || '-') + '</td>';
+            html += '  <td>' + (md.transactions || []).length + ' ' + itemsText + '</td>';
+            html += '  <td><strong>'+t('taka')+' ' + (md.currentBalance || 0).toFixed(2) + '</strong></td>';
+            html += '  <td>'+t('taka')+' ' + (md.totalRecharge || 0).toFixed(2) + '</td>';
+            html += '  <td>'+t('taka')+' ' + (md.totalExpended || 0).toFixed(2) + '</td>';
+            html += '</tr>';
+        }
+    } else {
+        html += '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--text-light);"><p>'+t('noMeters')+'</p></td></tr>';
+    }
+    
+    html += '  </tbody></table></div>';
     html += '</div>';
     
     document.getElementById('pageContent').innerHTML = html;
-    
-    // Load Firebase users and logs asynchronously
-    if (typeof loadUsersFromFirebase === 'function') loadUsersFromFirebase();
-    if (typeof loadActivityLogs === 'function') loadActivityLogs();
 }
+
 function getActiveText() {
     if (APP.language === 'en') return 'Active';
     return 'সক্রিয়';
@@ -91,7 +138,7 @@ function escapeHtml(str) {
 
 // ==================== EDIT USER ====================
 function editUser(userId) {
-    // Users loaded from Firebase via loadUsersFromFirebase()
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
     var user = null;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { user = users[i]; break; }
@@ -159,7 +206,7 @@ function saveUserEdit(userId) {
         return;
     }
     
-    // Users loaded from Firebase via loadUsersFromFirebase()
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
     var userIndex = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userIndex = i; break; }
@@ -199,7 +246,7 @@ function saveUserEdit(userId) {
 
 // ==================== VIEW USER LOGS ====================
 function viewUserLogs(userId) {
-    // Users loaded from Firebase via loadUsersFromFirebase()
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
     var user = null;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { user = users[i]; break; }
@@ -210,7 +257,7 @@ function viewUserLogs(userId) {
         return;
     }
 
-    var [] = []; // fixed - no getActivityLogs
+    var allLogs = getActivityLogs('all', 500);
     var userLogs = [];
     for (var k = 0; k < allLogs.length; k++) {
         if (allLogs[k].userId === userId || allLogs[k].userEmail === user.email) {
@@ -218,13 +265,13 @@ function viewUserLogs(userId) {
         }
     }
     
-    var totalUsers = 0, 0 = 0, 0 = 0, 0 = 0, 0 = 0;
+    var loginCount = 0, registerCount = 0, rechargeCount = 0, billCount = 0, logoutCount = 0;
     for (var l = 0; l < userLogs.length; l++) {
-        if (userLogs[l].type === 'login') 0++;
-        else if (userLogs[l].type === 'register') 0++;
-        else if (userLogs[l].type === 'recharge') 0++;
-        else if (userLogs[l].type === 'bill') 0++;
-        else if (userLogs[l].type === 'logout') 0++;
+        if (userLogs[l].type === 'login') loginCount++;
+        else if (userLogs[l].type === 'register') registerCount++;
+        else if (userLogs[l].type === 'recharge') rechargeCount++;
+        else if (userLogs[l].type === 'bill') billCount++;
+        else if (userLogs[l].type === 'logout') logoutCount++;
     }
 
     var L = APP.language;
@@ -247,11 +294,11 @@ function viewUserLogs(userId) {
     modalHtml += '  </div></div>';
     
     modalHtml += '<div class="activity-stats">';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + 0 + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + 0 + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + 0 + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + 0 + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + 0 + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + loginCount + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + registerCount + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + rechargeCount + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + billCount + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + logoutCount + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
     modalHtml += '</div>';
     
     modalHtml += '<h3 style="margin-bottom: 15px;">'+(L==='en'?'Activity History':'কার্যকলাপের ইতিহাস')+' (' + userLogs.length + ')</h3>';
@@ -282,7 +329,7 @@ function viewUserLogs(userId) {
 
 // ==================== DELETE USER ====================
 function deleteUser(userId) {
-    // Users loaded from Firebase via loadUsersFromFirebase()
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
     var userToDelete = null;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userToDelete = users[i]; break; }
@@ -304,7 +351,7 @@ function deleteUser(userId) {
 
 // ==================== PROMOTE TO ADMIN ====================
 function promoteToAdmin(userId) {
-    // Users loaded from Firebase via loadUsersFromFirebase()
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
     var userIndex = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userIndex = i; break; }
@@ -327,7 +374,7 @@ function demoteToUser(userId) {
         return;
     }
     
-    // Users loaded from Firebase via loadUsersFromFirebase()
+    var users = JSON.parse(localStorage.getItem('users') || '[]');
     var userIndex = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userIndex = i; break; }
@@ -348,81 +395,111 @@ function demoteToUser(userId) {
 }
 
 
-function loadActivityLogs() {
-    var container = document.getElementById("adminActivityLogs");
-    if (!container) { console.warn("Activity logs container not found"); return; }
-    
-    if (typeof database === "undefined" || !database) {
-        container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>Firebase not available</div>";
+function loadUsersFromFirebase() {
+    var tableBody = document.querySelector('#adminUsersTable tbody') || document.querySelector('.table-container tbody');
+    if (!tableBody) {
+        console.warn("Users table not found, may be using different view");
         return;
     }
     
-    container.innerHTML = "<div style=\'text-align: center; padding: 20px;\'>Loading...</div>";
+    if (typeof database === "undefined" || !database) {
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#999">Firebase not available</td></tr>';
+        return;
+    }
     
-    database.ref("[]").orderByChild("timestamp").limitToLast(50).once("value").then(function(snapshot) {
-        var logs = snapshot.val();
-        if (!logs) {
-            container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>No activity logs found</div>";
+    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px">Loading users...</td></tr>';
+    
+    database.ref("users").once("value").then(function(snapshot) {
+        var usersData = snapshot.val();
+        if (!usersData) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#999">No users found in Firebase</td></tr>';
             return;
         }
         
-        var html = "";
-        var logList = [];
-        Object.keys(logs).forEach(function(k) { logList.push(logs[k]); });
-        logList.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+        APP.users = usersData;
         
-        logList.forEach(function(log) {
-            var icon = log.type === "login" ? "\ud83d\udd11" : (log.type === "register" ? "\ud83d\udce5" : (log.type === "recharge" ? "\ud83d\udcb5" : (log.type === "bill" ? "\ud83d\udcb0" : "\ud83d\udccc")));
-            html += "<div class=\'activity-log-card log-" + (log.type || "info") + "\'>";
-            html += "  <div><span class=\'log-user\'>" + icon + " " + escapeHtml(log.userName || "") + "</span><span class=\'log-time\'>" + new Date(log.timestamp).toLocaleString() + "</span></div>";
-            html += "  <div class=\'log-details\'>" + escapeHtml(log.details || "") + "</div>";
-            html += "</div>";
+        var html = '';
+        var keys = Object.keys(usersData);
+        var currentUser = APP.currentUser;
+        var index = 1;
+        
+        keys.forEach(function(key) {
+            var u = usersData[key];
+            var isCurrent = (u.email === currentUser.email || u.id === currentUser.id);
+            
+            html += '<tr>';
+            html += '<td>' + (index++) + '</td>';
+            html += '<td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === "admin" ? "\ud83d\udc51" : "\ud83d\udc64") + '</span> ' + escapeHtml(u.name || u.displayName || "-") + (isCurrent ? ' <span class="badge badge-success" style="margin-left:5px;font-size:10px;">You</span>' : "") + '</td>';
+            html += '<td>' + escapeHtml(u.email || "-") + '</td>';
+            html += '<td><span class="badge ' + (u.role === "admin" ? "badge-warning" : "badge-success") + '">' + (u.role === "admin" ? "Admin" : "User") + '</span></td>';
+            html += '<td style="text-align: center; white-space: nowrap;">';
+            html += '<button class="btn btn-sm" onclick="viewUserLogs(\'' + key + '\')" title="View Logs" style="background:#3498db;padding:4px 10px;min-width:36px;font-size:14px;">\ud83d\udc41\ufe0f</button>';
+            if (u.role !== "admin" && !isCurrent) {
+                html += '<button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser(\'' + key + '\')" title="Delete" style="padding:4px 10px;min-width:36px;font-size:14px;">\ud83d\uddd1\ufe0f</button>';
+            }
+            html += '</td></tr>';
         });
         
-        container.innerHTML = html;
+        tableBody.innerHTML = html;
     }).catch(function(err) {
-        container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: #e74c3c;\'>Error loading logs</div>";
-        console.error("Error loading activity logs:", err);
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:red">Error: ' + err.message + '</td></tr>';
+    });
+}
+
+
+function loadActivityLogs() {
+    var container = document.getElementById("adminActivityLogs");
+    if (!container) return;
+    if (typeof database === "undefined" || !database) {
+        container.innerHTML = "<div style='text-align:center;padding:20px;color:#999'>Firebase not available</div>";
+        return;
+    }
+    container.innerHTML = "<div style='text-align:center;padding:20px'>Loading...</div>";
+    database.ref("activities").orderByChild("timestamp").limitToLast(50).once("value").then(function(snap) {
+        var logs = snap.val();
+        if (!logs) { container.innerHTML = "<div style='text-align:center;padding:20px;color:#999'>No logs found</div>"; return; }
+        var list = [];
+        Object.keys(logs).forEach(function(k){list.push(logs[k]);});
+        list.sort(function(a,b){return(b.timestamp||0)-(a.timestamp||0);});
+        var html = "";
+        list.forEach(function(log) {
+            var icon = log.type==="login"?"\ud83d\udd11":log.type==="register"?"\ud83d\udce5":log.type==="recharge"?"\ud83d\udcb5":log.type==="bill"?"\ud83d\udcb0":"\ud83d\udccc";
+            html += "<div class='activity-log-card log-"+(log.type||"info")+"'>";
+            html += "<div><span class='log-user'>"+icon+" "+escapeHtml(log.userName||"")+"</span><span class='log-time'>"+new Date(log.timestamp).toLocaleString()+"</span></div>";
+            html += "<div class='log-details'>"+escapeHtml(log.details||"")+"</div></div>";
+        });
+        container.innerHTML = html;
+    }).catch(function(e) {
+        container.innerHTML = "<div style='text-align:center;padding:20px;color:red'>Error loading logs</div>";
     });
 }
 
 function viewUserLogs(key) {
-    if (typeof database === "undefined" || !database) { showToast("Firebase not available", "error"); return; }
-    
-    database.ref("users/" + key).once("value").then(function(snapshot) {
-        var user = snapshot.val();
-        if (!user) { showToast("User not found", "error"); return; }
-        
-        var html = "<div style=\'display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;\'>";
-        html += "  <h2 style=\'margin: 0;\'>" + escapeHtml(user.name || "User") + "</h2>";
-        html += '  <button class="btn btn-sm btn-danger" onclick="closeModal()" style="min-width: 36px;">X</button></div>';
-        html += "<div style=\'background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; padding: 20px; color: white;\'>";
-        html += "  <p>Email: " + escapeHtml(user.email || "-") + "</p>";
-        html += "  <p>Role: <span class=\'badge " + (user.role === "admin" ? "badge-warning" : "badge-success") + "\'>" + (user.role === "admin" ? "Admin" : "User") + "</span></p>";
-        html += "  <p>Registered: " + (user.registeredAt ? new Date(user.registeredAt).toLocaleString() : "-") + "</p></div>";
-        
-        var userEmail = user.email || "";
-        database.ref("[]").orderByChild("userEmail").equalTo(userEmail).limitToLast(50).once("value").then(function(logSnap) {
-            var logs = logSnap.val();
-            html += "<h3 style=\'margin: 20px 0 10px;\'>Activity Logs</h3><div class=\'activity-log-container\' style=\'max-height: 300px; overflow-y: auto;\'>";
-            
-            if (logs) {
-                var logList = [];
-                Object.keys(logs).forEach(function(k) { logList.push(logs[k]); });
-                logList.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
-                logList.slice(0, 30).forEach(function(log) {
-                    var icon = log.type === "login" ? "\ud83d\udd11" : (log.type === "register" ? "\ud83d\udce5" : (log.type === "recharge" ? "\ud83d\udcb5" : (log.type === "bill" ? "\ud83d\udcb0" : "\ud83d\udccc")));
-                    html += "<div class=\'activity-log-card log-" + (log.type || "info") + "\'>";
-                    html += "  <div><span class=\'log-user\'>" + icon + " " + escapeHtml(log.userName || "") + "</span><span class=\'log-time\'>" + new Date(log.timestamp).toLocaleString() + "</span></div>";
-                    html += "  <div class=\'log-details\'>" + escapeHtml(log.details || "") + "</div></div>";
+    if(typeof database==="undefined"||!database){showToast("Firebase unavailable","error");return;}
+    database.ref("users/"+key).once("value").then(function(snap){
+        var u=snap.val();
+        if(!u){showToast("User not found","error");return;}
+        var html="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'><h2 style='margin:0'>"+escapeHtml(u.name||"User")+"</h2><button class='btn btn-sm btn-danger' onclick='closeModal()' style='min-width:36px'>X</button></div>";
+        html+="<div style='background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;padding:20px;color:white'><p>Email: "+escapeHtml(u.email||"-")+"</p><p>Role: <span class='badge "+(u.role==="admin"?"badge-warning":"badge-success")+"'>"+(u.role==="admin"?"Admin":"User")+"</span></p><p>Registered: "+(u.registeredAt?new Date(u.registeredAt).toLocaleString():"-")+"</p></div>";
+        database.ref("activities").orderByChild("userEmail").equalTo(u.email).limitToLast(50).once("value").then(function(ls){
+            var logs=ls.val();
+            html+="<h3 style='margin:20px 0 10px'>Activity Logs</h3><div class='activity-log-container' style='max-height:300px;overflow-y:auto'>";
+            if(logs){
+                var lst=[];Object.keys(logs).forEach(function(k){lst.push(logs[k]);});
+                lst.sort(function(a,b){return(b.timestamp||0)-(a.timestamp||0);});
+                lst.slice(0,30).forEach(function(log){
+                    var icon=log.type==="login"?"\ud83d\udd11":log.type==="register"?"\ud83d\udce5":log.type==="recharge"?"\ud83d\udcb5":log.type==="bill"?"\ud83d\udcb0":"\ud83d\udccc";
+                    html+="<div class='activity-log-card log-"+(log.type||"info")+"'><div><span class='log-user'>"+icon+" "+escapeHtml(log.userName||"")+"</span><span class='log-time'>"+new Date(log.timestamp).toLocaleString()+"</span></div><div class='log-details'>"+escapeHtml(log.details||"")+"</div></div>";
                 });
-            } else {
-                html += "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>No logs found</div>";
-            }
-            html += "</div>";
-            
-            document.getElementById("modalContent").innerHTML = html;
+            } else html+="<div style='text-align:center;padding:20px;color:#999'>No logs</div>";
+            html+="</div>";
+            document.getElementById("modalContent").innerHTML=html;
             document.getElementById("modal").classList.add("active");
         });
     });
+}
+
+function deleteFirebaseUser(key) {
+    if(!confirm("Delete this user permanently?"))return;
+    database.ref("users/"+key).remove().then(function(){showToast("Deleted!","success");loadUsersFromFirebase();});
 }
