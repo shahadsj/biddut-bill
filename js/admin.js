@@ -15,8 +15,8 @@ function showAdminPanel() {
     });
     var currentUser = APP.currentUser;
 
-    var activities = getActivityLogs('all', 200);
-    var loginCount = activities.filter(function(a) { return a.type === 'login'; }).length;
+    // Activity logs loaded asynchronously via loadActivityLogs()
+    // Recent activity display removed - logs load dynamically below
     var registerCount = activities.filter(function(a) { return a.type === 'register'; }).length;
     var rechargeCount = activities.filter(function(a) { return a.type === 'recharge'; }).length;
     var billCount = activities.filter(function(a) { return a.type === 'bill'; }).length;
