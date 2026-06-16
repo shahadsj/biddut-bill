@@ -395,7 +395,7 @@ function demoteToUser(userId) {
 }
 
 
-function getActivityLogs() {
+function loadActivityLogs() {
     var container = document.getElementById("adminActivityLogs");
     if (!container) { console.warn("Activity logs container not found"); return; }
     
