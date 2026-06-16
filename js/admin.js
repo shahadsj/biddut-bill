@@ -514,3 +514,9 @@ function getActivityLogs(type, limit) {
     // Returns empty array - logs load dynamically via loadActivityLogs()
     return [];
 }
+
+
+function closeModal() {
+    var modal = document.getElementById("modal");
+    if (modal) modal.classList.remove("active");
+}
