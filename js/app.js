@@ -271,68 +271,49 @@ const APP = {
     }
 };
 
-// ==================== INIT & NAVIGATION ====================
-function initApp() {
-    // Try session restore
-    try {
-        var s = JSON.parse(localStorage.getItem("biddut_session"));
-        if (s && s.loginTime && Date.now() - s.loginTime < 604800000) {
-            APP.currentUser = {id: s.userId || "1", email: s.email || "", name: s.name || "User", role: s.role || "user"};
-            document.getElementById("authPage").style.display = "none";
-            document.getElementById("appPage").style.display = "block";
-            if (APP.currentUser.role === "admin") document.getElementById("adminNav").style.display = "block";
-            if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
-            setTimeout(function() { navigateTo("dashboard"); }, 200);
-            return;
-        }
-    } catch(e) {}
-    
-    // No session - show login
-    document.getElementById("authPage").style.display = "block";
-    document.getElementById("appPage").style.display = "none";
-    if (typeof showLoginPage === "function") showLoginPage();
-}
-
+// ==================== NAVIGATION ====================
 function navigateTo(page) {
     APP.currentPage = page;
+    
+    // Hide all pages
     var pages = ["dashboard","meters","transactions","calculator","reports","analytics","settings","backup","admin","profile"];
-    pages.forEach(function(p) {
-        var el = document.getElementById(p + "Page");
+    for (var i = 0; i < pages.length; i++) {
+        var el = document.getElementById(pages[i] + "Page");
         if (el) el.style.display = "none";
-    });
-    
-    document.querySelectorAll(".sidebar-nav a, .nav-item").forEach(function(a) {
-        a.classList.remove("active");
-    });
-    var links = document.querySelectorAll("[onclick*=\'navigateTo(\\\"" + page + "\\\")\"], [onclick*=\"navigateTo(\'" + page + "\')\"]");
-    links.forEach(function(l) { l.classList.add("active"); });
-    
-    switch(page) {
-        case "dashboard": if(typeof showDashboard==="function")showDashboard(); break;
-        case "meters": if(typeof showMeters==="function")showMeters(); break;
-        case "transactions": if(typeof showTransactions==="function")showTransactions(); break;
-        case "calculator": if(typeof showCalculator==="function")showCalculator(); break;
-        case "reports": if(typeof showReports==="function")showReports(); break;
-        case "analytics": if(typeof showAnalytics==="function")showAnalytics(); break;
-        case "settings": if(typeof showSettings==="function")showSettings(); break;
-        case "backup": if(typeof showBackup==="function")showBackup(); break;
-        case "admin": if(typeof showAdminPanel==="function")showAdminPanel(); break;
-        case "profile": if(typeof showProfile==="function")showProfile(); break;
-        default: if(typeof showDashboard==="function")showDashboard();
     }
+    
+    // Update active nav class - simpler approach
+    var navItems = document.querySelectorAll(".nav-item");
+    for (var i = 0; i < navItems.length; i++) {
+        navItems[i].classList.remove("active");
+    }
+    
+    // Find and activate the clicked nav item
+    var allNavs = document.querySelectorAll(".nav-item, .sidebar-nav a");
+    for (var i = 0; i < allNavs.length; i++) {
+        var onclick = allNavs[i].getAttribute("onclick") || "";
+        if (onclick.indexOf("navigateTo") >= 0 && onclick.indexOf(page) >= 0) {
+            allNavs[i].classList.add("active");
+        }
+    }
+    
+    // Show page content
+    if (page === "dashboard" && typeof showDashboard === "function") showDashboard();
+    else if (page === "meters" && typeof showMeters === "function") showMeters();
+    else if (page === "transactions" && typeof showTransactions === "function") showTransactions();
+    else if (page === "calculator" && typeof showCalculator === "function") showCalculator();
+    else if (page === "reports" && typeof showReports === "function") showReports();
+    else if (page === "analytics" && typeof showAnalytics === "function") showAnalytics();
+    else if (page === "settings" && typeof showSettings === "function") showSettings();
+    else if (page === "backup" && typeof showBackup === "function") showBackup();
+    else if (page === "admin" && typeof showAdminPanel === "function") showAdminPanel();
+    else if (page === "profile" && typeof showProfile === "function") showProfile();
+    else if (typeof showDashboard === "function") showDashboard();
 }
 
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("collapsed");
-}
-
-function logout() {
-    localStorage.removeItem("biddut_session");
-    APP.currentUser = null;
-    document.getElementById("adminNav").style.display = "none";
-    document.getElementById("appPage").style.display = "none";
-    document.getElementById("authPage").style.display = "block";
-    if (typeof showLoginPage === "function") showLoginPage();
+    var sb = document.getElementById("sidebar");
+    if (sb) sb.classList.toggle("collapsed");
 }
 
 function updateSidebarUserInfo() {
@@ -345,7 +326,38 @@ function updateSidebarUserInfo() {
     }
 }
 
-// Run init when ready
+function logout() {
+    localStorage.removeItem("biddut_session");
+    APP.currentUser = null;
+    var adminNav = document.getElementById("adminNav");
+    if (adminNav) adminNav.style.display = "none";
+    document.getElementById("appPage").style.display = "none";
+    document.getElementById("authPage").style.display = "block";
+    if (typeof showLoginPage === "function") showLoginPage();
+}
+
+// ==================== INIT ====================
+function initApp() {
+    try {
+        var s = JSON.parse(localStorage.getItem("biddut_session"));
+        if (s && s.loginTime && Date.now() - s.loginTime < 604800000) {
+            APP.currentUser = {id: s.userId || "1", email: s.email || "", name: s.name || "User", role: s.role || "user"};
+            document.getElementById("authPage").style.display = "none";
+            document.getElementById("appPage").style.display = "block";
+            var adminNav = document.getElementById("adminNav");
+            if (adminNav && APP.currentUser.role === "admin") adminNav.style.display = "block";
+            if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
+            setTimeout(function() { navigateTo("dashboard"); }, 300);
+            return;
+        }
+    } catch(e) {}
+    
+    document.getElementById("authPage").style.display = "block";
+    document.getElementById("appPage").style.display = "none";
+    if (typeof showLoginPage === "function") showLoginPage();
+    else document.getElementById("authPage").innerHTML = "<h2>Loading...</h2>";
+}
+
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initApp);
 } else {
