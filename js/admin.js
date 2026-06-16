@@ -251,7 +251,7 @@ function saveUserEdit(userId) {
     
     if (!name) { showToast(L==='en'?'Name is required':'নাম প্রয়োজন', 'error'); return; }
     if (!email) { showToast(L==='en'?'Email is required':'ইমেইল প্রয়োজন', 'error'); return; }
-    if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+    if (email.indexOf('') === -1 || email.indexOf('.') === -1) {
         showToast(L==='en'?'Please enter a valid email address':'সঠিক ইমেইল দিন', 'error');
         return;
     }
