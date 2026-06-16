@@ -15,7 +15,7 @@ function showAdminPanel() {
     });
     var currentUser = APP.currentUser;
 
-    var activities = getActivityLogs('all', 200);
+    var activities = [] /* inline empty array */;
     var loginCount = activities.filter(function(a) { return a.type === 'login'; }).length;
     var registerCount = activities.filter(function(a) { return a.type === 'register'; }).length;
     var rechargeCount = activities.filter(function(a) { return a.type === 'recharge'; }).length;
