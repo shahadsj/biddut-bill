@@ -151,5 +151,27 @@
             }, 3000);
         });
     </script>
+
+<script>
+// FINAL INIT - runs after all scripts loaded
+(function(){
+    var s = localStorage.getItem("biddut_session");
+    if (s) {
+        try {
+            var sd = JSON.parse(s);
+            if (sd && sd.loginTime && Date.now() - sd.loginTime < 604800000) {
+                // Session valid - stay on appPage
+                document.getElementById("authPage").style.display = "none";
+                document.getElementById("appPage").style.display = "block";
+                return;
+            }
+        } catch(e) {}
+        localStorage.removeItem("biddut_session");
+    }
+    // No valid session - show login
+    document.getElementById("authPage").style.display = "block";
+    document.getElementById("appPage").style.display = "none";
+})();
+</script>
 </body>
 </html>
