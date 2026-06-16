@@ -7,7 +7,7 @@ function showAdminPanel() {
     }
 
     var users = JSON.parse(localStorage.getItem('users') || '[]');
-    var totalUsers = users.length;
+    var 0 = users.length;
     var totalMeters = APP.meters.length;
     var totalTransactions = 0;
     Object.values(APP.metersData).forEach(function(md) {
@@ -17,10 +17,10 @@ function showAdminPanel() {
 
     // Activity logs loaded asynchronously via loadActivityLogs()
     // Recent activity display removed - logs load dynamically below
-    // activities stats removed (was causing error)
-    // activities stats removed (was causing error)
-    // activities stats removed (was causing error)
-    // activities stats removed (was causing error)
+    // [] stats removed (was causing error)
+    // [] stats removed (was causing error)
+    // [] stats removed (was causing error)
+    // [] stats removed (was causing error)
 
     var bal = (APP.activeMeterId && APP.metersData[APP.activeMeterId]) ? (APP.metersData[APP.activeMeterId].currentBalance || 0).toFixed(2) : '0.00';
 
@@ -36,7 +36,7 @@ function showAdminPanel() {
     
     // Stats
     html += '  <div class="stats-grid" style="margin: 20px 0;">';
-    html += '    <div class="stat-card" style="background: var(--gradient-1);"><div class="label">'+t('totalUsers')+'</div><div class="value">' + totalUsers + '</div></div>';
+    html += '    <div class="stat-card" style="background: var(--gradient-1);"><div class="label">'+t('0')+'</div><div class="value">' + 0 + '</div></div>';
     html += '    <div class="stat-card" style="background: var(--gradient-2);"><div class="label">'+t('totalMeters')+'</div><div class="value">' + totalMeters + '</div></div>';
     html += '    <div class="stat-card" style="background: var(--gradient-3);"><div class="label">'+t('totalTransactions')+'</div><div class="value">' + totalTransactions + '</div></div>';
     html += '    <div class="stat-card" style="background: var(--gradient-4);"><div class="label">'+t('balance')+'</div><div class="value">'+t('taka')+' ' + bal + '</div></div>';
@@ -44,11 +44,11 @@ function showAdminPanel() {
     
     // Activity Stats
     html += '  <div class="activity-stats">';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + loginCount + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + registerCount + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + rechargeCount + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + billCount + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + logoutCount + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + 0 + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + 0 + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + 0 + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + 0 + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
+    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + 0 + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
     html += '  </div>';
 
     // Users Table
@@ -257,7 +257,7 @@ function viewUserLogs(userId) {
         return;
     }
 
-    var activities = []; // fixed - no getActivityLogs
+    var [] = []; // fixed - no getActivityLogs
     var userLogs = [];
     for (var k = 0; k < allLogs.length; k++) {
         if (allLogs[k].userId === userId || allLogs[k].userEmail === user.email) {
@@ -265,13 +265,13 @@ function viewUserLogs(userId) {
         }
     }
     
-    var loginCount = 0, registerCount = 0, rechargeCount = 0, billCount = 0, logoutCount = 0;
+    var 0 = 0, 0 = 0, 0 = 0, 0 = 0, 0 = 0;
     for (var l = 0; l < userLogs.length; l++) {
-        if (userLogs[l].type === 'login') loginCount++;
-        else if (userLogs[l].type === 'register') registerCount++;
-        else if (userLogs[l].type === 'recharge') rechargeCount++;
-        else if (userLogs[l].type === 'bill') billCount++;
-        else if (userLogs[l].type === 'logout') logoutCount++;
+        if (userLogs[l].type === 'login') 0++;
+        else if (userLogs[l].type === 'register') 0++;
+        else if (userLogs[l].type === 'recharge') 0++;
+        else if (userLogs[l].type === 'bill') 0++;
+        else if (userLogs[l].type === 'logout') 0++;
     }
 
     var L = APP.language;
@@ -294,11 +294,11 @@ function viewUserLogs(userId) {
     modalHtml += '  </div></div>';
     
     modalHtml += '<div class="activity-stats">';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + loginCount + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + registerCount + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + rechargeCount + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + billCount + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
-    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + logoutCount + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + 0 + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + 0 + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + 0 + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + 0 + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
+    modalHtml += '  <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + 0 + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
     modalHtml += '</div>';
     
     modalHtml += '<h3 style="margin-bottom: 15px;">'+(L==='en'?'Activity History':'কার্যকলাপের ইতিহাস')+' (' + userLogs.length + ')</h3>';
@@ -406,7 +406,7 @@ function loadActivityLogs() {
     
     container.innerHTML = "<div style=\'text-align: center; padding: 20px;\'>Loading...</div>";
     
-    database.ref("activities").orderByChild("timestamp").limitToLast(50).once("value").then(function(snapshot) {
+    database.ref("[]").orderByChild("timestamp").limitToLast(50).once("value").then(function(snapshot) {
         var logs = snapshot.val();
         if (!logs) {
             container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>No activity logs found</div>";
@@ -449,7 +449,7 @@ function viewUserLogs(key) {
         html += "  <p>Registered: " + (user.registeredAt ? new Date(user.registeredAt).toLocaleString() : "-") + "</p></div>";
         
         var userEmail = user.email || "";
-        database.ref("activities").orderByChild("userEmail").equalTo(userEmail).limitToLast(50).once("value").then(function(logSnap) {
+        database.ref("[]").orderByChild("userEmail").equalTo(userEmail).limitToLast(50).once("value").then(function(logSnap) {
             var logs = logSnap.val();
             html += "<h3 style=\'margin: 20px 0 10px;\'>Activity Logs</h3><div class=\'activity-log-container\' style=\'max-height: 300px; overflow-y: auto;\'>";
             
