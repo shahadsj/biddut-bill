@@ -15,8 +15,141 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <!-- Auth Container (Login/Register) - Only visible when not logged in -->
+    <div id="authPage" style="display: none;">
+        <!-- Auth content will be loaded here dynamically -->
+    </div>
 
-<!-- escapeHtml removed -->(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}</script>
+    <!-- Main App - Only visible when logged in -->
+    <div id="appPage" style="display: none;">
+        <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
 
+        <div class="app-container">
+            <!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                                <div class="logo">⚡ বিদ্যুৎ বিল</div>
+                <nav>
+                    <div class="nav-item active" onclick="navigateTo('dashboard')">
+                        <span>📊</span> <span class="nav-text" data-key="sidebarDashboard">ড্যাশবোর্ড</span>
+                    </div>
+                                        <div class="nav-item" onclick="navigateTo('meters')">
+                        <span>⚡</span> <span class="nav-text" data-key="sidebarMeters">মিটার ম্যানেজমেন্ট</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('transactions')">
+                        <span>💳</span> <span class="nav-text" data-key="sidebarTransactions">ট্রানজেকশন</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('calculator')">
+                        <span>🧮</span> <span class="nav-text" data-key="sidebarCalculator">ক্যালকুলেটর</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('reports')">
+                        <span>📈</span> <span class="nav-text" data-key="sidebarReports">রিপোর্ট</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('analytics')">
+                        <span>📉</span> <span class="nav-text" data-key="sidebarAnalytics">এনালিটিক্স</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('settings')">
+                        <span>⚙️</span> <span class="nav-text" data-key="sidebarSettings">সেটিংস</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('backup')">
+                        <span>💾</span> <span class="nav-text" data-key="sidebarBackup">ব্যাকআপ</span>
+                    </div>
+                    
+                    <!-- Divider -->
+                    <div style="border-top: 1px solid var(--border); margin: 10px 0;"></div>
+                    
+                                        <div class="nav-item" onclick="navigateTo('profile')">
+                        <span>👤</span> <span class="nav-text" data-key="sidebarProfile">প্রোফাইল</span>
+                    </div>
+                    
+                    <!-- Admin Panel -->
+                    <div class="nav-item" id="adminNav" style="display:none;" onclick="navigateTo('admin')">
+                        <span>👑</span> <span class="nav-text" data-key="sidebarAdmin">অ্যাডমিন প্যানেল</span>
+                    </div>
+                </nav>
+                
+                <!-- User Info at bottom of sidebar with Logout -->
+                <div id="sidebarUserInfo" style="margin-top: auto; padding: 15px; border-top: 1px solid var(--border); display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-1); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                            👤
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="sidebarUserName"></div>
+                            <div style="font-size: 11px; color: var(--text-light);" id="sidebarUserRole"></div>
+                        </div>
+                        <div class="nav-logout" onclick="logout()" title="Logout" style="cursor: pointer; padding: 8px; border-radius: 50%; background: rgba(231, 76, 60, 0.1); transition: all 0.3s ease; font-size: 20px;">
+                            🚪
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content" id="mainContent">
+                <div id="pageContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+        <!-- 🔥 Firebase SDK for Realtime Database -->
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+        <!-- JavaScript Files -->
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/firebase-init.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/meters.js"></script>
+    <script src="js/transactions.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- PWA Scripts -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful');
+                }).catch(function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            setTimeout(() => {
+                if (confirm('এই অ্যাপ ইন্সটল করতে চান?')) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function(choiceResult) {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            }, 3000);
+        });
+    </script>
 </body>
 </html>
