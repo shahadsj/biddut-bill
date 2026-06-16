@@ -1,3 +1,6 @@
+// Global utility functions
+function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
+
 // ==================== APP STATE & INITIALIZATION ====================
 const APP = {
     currentUser: null,
