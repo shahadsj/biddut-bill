@@ -393,3 +393,83 @@ function demoteToUser(userId) {
     showToast(L==='en'?'"'+users[userIndex].name+'" demoted to User':'"'+users[userIndex].name+'" ইউজার হয়েছে', 'success');
     showAdminPanel();
 }
+
+
+function getActivityLogs() {
+    var container = document.getElementById("adminActivityLogs");
+    if (!container) { console.warn("Activity logs container not found"); return; }
+    
+    if (typeof database === "undefined" || !database) {
+        container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>Firebase not available</div>";
+        return;
+    }
+    
+    container.innerHTML = "<div style=\'text-align: center; padding: 20px;\'>Loading...</div>";
+    
+    database.ref("activities").orderByChild("timestamp").limitToLast(50).once("value").then(function(snapshot) {
+        var logs = snapshot.val();
+        if (!logs) {
+            container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>No activity logs found</div>";
+            return;
+        }
+        
+        var html = "";
+        var logList = [];
+        Object.keys(logs).forEach(function(k) { logList.push(logs[k]); });
+        logList.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+        
+        logList.forEach(function(log) {
+            var icon = log.type === "login" ? "\ud83d\udd11" : (log.type === "register" ? "\ud83d\udce5" : (log.type === "recharge" ? "\ud83d\udcb5" : (log.type === "bill" ? "\ud83d\udcb0" : "\ud83d\udccc")));
+            html += "<div class=\'activity-log-card log-" + (log.type || "info") + "\'>";
+            html += "  <div><span class=\'log-user\'>" + icon + " " + escapeHtml(log.userName || "") + "</span><span class=\'log-time\'>" + new Date(log.timestamp).toLocaleString() + "</span></div>";
+            html += "  <div class=\'log-details\'>" + escapeHtml(log.details || "") + "</div>";
+            html += "</div>";
+        });
+        
+        container.innerHTML = html;
+    }).catch(function(err) {
+        container.innerHTML = "<div style=\'text-align: center; padding: 20px; color: #e74c3c;\'>Error loading logs</div>";
+        console.error("Error loading activity logs:", err);
+    });
+}
+
+function viewUserLogs(key) {
+    if (typeof database === "undefined" || !database) { showToast("Firebase not available", "error"); return; }
+    
+    database.ref("users/" + key).once("value").then(function(snapshot) {
+        var user = snapshot.val();
+        if (!user) { showToast("User not found", "error"); return; }
+        
+        var html = "<div style=\'display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;\'>";
+        html += "  <h2 style=\'margin: 0;\'>" + escapeHtml(user.name || "User") + "</h2>";
+        html += '  <button class="btn btn-sm btn-danger" onclick="closeModal()" style="min-width: 36px;">X</button></div>';
+        html += "<div style=\'background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; padding: 20px; color: white;\'>";
+        html += "  <p>Email: " + escapeHtml(user.email || "-") + "</p>";
+        html += "  <p>Role: <span class=\'badge " + (user.role === "admin" ? "badge-warning" : "badge-success") + "\'>" + (user.role === "admin" ? "Admin" : "User") + "</span></p>";
+        html += "  <p>Registered: " + (user.registeredAt ? new Date(user.registeredAt).toLocaleString() : "-") + "</p></div>";
+        
+        var userEmail = user.email || "";
+        database.ref("activities").orderByChild("userEmail").equalTo(userEmail).limitToLast(50).once("value").then(function(logSnap) {
+            var logs = logSnap.val();
+            html += "<h3 style=\'margin: 20px 0 10px;\'>Activity Logs</h3><div class=\'activity-log-container\' style=\'max-height: 300px; overflow-y: auto;\'>";
+            
+            if (logs) {
+                var logList = [];
+                Object.keys(logs).forEach(function(k) { logList.push(logs[k]); });
+                logList.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+                logList.slice(0, 30).forEach(function(log) {
+                    var icon = log.type === "login" ? "\ud83d\udd11" : (log.type === "register" ? "\ud83d\udce5" : (log.type === "recharge" ? "\ud83d\udcb5" : (log.type === "bill" ? "\ud83d\udcb0" : "\ud83d\udccc")));
+                    html += "<div class=\'activity-log-card log-" + (log.type || "info") + "\'>";
+                    html += "  <div><span class=\'log-user\'>" + icon + " " + escapeHtml(log.userName || "") + "</span><span class=\'log-time\'>" + new Date(log.timestamp).toLocaleString() + "</span></div>";
+                    html += "  <div class=\'log-details\'>" + escapeHtml(log.details || "") + "</div></div>";
+                });
+            } else {
+                html += "<div style=\'text-align: center; padding: 20px; color: var(--text-light);\'>No logs found</div>";
+            }
+            html += "</div>";
+            
+            document.getElementById("modalContent").innerHTML = html;
+            document.getElementById("modal").classList.add("active");
+        });
+    });
+}
