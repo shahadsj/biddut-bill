@@ -124,6 +124,11 @@ function showAdminPanel() {
     html += '</div>';
     
     document.getElementById('pageContent').innerHTML = html;
+    
+    // Auto-load users from Firebase
+    if (typeof loadUsersFromFirebase === 'function') {
+        setTimeout(function() { loadUsersFromFirebase(); }, 300);
+    }
 }
 
 function getActiveText() {
