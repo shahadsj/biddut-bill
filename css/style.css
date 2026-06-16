@@ -1504,28 +1504,9 @@ padding: 16px 14px !important;
     height: 100% !important;
 }
 
-/* ==================== RESPONSIVE DESIGN (ALL DEVICES) ==================== */
+/* ==================== RESPONSIVE DESIGN (MOBILE ONLY) ==================== */
 
-/* Tablet & Small Laptop (max 1024px) */
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 220px;
-    }
-    
-    .main-content {
-        margin-left: 220px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .meter-selector select {
-        min-width: 160px;
-    }
-}
-
-/* Mobile (max 768px) */
+/* Mobile (max 768px) - শুধু মোবাইলের জন্য */
 @media (max-width: 768px) {
     /* Sidebar */
     .sidebar {
@@ -1550,7 +1531,7 @@ padding: 16px 14px !important;
         padding-top: 65px;
     }
     
-    /* Toggle Sidebar Button */
+    /* Toggle Sidebar Button - শুধু মোবাইলে দেখাবে */
     .toggle-sidebar {
         display: flex !important;
         align-items: center;
@@ -1570,7 +1551,7 @@ padding: 16px 14px !important;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
     }
     
-    /* Stats */
+    /* Stats - 1 কলাম */
     .stats-grid {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -1590,7 +1571,7 @@ padding: 16px 14px !important;
         font-size: 13px;
     }
     
-    /* Auth Card */
+    /* Auth Card - মোবাইলে ছোট */
     .auth-card {
         margin: 15px;
         padding: 25px 20px !important;
@@ -1669,7 +1650,7 @@ padding: 16px 14px !important;
         flex-shrink: 0;
     }
     
-    /* Buttons */
+    /* Buttons - মোবাইলে বড় */
     .btn {
         padding: 10px 18px;
         font-size: 14px;
@@ -1722,7 +1703,7 @@ padding: 16px 14px !important;
         min-height: 44px;
     }
     
-    /* Tables */
+    /* Tables - scrollable */
     .table-container {
         margin: 0 -12px;
         border-radius: 0;
@@ -1802,7 +1783,7 @@ padding: 16px 14px !important;
         align-items: flex-start;
     }
     
-    /* Quick Recharge & Balance Update Forms */
+    /* Quick Recharge & Balance Update Forms - 1 কলাম */
     div[style*="grid-template-columns: 1fr 1fr"] {
         grid-template-columns: 1fr !important;
     }
@@ -1876,7 +1857,7 @@ padding: 16px 14px !important;
     }
 }
 
-/* Touch-friendly adjustments - সব টাচ ডিভাইসের জন্য */
+/* Touch-friendly adjustments - শুধু টাচ ডিভাইসের জন্য (হোভার ইফেক্ট অফ) */
 @media (pointer: coarse) {
     .nav-item:hover {
         transform: none !important;
