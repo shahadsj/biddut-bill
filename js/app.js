@@ -293,3 +293,74 @@ window.__sessionRestored=true;
     } catch(e) {}
 })();
 
+
+
+// ==================== NAVIGATION ====================
+function navigateTo(page) {
+    APP.currentPage = page;
+    
+    // Hide all pages
+    var pages = ['dashboard', 'meters', 'transactions', 'calculator', 'reports', 
+                 'analytics', 'settings', 'backup', 'admin', 'profile'];
+    
+    pages.forEach(function(p) {
+        var el = document.getElementById(p + 'Page');
+        if (el) el.style.display = 'none';
+    });
+    
+    // Update active sidebar link
+    document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
+        a.classList.remove('active');
+    });
+    
+    var activeLink = document.querySelector('.sidebar-nav a[onclick*="' + page + '"]');
+    if (activeLink) activeLink.classList.add('active');
+    
+    // Show selected page content
+    switch(page) {
+        case 'dashboard':
+            if (typeof showDashboard === 'function') showDashboard();
+            break;
+        case 'meters':
+            if (typeof showMeters === 'function') showMeters();
+            break;
+        case 'transactions':
+            if (typeof showTransactions === 'function') showTransactions();
+            break;
+        case 'calculator':
+            if (typeof showCalculator === 'function') showCalculator();
+            break;
+        case 'reports':
+            if (typeof showReports === 'function') showReports();
+            break;
+        case 'analytics':
+            if (typeof showAnalytics === 'function') showAnalytics();
+            break;
+        case 'settings':
+            if (typeof showSettings === 'function') showSettings();
+            break;
+        case 'backup':
+            if (typeof showBackup === 'function') showBackup();
+            break;
+        case 'admin':
+            if (typeof showAdminPanel === 'function') showAdminPanel();
+            else document.getElementById('pageContent').innerHTML = '<div class="card"><h2>Admin Panel</h2><p>Loading...</p></div>';
+            break;
+        case 'profile':
+            if (typeof showProfile === 'function') showProfile();
+            else document.getElementById('pageContent').innerHTML = '<div class="card"><h2>Profile</h2><p>Loading...</p></div>';
+            break;
+        default:
+            if (typeof showDashboard === 'function') showDashboard();
+    }
+}
+
+function updateSidebarUserInfo() {
+    var nameEl = document.getElementById('sidebarUserName');
+    var roleEl = document.getElementById('sidebarUserRole');
+    if (nameEl && APP.currentUser) nameEl.textContent = APP.currentUser.name || 'User';
+    if (roleEl && APP.currentUser) {
+        roleEl.textContent = APP.currentUser.role === 'admin' ? 'Admin' : 'User';
+        roleEl.className = 'badge ' + (APP.currentUser.role === 'admin' ? 'badge-warning' : 'badge-success');
+    }
+}
