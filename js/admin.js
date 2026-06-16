@@ -265,7 +265,7 @@ function viewUserLogs(userId) {
         }
     }
     
-    var 0 = 0, 0 = 0, 0 = 0, 0 = 0, 0 = 0;
+    var totalUsers = 0, 0 = 0, 0 = 0, 0 = 0, 0 = 0;
     for (var l = 0; l < userLogs.length; l++) {
         if (userLogs[l].type === 'login') 0++;
         else if (userLogs[l].type === 'register') 0++;
