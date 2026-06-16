@@ -138,7 +138,9 @@ function restoreFromJSON(event) {
             
             saveData();
             checkBadgesOnLoad();
-            applySettings();
+            if (typeof applySettings === 'function') {
+                applySettings();
+            }
             showToast(L==='en'?'Data restored successfully!':'ডাটা সফলভাবে রিস্টোর হয়েছে!', 'success');
             event.target.value = '';
             setTimeout(function(){ navigateTo('dashboard'); }, 500);

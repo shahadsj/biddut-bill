@@ -225,3 +225,96 @@ function switchMeter(meterId) {
     if (APP.currentPage === 'dashboard') showDashboard();
     else navigateTo('dashboard');
 }
+
+// ==================== MISSING FUNCTIONS ====================
+
+// applySettings - Settings apply করার জন্য
+function applySettings() {
+    // Font size apply
+    if (APP.settings.fontSize) {
+        document.documentElement.style.setProperty('--font-size', APP.settings.fontSize + 'px');
+    }
+    
+    // Dark mode
+    if (APP.settings.darkMode) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    
+    // High contrast
+    if (APP.settings.highContrast) {
+        document.body.classList.add('high-contrast');
+    } else {
+        document.body.classList.remove('high-contrast');
+    }
+}
+
+// getActiveMeterData - বর্তমান মিটারের ডাটা পাওয়ার জন্য
+function getActiveMeterData() {
+    if (!APP.activeMeterId) return null;
+    return APP.metersData[APP.activeMeterId] || null;
+}
+
+// updateActiveMeterData - বর্তমান মিটারের ডাটা আপডেট করার জন্য
+function updateActiveMeterData(data) {
+    if (!APP.activeMeterId) return;
+    APP.metersData[APP.activeMeterId] = data;
+    saveData();
+}
+
+// getMeterData - নির্দিষ্ট মিটারের ডাটা পাওয়ার জন্য
+function getMeterData(meterId) {
+    return APP.metersData[meterId] || null;
+}
+
+// logActivity - অ্যাক্টিভিটি লগ করার জন্য
+function logActivity(type, details) {
+    if (!APP.currentUser) return;
+    
+    var log = {
+        type: type,
+        userName: APP.currentUser.name || 'User',
+        userEmail: APP.currentUser.email || '',
+        userId: APP.currentUser.id || '',
+        details: details || '',
+        timestamp: Date.now(),
+        deviceInfo: {
+            platform: navigator.platform || 'Unknown',
+            language: navigator.language || 'Unknown',
+            userAgent: navigator.userAgent || 'Unknown'
+        }
+    };
+    
+    // Save to Firebase if available
+    if (typeof database !== "undefined" && database && APP.currentUser) {
+        var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+        var ref = database.ref('users/' + userEmail + '/activities');
+        ref.push(log).catch(function(err) {
+            console.warn('Activity log save error:', err);
+        });
+    }
+    
+    // Also save locally
+    var logs = JSON.parse(localStorage.getItem('activity_logs') || '[]');
+    logs.push(log);
+    if (logs.length > 1000) logs = logs.slice(-500);
+    localStorage.setItem('activity_logs', JSON.stringify(logs));
+}
+
+// getActivityLogs - অ্যাক্টিভিটি লগ পাওয়ার জন্য
+function getActivityLogs(type, limit) {
+    var logs = JSON.parse(localStorage.getItem('activity_logs') || '[]');
+    
+    if (type && type !== 'all') {
+        logs = logs.filter(function(log) { return log.type === type; });
+    }
+    
+    logs.sort(function(a, b) { return b.timestamp - a.timestamp; });
+    
+    if (limit) {
+        logs = logs.slice(0, limit);
+    }
+    
+    return logs;
+}
