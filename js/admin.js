@@ -503,3 +503,9 @@ function deleteFirebaseUser(key) {
     if(!confirm("Delete this user permanently?"))return;
     database.ref("users/"+key).remove().then(function(){showToast("Deleted!","success");loadUsersFromFirebase();});
 }
+
+
+function getActivityLogs(type, limit) {
+    // Returns empty array - logs load dynamically via loadActivityLogs()
+    return [];
+}
