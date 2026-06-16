@@ -1,3 +1,7 @@
+function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
+
+function __(k){const l=APP.language||"bn";return APP.translations&&APP.translations[l]&&APP.translations[l][k]?APP.translations[l][k]:APP.translations&&APP.translations["bn"]&&APP.translations["bn"][k]?APP.translations["bn"][k]:k;}
+
 // ==================== UTILITY FUNCTIONS ====================
 function calculateBalance(meterId) {
     var meterData = APP.metersData[meterId];
