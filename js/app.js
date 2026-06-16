@@ -1,3 +1,4 @@
+function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
 // Global utility functions
 function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
 
@@ -269,3 +270,14 @@ const APP = {
         }
     }
 };
+// Session restore on load
+(function() {
+    try {
+        var s = JSON.parse(localStorage.getItem("biddut_session") || "null");
+        if (s && s.loginTime && Date.now() - s.loginTime < 604800000) {
+            APP.currentUser = { id: s.userId, email: s.email, name: s.name, role: s.role };
+            window.__sessionRestored = true;
+        }
+    } catch(e) {}
+})();
+
