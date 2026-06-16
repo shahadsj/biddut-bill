@@ -318,3 +318,31 @@ function getActivityLogs(type, limit) {
     
     return logs;
 }
+
+function saveData() {
+    // ===== localStorage এ সেভ করুন =====
+    try {
+        var data = {
+            meters: APP.meters,
+            metersData: APP.metersData,
+            activeMeterId: APP.activeMeterId,
+            settings: APP.settings,
+            tariffRates: APP.tariffRates,
+            language: APP.language,
+            savingsGoal: APP.savingsGoal || 0,
+            badges: APP.badges || [],
+            lastUpdated: Date.now()
+        };
+        localStorage.setItem('biddut_app_data', JSON.stringify(data));
+        console.log('💾 Data saved to localStorage');
+    } catch(e) {
+        console.warn('Save to localStorage error:', e);
+    }
+    
+    // ===== Firebase এ সেভ করুন =====
+    if (typeof database !== "undefined" && database && APP.currentUser) {
+        if (typeof syncAllToCloud === 'function') {
+            syncAllToCloud();
+        }
+    }
+}

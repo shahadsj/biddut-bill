@@ -122,7 +122,10 @@ function syncAllToCloud() {
 
 // ==================== LOAD FROM CLOUD ====================
 function loadFromCloud() {
-    if (typeof APP === "undefined" || !APP) { console.warn("APP not ready"); return Promise.resolve(false); }
+    if (typeof APP === "undefined" || !APP) { 
+        console.warn("APP not ready"); 
+        return Promise.resolve(false); 
+    }
     if (!isFirebaseReady || !APP.currentUser) {
         return Promise.resolve(false);
     }
@@ -131,19 +134,25 @@ function loadFromCloud() {
         var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
         var changed = false;
         
+        console.log('☁️ Loading data from cloud...');
+        
         // Load app data
         database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
             var appData = snapshot.val();
             if (appData) {
                 // Merge settings
                 if (appData.settings) {
-                    var oldLang = APP.language;
                     APP.settings = Object.assign({}, APP.settings, appData.settings);
                 }
                 if (appData.tariffRates) APP.tariffRates = appData.tariffRates;
                 if (appData.language) APP.language = appData.language;
                 APP.savingsGoal = appData.savingsGoal || 0;
                 APP.badges = appData.badges || [];
+                
+                // activeMeterId লোড করুন
+                if (appData.activeMeterId) {
+                    APP.activeMeterId = appData.activeMeterId;
+                }
                 
                 // Merge meters list
                 if (appData.meters && Array.isArray(appData.meters)) {
@@ -218,9 +227,17 @@ function loadFromCloud() {
                 });
             }
             
+            // activeMeterId না থাকলে সেট করুন
+            if (!APP.activeMeterId && APP.meters.length > 0) {
+                APP.activeMeterId = APP.meters[0].id;
+            }
+            
+            // changed হলে save করুন
             if (changed) {
                 saveData();
             }
+            
+            console.log('☁️ Background sync completed. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
             resolve(changed);
         }).catch(function(error) {
             console.error('❌ Cloud load error:', error);

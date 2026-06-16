@@ -342,12 +342,38 @@ function initApp() {
         var s = JSON.parse(localStorage.getItem("biddut_session"));
         if (s && s.loginTime && Date.now() - s.loginTime < 604800000) {
             APP.currentUser = {id: s.userId || "1", email: s.email || "", name: s.name || "User", role: s.role || "user"};
+            
+            // ===== localStorage থেকে ডাটা লোড করুন (Firebase এর আগে) =====
+            loadFromLocalStorage();
+            
+            // ===== App দেখান =====
             document.getElementById("authPage").style.display = "none";
             document.getElementById("appPage").style.display = "block";
+            
             var adminNav = document.getElementById("adminNav");
             if (adminNav && APP.currentUser.role === "admin") adminNav.style.display = "block";
             if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
-            setTimeout(function() { navigateTo("dashboard"); }, 300);
+            
+            // ===== Dashboard দেখান (localStorage ডাটা দিয়ে) =====
+            setTimeout(function() { 
+                navigateTo("dashboard"); 
+            }, 50);
+            
+            // ===== পটভূমিতে Firebase থেকে ডাটা লোড করুন =====
+            if (typeof loadFromCloud === "function") {
+                setTimeout(function() {
+                    loadFromCloud().then(function(hasChanges) {
+                        if (hasChanges) {
+                            console.log('☁️ Background sync completed, updating UI silently');
+                            if (APP.currentPage === 'dashboard' && typeof showDashboard === 'function') {
+                                showDashboard();
+                            } else {
+                                navigateTo(APP.currentPage || 'dashboard');
+                            }
+                        }
+                    });
+                }, 300);
+            }
             return;
         }
     } catch(e) {}
@@ -356,6 +382,27 @@ function initApp() {
     document.getElementById("appPage").style.display = "none";
     if (typeof showLoginPage === "function") showLoginPage();
     else document.getElementById("authPage").innerHTML = "<h2>Loading...</h2>";
+}
+
+// ===== localStorage থেকে ডাটা লোড করার ফাংশন =====
+function loadFromLocalStorage() {
+    try {
+        var savedData = localStorage.getItem('biddut_app_data');
+        if (savedData) {
+            var data = JSON.parse(savedData);
+            if (data.meters) APP.meters = data.meters;
+            if (data.metersData) APP.metersData = data.metersData;
+            if (data.activeMeterId) APP.activeMeterId = data.activeMeterId;
+            if (data.settings) APP.settings = Object.assign({}, APP.settings, data.settings);
+            if (data.tariffRates) APP.tariffRates = data.tariffRates;
+            if (data.language) APP.language = data.language;
+            if (data.savingsGoal !== undefined) APP.savingsGoal = data.savingsGoal;
+            if (data.badges) APP.badges = data.badges;
+            console.log('📂 Data loaded from localStorage. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
+        }
+    } catch(e) {
+        console.warn('LocalStorage load error:', e);
+    }
 }
 
 if (document.readyState === "loading") {
