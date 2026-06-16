@@ -9,7 +9,6 @@ function showLoginPage() {
 
     document.getElementById("authPage").innerHTML = [
         '<div class="auth-page-container">',
-            '<div class="auth-gradient-bg"></div>',
             '<div class="auth-content">',
                 '<div class="auth-card">',
                     // Logo Section
@@ -80,7 +79,6 @@ function showRegisterPage() {
 
     document.getElementById("authPage").innerHTML = [
         '<div class="auth-page-container">',
-            '<div class="auth-gradient-bg"></div>',
             '<div class="auth-content">',
                 '<div class="auth-card">',
                     // Logo Section
@@ -93,7 +91,7 @@ function showRegisterPage() {
                     // Register Header
                     '<div class="auth-header">',
                         '<h2>'+(L==='en'?'Create Account':'নতুন অ্যাকাউন্ট')+'</h2>',
-                        '<p>'+(L==='en'?'Join us today':'���জই যোগ দিন')+'</p>',
+                        '<p>'+(L==='en'?'Join us today':'আজই যোগ দিন')+'</p>',
                     '</div>',
                     
                     // Form
