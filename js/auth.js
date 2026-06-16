@@ -8,17 +8,66 @@ function showLoginPage() {
     var L = APP.language;
 
     document.getElementById("authPage").innerHTML = [
-        '<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">',
-            '<div class="card" style="max-width: 400px; width: 90%;">',
-                '<h2 style="text-align: center; margin-bottom: 20px;">Login</h2>',
-                '<div class="form-group"><label>Email</label>',
-                    '<input type="email" class="form-control" id="loginEmail" placeholder="Email">',
+        '<div class="auth-page-container">',
+            '<div class="auth-gradient-bg"></div>',
+            '<div class="auth-content">',
+                '<div class="auth-card">',
+                    // Logo Section
+                    '<div class="auth-logo-section">',
+                        '<div class="auth-logo-icon">⚡</div>',
+                        '<h1 class="auth-logo-title">বিদ্যুৎ বিল</h1>',
+                        '<p class="auth-logo-subtitle">Electricity Bill Manager</p>',
+                    '</div>',
+                    
+                    // Login Header
+                    '<div class="auth-header">',
+                        '<h2>'+(L==='en'?'Welcome Back':'আপনাকে স্বাগতম')+'</h2>',
+                        '<p>'+(L==='en'?'Sign in to your account':'আপনার অ্যাকাউন্টে লগইন করুন')+'</p>',
+                    '</div>',
+                    
+                    // Form
+                    '<div class="auth-form">',
+                        // Email Input
+                        '<div class="form-group">',
+                            '<label class="form-label">'+(L==='en'?'Email Address':'ইমেইল')+'</label>',
+                            '<div class="input-wrapper">',
+                                '<span class="input-icon">📧</span>',
+                                '<input type="email" class="form-control auth-input" id="loginEmail" placeholder="'+(L==='en'?'your@email.com':'আপনার ইমেইল')+'">',
+                            '</div>',
+                        '</div>',
+                        
+                        // Password Input
+                        '<div class="form-group">',
+                            '<label class="form-label">'+(L==='en'?'Password':'পাসওয়ার্ড')+'</label>',
+                            '<div class="input-wrapper">',
+                                '<span class="input-icon">🔐</span>',
+                                '<input type="password" class="form-control auth-input" id="loginPassword" placeholder="'+(L==='en'?'Enter your password':'পাসওয়ার্ড লিখুন')+'">',
+                            '</div>',
+                        '</div>',
+                        
+                        // Remember Me
+                        '<div class="remember-me">',
+                            '<input type="checkbox" id="rememberMe">',
+                            '<label for="rememberMe">'+(L==='en'?'Remember me':'আমাকে মনে রাখুন')+'</label>',
+                        '</div>',
+                        
+                        // Login Button
+                        '<button class="btn auth-btn-primary" onclick="login()">'+(L==='en'?'Sign In':'লগইন করুন')+'</button>',
+                    '</div>',
+                    
+                    // Divider
+                    '<div class="auth-divider">',
+                        '<span>'+(L==='en'?'Don\'t have an account?':'অ্যাকাউন্ট নেই?')+'</span>',
+                    '</div>',
+                    
+                    // Register Link
+                    '<button class="btn auth-btn-secondary" onclick="showRegisterPage()">'+(L==='en'?'Create Account':'নতুন অ্যাকাউন্ট তৈরি করুন')+'</button>',
+                    
+                    // Footer
+                    '<div class="auth-footer">',
+                        '<p class="text-small">'+(L==='en'?'Secure login powered by Firebase':'Firebase দ্বারা সুরক্ষিত লগইন')+'</p>',
+                    '</div>',
                 '</div>',
-                '<div class="form-group"><label>Password</label>',
-                    '<input type="password" class="form-control" id="loginPassword" placeholder="Password">',
-                '</div>',
-                '<button class="btn" onclick="login()" style="width: 100%; margin-top: 10px;">Login</button>',
-                '<p style="text-align: center; margin-top: 15px;"><a href="#" onclick="showRegisterPage()" style="color: var(--primary);">Register</a></p>',
             '</div>',
         '</div>',
     ].join("");
@@ -30,20 +79,70 @@ function showRegisterPage() {
     var L = APP.language;
 
     document.getElementById("authPage").innerHTML = [
-        '<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">',
-            '<div class="card" style="max-width: 400px; width: 90%;">',
-                '<h2 style="text-align: center; margin-bottom: 20px;">Register</h2>',
-                '<div class="form-group"><label>Name</label>',
-                    '<input type="text" class="form-control" id="regName" placeholder="Name">',
+        '<div class="auth-page-container">',
+            '<div class="auth-gradient-bg"></div>',
+            '<div class="auth-content">',
+                '<div class="auth-card">',
+                    // Logo Section
+                    '<div class="auth-logo-section">',
+                        '<div class="auth-logo-icon">⚡</div>',
+                        '<h1 class="auth-logo-title">বিদ্যুৎ বিল</h1>',
+                        '<p class="auth-logo-subtitle">Electricity Bill Manager</p>',
+                    '</div>',
+                    
+                    // Register Header
+                    '<div class="auth-header">',
+                        '<h2>'+(L==='en'?'Create Account':'নতুন অ্যাকাউন্ট')+'</h2>',
+                        '<p>'+(L==='en'?'Join us today':'���জই যোগ দিন')+'</p>',
+                    '</div>',
+                    
+                    // Form
+                    '<div class="auth-form">',
+                        // Name Input
+                        '<div class="form-group">',
+                            '<label class="form-label">'+(L==='en'?'Full Name':'পুরো নাম')+'</label>',
+                            '<div class="input-wrapper">',
+                                '<span class="input-icon">👤</span>',
+                                '<input type="text" class="form-control auth-input" id="regName" placeholder="'+(L==='en'?'John Doe':'আপনার নাম')+'">',
+                            '</div>',
+                        '</div>',
+                        
+                        // Email Input
+                        '<div class="form-group">',
+                            '<label class="form-label">'+(L==='en'?'Email Address':'ইমেইল')+'</label>',
+                            '<div class="input-wrapper">',
+                                '<span class="input-icon">📧</span>',
+                                '<input type="email" class="form-control auth-input" id="regEmail" placeholder="'+(L==='en'?'your@email.com':'আপনার ইমেইল')+'">',
+                            '</div>',
+                        '</div>',
+                        
+                        // Password Input
+                        '<div class="form-group">',
+                            '<label class="form-label">'+(L==='en'?'Password':'পাসওয়ার্ড')+'</label>',
+                            '<div class="input-wrapper">',
+                                '<span class="input-icon">🔐</span>',
+                                '<input type="password" class="form-control auth-input" id="regPassword" placeholder="'+(L==='en'?'Min 6 characters':'কমপক্ষে ৬ অক্ষর')+'">',
+                            '</div>',
+                            '<small class="password-hint">'+(L==='en'?'Use at least 6 characters':'কমপক্ষে ৬ অক্ষর ব্যবহার করুন')+'</small>',
+                        '</div>',
+                        
+                        // Register Button
+                        '<button class="btn auth-btn-primary" onclick="register()">'+(L==='en'?'Create Account':'অ্যাকাউন্ট তৈরি করুন')+'</button>',
+                    '</div>',
+                    
+                    // Divider
+                    '<div class="auth-divider">',
+                        '<span>'+(L==='en'?'Already have an account?':'অ্যাকাউন্ট আছে?')+'</span>',
+                    '</div>',
+                    
+                    // Login Link
+                    '<button class="btn auth-btn-secondary" onclick="showLoginPage()">'+(L==='en'?'Sign In':'লগইন করুন')+'</button>',
+                    
+                    // Footer
+                    '<div class="auth-footer">',
+                        '<p class="text-small">'+(L==='en'?'By signing up, you agree to our terms':'সাইন আপ করে আপনি আমাদের শর্তে সম্মত হচ্ছেন')+'</p>',
+                    '</div>',
                 '</div>',
-                '<div class="form-group"><label>Email</label>',
-                    '<input type="email" class="form-control" id="regEmail" placeholder="Email">',
-                '</div>',
-                '<div class="form-group"><label>Password</label>',
-                    '<input type="password" class="form-control" id="regPassword" placeholder="Password">',
-                '</div>',
-                '<button class="btn" onclick="register()" style="width: 100%; margin-top: 10px;">Register</button>',
-                '<p style="text-align: center; margin-top: 15px;"><a href="#" onclick="showLoginPage()" style="color: var(--primary);">Login</a></p>',
             '</div>',
         '</div>',
     ].join("");
