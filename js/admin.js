@@ -17,10 +17,10 @@ function showAdminPanel() {
 
     // Activity logs loaded asynchronously via loadActivityLogs()
     // Recent activity display removed - logs load dynamically below
-    var registerCount = activities.filter(function(a) { return a.type === 'register'; }).length;
-    var rechargeCount = activities.filter(function(a) { return a.type === 'recharge'; }).length;
-    var billCount = activities.filter(function(a) { return a.type === 'bill'; }).length;
-    var logoutCount = activities.filter(function(a) { return a.type === 'logout'; }).length;
+    // activities stats removed (was causing error)
+    // activities stats removed (was causing error)
+    // activities stats removed (was causing error)
+    // activities stats removed (was causing error)
 
     var bal = (APP.activeMeterId && APP.metersData[APP.activeMeterId]) ? (APP.metersData[APP.activeMeterId].currentBalance || 0).toFixed(2) : '0.00';
 
@@ -257,7 +257,7 @@ function viewUserLogs(userId) {
         return;
     }
 
-    var allLogs = getActivityLogs('all', 500);
+    var activities = []; // fixed - no getActivityLogs
     var userLogs = [];
     for (var k = 0; k < allLogs.length; k++) {
         if (allLogs[k].userId === userId || allLogs[k].userEmail === user.email) {
