@@ -113,3 +113,68 @@ function setLanguage(lang) {
     showSettings();
     showToast(lang==='en'?'Language changed to English':'ভাষা পরিবর্তন করে বাংলা করা হয়েছে', 'success');
 }
+
+
+function saveData() {
+    if (typeof database === "undefined" || !database) {
+        showToast("Firebase not available, saving locally", "warning");
+        return false;
+    }
+    
+    var userId = APP.currentUser ? APP.currentUser.id : null;
+    if (!userId) {
+        showToast("User not logged in", "error");
+        return false;
+    }
+    
+    var data = {
+        settings: APP.settings,
+        meters: APP.meters,
+        metersData: APP.metersData,
+        updatedAt: Date.now()
+    };
+    
+    database.ref("users/" + userId + "/data").set(data).then(function() {
+        showToast("Data saved to cloud!", "success");
+        return true;
+    }).catch(function(err) {
+        console.error("Save error:", err);
+        showToast("Failed to save to cloud", "error");
+        return false;
+    });
+    
+    return true;
+}
+
+function loadFromCloud() {
+    return new Promise(function(resolve) {
+        if (typeof database === "undefined" || !database) {
+            console.warn("Firebase not available");
+            resolve(false);
+            return;
+        }
+        
+        var userId = APP.currentUser ? APP.currentUser.id : null;
+        if (!userId) {
+            resolve(false);
+            return;
+        }
+        
+        database.ref("users/" + userId + "/data").once("value").then(function(snapshot) {
+            var data = snapshot.val();
+            if (data) {
+                if (data.settings) APP.settings = data.settings;
+                if (data.meters) APP.meters = data.meters;
+                if (data.metersData) APP.metersData = data.metersData;
+                console.log("Data loaded from cloud:", Object.keys(data));
+                resolve(true);
+            } else {
+                console.log("No cloud data found");
+                resolve(false);
+            }
+        }).catch(function(err) {
+            console.error("Load error:", err);
+            resolve(false);
+        });
+    });
+}
