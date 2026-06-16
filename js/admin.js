@@ -6,8 +6,8 @@ function showAdminPanel() {
         return;
     }
 
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
-    var 0 = users.length;
+    // Users loaded from Firebase via loadUsersFromFirebase()
+    var totalUsers = 0; // Will be calculated from Firebase
     var totalMeters = APP.meters.length;
     var totalTransactions = 0;
     Object.values(APP.metersData).forEach(function(md) {
@@ -138,7 +138,7 @@ function escapeHtml(str) {
 
 // ==================== EDIT USER ====================
 function editUser(userId) {
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    // Users loaded from Firebase via loadUsersFromFirebase()
     var user = null;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { user = users[i]; break; }
@@ -206,7 +206,7 @@ function saveUserEdit(userId) {
         return;
     }
     
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    // Users loaded from Firebase via loadUsersFromFirebase()
     var userIndex = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userIndex = i; break; }
@@ -246,7 +246,7 @@ function saveUserEdit(userId) {
 
 // ==================== VIEW USER LOGS ====================
 function viewUserLogs(userId) {
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    // Users loaded from Firebase via loadUsersFromFirebase()
     var user = null;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { user = users[i]; break; }
@@ -329,7 +329,7 @@ function viewUserLogs(userId) {
 
 // ==================== DELETE USER ====================
 function deleteUser(userId) {
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    // Users loaded from Firebase via loadUsersFromFirebase()
     var userToDelete = null;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userToDelete = users[i]; break; }
@@ -351,7 +351,7 @@ function deleteUser(userId) {
 
 // ==================== PROMOTE TO ADMIN ====================
 function promoteToAdmin(userId) {
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    // Users loaded from Firebase via loadUsersFromFirebase()
     var userIndex = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userIndex = i; break; }
@@ -374,7 +374,7 @@ function demoteToUser(userId) {
         return;
     }
     
-    var users = JSON.parse(localStorage.getItem('users') || '[]');
+    // Users loaded from Firebase via loadUsersFromFirebase()
     var userIndex = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i].id === userId) { userIndex = i; break; }
