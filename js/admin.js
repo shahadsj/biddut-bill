@@ -1,3 +1,5 @@
+function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
+
 // ==================== ADMIN PANEL ====================
 function showAdminPanel() {
     if (!APP.currentUser || APP.currentUser.role !== 'admin') {
