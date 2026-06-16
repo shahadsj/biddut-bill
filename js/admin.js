@@ -6,21 +6,13 @@ function showAdminPanel() {
         return;
     }
 
-    // Users loaded from Firebase via loadUsersFromFirebase()
-    var totalUsers = 0; // Will be calculated from Firebase
+    var totalUsers = APP.users ? (APP.users.length || Object.keys(APP.users).length) : 0;
     var totalMeters = APP.meters.length;
     var totalTransactions = 0;
     Object.values(APP.metersData).forEach(function(md) {
         totalTransactions += (md.transactions || []).length;
     });
     var currentUser = APP.currentUser;
-
-    // Activity logs loaded asynchronously via loadActivityLogs()
-    // Recent activity display removed - logs load dynamically below
-    // [] stats removed (was causing error)
-    // [] stats removed (was causing error)
-    // [] stats removed (was causing error)
-    // [] stats removed (was causing error)
 
     var bal = (APP.activeMeterId && APP.metersData[APP.activeMeterId]) ? (APP.metersData[APP.activeMeterId].currentBalance || 0).toFixed(2) : '0.00';
 
@@ -36,96 +28,57 @@ function showAdminPanel() {
     
     // Stats
     html += '  <div class="stats-grid" style="margin: 20px 0;">';
-    html += '    <div class="stat-card" style="background: var(--gradient-1);"><div class="label">'+t('0')+'</div><div class="value">' + 0 + '</div></div>';
+    html += '    <div class="stat-card" style="background: var(--gradient-1);"><div class="label">'+t('totalUsers')+'</div><div class="value">' + totalUsers + '</div></div>';
     html += '    <div class="stat-card" style="background: var(--gradient-2);"><div class="label">'+t('totalMeters')+'</div><div class="value">' + totalMeters + '</div></div>';
     html += '    <div class="stat-card" style="background: var(--gradient-3);"><div class="label">'+t('totalTransactions')+'</div><div class="value">' + totalTransactions + '</div></div>';
     html += '    <div class="stat-card" style="background: var(--gradient-4);"><div class="label">'+t('balance')+'</div><div class="value">'+t('taka')+' ' + bal + '</div></div>';
     html += '  </div>';
     
-    // Activity Stats
-    html += '  <div class="activity-stats">';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #3498db;">' + 0 + '</div><div class="stat-label">'+t('loginActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #9b59b6;">' + 0 + '</div><div class="stat-label">'+t('registerActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #27ae60;">' + 0 + '</div><div class="stat-label">'+t('rechargeActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #f39c12;">' + 0 + '</div><div class="stat-label">'+t('billActivity')+'</div></div>';
-    html += '    <div class="activity-stat-item"><div class="stat-count" style="color: #e74c3c;">' + 0 + '</div><div class="stat-label">'+t('logoutActivity')+'</div></div>';
-    html += '  </div>';
-
     // Users Table
     html += '  <h3 style="margin-top: 30px; margin-bottom: 15px;">'+t('userList')+'</h3>';
     html += '  <div class="table-container"><table><thead><tr>';
-    html += '    <th>#</th><th>'+t('nameCol')+'</th><th>'+t('emailCol')+'</th><th>'+t('statusCol')+'</th><th>'+t('roleCol')+'</th><th style="text-align: center;">'+t('actionCol')+'</th>';
+    html += '    <th>#</th><th>'+t('nameCol')+'</th><th>'+t('emailCol')+'</th><th>'+t('roleCol')+'</th><th style="text-align: center;">'+t('actionCol')+'</th>';
     html += '  </tr></thead><tbody>';
     
-    if (users.length > 0) {
-        for (var i = 0; i < users.length; i++) {
-            var u = users[i];
-            var isCurrent = (u.id === currentUser.id);
+    // Get users from Firebase via loadUsersFromFirebase
+    var userList = APP.users ? (Array.isArray(APP.users) ? APP.users : Object.values(APP.users)) : [];
+    
+    if (userList.length > 0) {
+        for (var i = 0; i < userList.length; i++) {
+            var u = userList[i];
+            var isCurrent = (u.id === currentUser.id || u.email === currentUser.email);
             
             html += '<tr>';
             html += '  <td>' + (i + 1) + '</td>';
-            html += '  <td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === 'admin' ? '&#x1F451;' : '&#x1F464;') + '</span> ' + escapeHtml(u.name) + (isCurrent ? ' <span class="badge badge-success" style="margin-left: 5px; font-size: 10px;">'+t('you')+'</span>' : '') + '</td>';
-            html += '  <td>' + escapeHtml(u.email) + '</td>';
-            html += '  <td><span class="badge" style="background: #27ae60; color: white; font-size: 11px;">'+getActiveText()+'</span></td>';
+            html += '  <td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === 'admin' ? '\ud83d\udc51' : '\ud83d\udc64') + '</span> ' + escapeHtml(u.name || u.displayName || '-') + (isCurrent ? ' <span class="badge badge-success" style="margin-left: 5px; font-size: 10px;">'+t('you')+'</span>' : '') + '</td>';
+            html += '  <td>' + escapeHtml(u.email || '-') + '</td>';
             html += '  <td><span class="badge ' + (u.role === 'admin' ? 'badge-warning' : 'badge-success') + '">' + (u.role === 'admin' ? t('adminRole') : t('userRole')) + '</span></td>';
             html += '  <td style="text-align: center; white-space: nowrap;">';
-            
-            // View icon
-            html += '    <button class="btn btn-sm" onclick="viewUserLogs(\'' + u.id + '\')" title="'+(L==='en'?'View Activity Logs':'কার্যকলাপ দেখুন')+'" style="background: #3498db; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x1F441;&#xFE0F;</button>';
-            
-            // Edit icon - ALL users
-            html += '    <button class="btn btn-sm" onclick="editUser(\'' + u.id + '\')" title="'+(L==='en'?'Edit User Info':'তথ্য সম্পাদনা')+'" style="background: #2ecc71; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x270F;&#xFE0F;</button>';
-            
-            // Promote/Demote/Delete
-            if (u.role === 'admin' && u.id !== currentUser.id) {
-                html += '    <button class="btn btn-sm" onclick="demoteToUser(\'' + u.id + '\')" title="'+(L==='en'?'Demote to User':'ইউজার করুন')+'" style="background: #f39c12; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x2B07;&#xFE0F;</button>';
+            html += '    <button class="btn btn-sm" onclick="viewUserLogs(\'' + (u.id || u.email) + '\')" title="'+(L==='en'?'View Logs':'লগস')+'" style="background: #3498db; padding: 4px 10px; min-width: 36px; font-size: 14px;">\ud83d\udc41\ufe0f</button>';
+            if (u.role !== 'admin' && !isCurrent) {
+                html += '    <button class="btn btn-sm btn-danger" onclick="deleteFirebaseUser(\'' + (u.id || u.email) + '\')" title="'+(L==='en'?'Delete':'মুছুন')+'" style="padding: 4px 10px; min-width: 36px; font-size: 14px;">\ud83d\uddd1\ufe0f</button>';
             }
-            if (u.role !== 'admin') {
-                html += '    <button class="btn btn-sm" onclick="promoteToAdmin(\'' + u.id + '\')" title="'+(L==='en'?'Promote to Admin':'অ্যাডমিন করুন')+'" style="background: #9b59b6; padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x2B06;&#xFE0F;</button>';
-                html += '    <button class="btn btn-sm btn-danger" onclick="deleteUser(\'' + u.id + '\')" title="'+(L==='en'?'Delete User':'মুছে ফেলুন')+'" style="padding: 4px 10px; min-width: 36px; font-size: 14px;">&#x1F5D1;&#xFE0F;</button>';
-            }
-            if (isCurrent) {
-                html += '    <span class="badge badge-warning" style="font-size: 10px;">'+t('current')+'</span>';
-            }
-            
             html += '  </td></tr>';
         }
     } else {
-        html += '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--text-light);"><p>'+t('noUsers')+'</p></td></tr>';
+        html += '<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text-light);"><p>'+t('noUsers')+'</p><button class="btn" onclick="loadUsersFromFirebase()" style="margin-top: 10px;">'+(L==='en'?'Load Users from Firebase':'Firebase থেকে ইউজার লোড করুন')+'</button></td></tr>';
     }
     
     html += '  </tbody></table></div>';
     
-    // App Data Overview
-    html += '  <h3 style="margin-top: 30px; margin-bottom: 15px;">'+t('appDataOverview')+'</h3>';
-    html += '  <div class="table-container"><table><thead><tr>';
-    html += '    <th>'+t('meterName')+'</th><th>'+t('meterNo')+'</th><th>'+t('totalTransactions')+'</th><th>'+t('balanceCol')+'</th><th>'+t('totalRechargeCol')+'</th><th>'+t('totalExpenseCol')+'</th>';
-    html += '  </tr></thead><tbody>';
-    
-    if (APP.meters.length > 0) {
-        for (var j = 0; j < APP.meters.length; j++) {
-            var m = APP.meters[j];
-            var md = APP.metersData[m.id] || {};
-            var itemsText = L==='en'?'items':'টি';
-            html += '<tr>';
-            html += '  <td><strong>' + escapeHtml(m.name) + '</strong></td>';
-            html += '  <td>' + (m.meterNumber || m.meterNo || '-') + '</td>';
-            html += '  <td>' + (md.transactions || []).length + ' ' + itemsText + '</td>';
-            html += '  <td><strong>'+t('taka')+' ' + (md.currentBalance || 0).toFixed(2) + '</strong></td>';
-            html += '  <td>'+t('taka')+' ' + (md.totalRecharge || 0).toFixed(2) + '</td>';
-            html += '  <td>'+t('taka')+' ' + (md.totalExpended || 0).toFixed(2) + '</td>';
-            html += '</tr>';
-        }
-    } else {
-        html += '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--text-light);"><p>'+t('noMeters')+'</p></td></tr>';
-    }
-    
-    html += '  </tbody></table></div>';
+    // Activity Logs Section
+    html += '  <h3 style="margin-top: 30px; margin-bottom: 15px;">'+t('recentActivities')+'</h3>';
+    html += '  <div id="adminActivityLogs" style="max-height: 400px; overflow-y: auto;">';
+    html += '    <div style="text-align: center; padding: 20px; color: var(--text-light);">'+(L==='en'?'Loading activity logs...':'কার্যকলাপ লোড হচ্ছে...')+'</div>';
+    html += '  </div>';
     html += '</div>';
     
     document.getElementById('pageContent').innerHTML = html;
+    
+    // Load Firebase users and logs asynchronously
+    if (typeof loadUsersFromFirebase === 'function') loadUsersFromFirebase();
+    if (typeof loadActivityLogs === 'function') loadActivityLogs();
 }
-
 function getActiveText() {
     if (APP.language === 'en') return 'Active';
     return 'সক্রিয়';
