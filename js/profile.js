@@ -5,6 +5,9 @@ function showProfile() {
     if (!APP.currentUser) { showLoginPage(); return; }
     var L = APP.language;
     
+    // Check badges first
+    checkBadges();
+    
     var totalTransactions = Object.values(APP.metersData).reduce(function(sum, meter) {
         return sum + (meter.transactions ? meter.transactions.length : 0);
     }, 0);
@@ -35,14 +38,16 @@ function showProfile() {
         '<div class="card" style="margin-top: 20px;">',
             '<h3>&#x1F3C6; '+(L==='en'?'Earned Badges':'অর্জিত ব্যাজ')+'</h3>',
             '<div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;">',
-                (APP.badges.length > 0 ? APP.badges.map(function(b) {
-                    return '<span style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #333; padding: 10px 20px; border-radius: 25px; font-weight: bold; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">'+b+'</span>';
-                }).join('') :
-                '<div style="text-align: center; width: 100%; padding: 20px; color: var(--text-light);">'+
-                    '<p style="font-size: 48px; margin-bottom: 10px;">&#x1F3C5;</p>'+
-                    '<p>'+(L==='en'?'No badges earned yet.':'এখনও কোন ব্যাজ অর্জিত হয়নি।')+'</p>'+
-                    '<p style="font-size: 13px;">'+(L==='en'?'Add 5 bills to earn your first badge!':'৫টি বিল যোগ করে প্রথম ব্যাজ অর্জন করুন!')+'</p>'+
-                '</div>'),
+                (APP.badges.length > 0 ? 
+                    APP.badges.map(function(b) {
+                        return '<span style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #333; padding: 10px 20px; border-radius: 25px; font-weight: bold; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">'+b+'</span>';
+                    }).join('') :
+                    '<div style="text-align: center; width: 100%; padding: 20px; color: var(--text-light);">'+
+                        '<p style="font-size: 48px; margin-bottom: 10px;">🏅</p>'+
+                        '<p>'+(L==='en'?'No badges earned yet.':'এখনও কোন ব্যাজ অর্জিত হয়নি।')+'</p>'+
+                        '<p style="font-size: 13px;">'+(L==='en'?'Add 5 bills to earn your first badge!':'৫টি বিল যোগ করে প্রথম ব্যাজ অর্জন করুন!')+'</p>'+
+                    '</div>'
+                ),
             '</div>',
         '</div>',
         '<div class="card" style="margin-top: 20px;">',

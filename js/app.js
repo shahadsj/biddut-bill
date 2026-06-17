@@ -395,7 +395,12 @@ function loadFromLocalStorage() {
             if (data.language) APP.language = data.language;
             if (data.savingsGoal !== undefined) APP.savingsGoal = data.savingsGoal;
             if (data.badges) APP.badges = data.badges;
-            console.log('📂 Data loaded from localStorage. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
+            console.log('📂 Data loaded from localStorage. Meters:', APP.meters.length, 'Badges:', APP.badges.length);
+            
+            // ✅ Check badges after loading
+            setTimeout(function() {
+                checkBadges();
+            }, 500);
         }
     } catch(e) {
         console.warn('LocalStorage load error:', e);

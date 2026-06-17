@@ -61,15 +61,35 @@ function showBackup() {
     ].join('');
 }
 
+// ==================== BACKUP TO JSON ====================
 function backupToJSON() {
     var L = APP.language;
     try {
+        // Make sure all meter data is properly structured
+        var metersDataCopy = {};
+        for (var meterId in APP.metersData) {
+            if (APP.metersData.hasOwnProperty(meterId)) {
+                var md = APP.metersData[meterId];
+                metersDataCopy[meterId] = {
+                    transactions: md.transactions || [],
+                    monthlyRecharges: md.monthlyRecharges || [],
+                    currentBalance: md.currentBalance || 0,
+                    totalRecharge: md.totalRecharge || 0,
+                    totalExpended: md.totalExpended || 0,
+                    lastDemandChargeMonth: md.lastDemandChargeMonth || "",
+                    initialBalance: md.initialBalance || 0,
+                    meterInfo: md.meterInfo || null,
+                    lastUpdated: md.lastUpdated || new Date().toISOString()
+                };
+            }
+        }
+        
         var backupData = {
-            meters: APP.meters,
-            metersData: APP.metersData,
+            meters: JSON.parse(JSON.stringify(APP.meters)),
+            metersData: metersDataCopy,
             activeMeterId: APP.activeMeterId,
-            settings: APP.settings,
-            tariffRates: APP.tariffRates,
+            settings: JSON.parse(JSON.stringify(APP.settings)),
+            tariffRates: JSON.parse(JSON.stringify(APP.tariffRates)),
             savingsGoal: APP.savingsGoal || 0,
             badges: APP.badges || [],
             language: APP.language || 'bn',
@@ -90,10 +110,12 @@ function backupToJSON() {
         URL.revokeObjectURL(url);
         showToast(L==='en'?'Backup downloaded successfully':'ব্যাকআপ সফলভাবে ডাউনলোড হয়েছে', 'success');
     } catch (error) {
+        console.error('Backup error:', error);
         showToast((L==='en'?'Backup failed: ':'ব্যাকআপ ব্যর্থ: ') + error.message, 'error');
     }
 }
 
+// ==================== RESTORE FROM JSON ====================
 function restoreFromJSON(event) {
     var L = APP.language;
     var file = event.target.files[0];
@@ -104,6 +126,7 @@ function restoreFromJSON(event) {
         try {
             var backup = JSON.parse(e.target.result);
             
+            // Validate backup
             if (!backup.metersData && !backup.meters) {
                 showToast(L==='en'?'Invalid backup file':'অবৈধ ব্যাকআপ ফাইল', 'error');
                 return;
@@ -114,86 +137,362 @@ function restoreFromJSON(event) {
                 return;
             }
             
-            // ===== ১. APP তে ডাটা লোড করুন =====
-            if (backup.meters && Array.isArray(backup.meters)) {
+            console.log('📂 Restoring backup...');
+            console.log('Backup meters:', backup.meters ? backup.meters.length : 0);
+            console.log('Backup metersData keys:', backup.metersData ? Object.keys(backup.metersData).length : 0);
+            
+            // ===== 1. CLEAR EXISTING DATA =====
+            APP.meters = [];
+            APP.metersData = {};
+            APP.activeMeterId = null;
+            
+            // ===== 2. RESTORE METERS =====
+            if (backup.meters && Array.isArray(backup.meters) && backup.meters.length > 0) {
                 APP.meters = JSON.parse(JSON.stringify(backup.meters));
+                console.log('✅ Restored', APP.meters.length, 'meters');
+            } else {
+                showToast(L==='en'?'No meters found in backup':'ব্যাকআপে কোন মিটার নেই', 'warning');
+                event.target.value = '';
+                return;
             }
+            
+            // ===== 3. RESTORE METERS DATA =====
             if (backup.metersData) {
-                APP.metersData = JSON.parse(JSON.stringify(backup.metersData));
+                // Restore each meter's data
+                for (var meterId in backup.metersData) {
+                    if (backup.metersData.hasOwnProperty(meterId)) {
+                        var md = backup.metersData[meterId];
+                        
+                        // Ensure all required fields exist
+                        APP.metersData[meterId] = {
+                            transactions: md.transactions || [],
+                            monthlyRecharges: md.monthlyRecharges || [],
+                            currentBalance: md.currentBalance || 0,
+                            totalRecharge: md.totalRecharge || 0,
+                            totalExpended: md.totalExpended || 0,
+                            lastDemandChargeMonth: md.lastDemandChargeMonth || "",
+                            initialBalance: md.initialBalance || 0,
+                            meterInfo: md.meterInfo || null,
+                            lastUpdated: md.lastUpdated || new Date().toISOString()
+                        };
+                        
+                        // Log transaction count for debugging
+                        console.log('📊 Meter', meterId, 'has', APP.metersData[meterId].transactions.length, 'transactions');
+                    }
+                }
+                console.log('✅ Restored', Object.keys(APP.metersData).length, 'meter data objects');
             }
             
-            // Meter Data ঠিক করুন
-            APP.meters.forEach(function(meter) {
-                if (!APP.metersData[meter.id]) {
-                    APP.metersData[meter.id] = {
-                        transactions: [], 
-                        monthlyRecharges: [], 
-                        currentBalance: 0, 
-                        totalRecharge: 0, 
-                        totalExpended: 0,
-                        lastDemandChargeMonth: "", 
-                        settings: JSON.parse(JSON.stringify(APP.settings)),
-                        tariffRates: JSON.parse(JSON.stringify(APP.tariffRates)), 
-                        meterInfo: meter, 
-                        lastUpdated: new Date().toISOString()
-                    };
-                } else { 
-                    APP.metersData[meter.id].meterInfo = meter; 
-                }
-            });
-            
+            // ===== 4. SET ACTIVE METER =====
             if (backup.activeMeterId && APP.meters.find(function(m){return m.id===backup.activeMeterId;})) {
                 APP.activeMeterId = backup.activeMeterId;
-            } else if (APP.meters.length > 0) { 
-                APP.activeMeterId = APP.meters[0].id; 
+            } else if (APP.meters.length > 0) {
+                APP.activeMeterId = APP.meters[0].id;
             }
             
-            if (backup.settings) APP.settings = Object.assign({}, APP.settings, backup.settings);
-            if (backup.tariffRates) APP.tariffRates = JSON.parse(JSON.stringify(backup.tariffRates));
-            if (backup.language) APP.language = backup.language;
+            // ===== 5. RESTORE SETTINGS =====
+            if (backup.settings) {
+                APP.settings = Object.assign({}, APP.settings, backup.settings);
+            }
+            if (backup.tariffRates) {
+                APP.tariffRates = JSON.parse(JSON.stringify(backup.tariffRates));
+            }
+            if (backup.language) {
+                APP.language = backup.language;
+            }
+            if (backup.savingsGoal !== undefined) {
+                APP.savingsGoal = backup.savingsGoal || 0;
+            }
+            if (backup.badges) {
+                APP.badges = backup.badges || [];
+            }
             
-            // ===== ২. লোকাল স্টোরেজে সেভ করুন =====
+            // ===== 6. SAVE TO LOCALSTORAGE =====
             saveData();
             
-            // ===== ৩. Firebase এ সেভ করুন (গুরুত্বপূর্ণ) =====
+            // ===== 7. SYNC TO FIREBASE =====
             if (typeof syncAllToCloud === 'function') {
                 syncAllToCloud();
-                showToast(L==='en'?'Data restored and synced to cloud!':'ডাটা রিস্টোর এবং ক্লাউডে সিঙ্ক হয়েছে!', 'success');
-            } else {
-                // Firebase এ ম্যানুয়ালি সেভ
-                saveToFirebase();
+                console.log('☁️ Data synced to cloud');
             }
             
-            // ===== ৪. Settings Apply করুন =====
+            // ===== 8. APPLY SETTINGS =====
             if (typeof applySettings === 'function') {
                 applySettings();
             }
             
-            // ===== ৫. Badges চেক করুন =====
-            checkBadgesOnLoad();
+            // ===== 9. UPDATE UI =====
+            if (typeof updateAllSidebarTexts === 'function') {
+                updateAllSidebarTexts();
+            }
+            if (typeof updateSidebarUserInfo === 'function') {
+                updateSidebarUserInfo();
+            }
             
-            showToast(L==='en'?'Data restored successfully!':'ডাটা সফলভাবে রিস্টোর হয়েছে!', 'success');
+            // ===== 10. CHECK BADGES =====
+            if (typeof checkBadgesOnLoad === 'function') {
+                checkBadgesOnLoad();
+            }
+            
+            // ===== 11. SHOW SUCCESS =====
+            var totalTransactions = 0;
+            for (var mid in APP.metersData) {
+                if (APP.metersData.hasOwnProperty(mid)) {
+                    totalTransactions += APP.metersData[mid].transactions.length;
+                }
+            }
+            
+            var msg = L==='en' ? 
+                'Data restored successfully! ' + APP.meters.length + ' meters, ' + totalTransactions + ' transactions.' :
+                'ডাটা সফলভাবে রিস্টোর হয়েছে! ' + APP.meters.length + 'টি মিটার, ' + totalTransactions + 'টি ট্রানজেকশন।';
+            
+            showToast(msg, 'success');
+            console.log('✅ Restore complete!', APP.meters.length, 'meters,', totalTransactions, 'transactions');
+            
             event.target.value = '';
             
-            // ===== ৬. Dashboard এ নেভিগেট করুন =====
-            setTimeout(function(){ 
-                navigateTo('dashboard'); 
+            // ===== 12. REFRESH DASHBOARD =====
+            setTimeout(function() {
+                navigateTo('dashboard');
             }, 500);
             
         } catch (error) {
             console.error('Restore error:', error);
-            showToast(L==='en'?'Failed to read file: ':'ফাইল পড়তে ব্যর্থ: ' + error.message, 'error');
+            showToast(L==='en'?'Restore failed: ':'রিস্টোর ব্যর্থ: ' + error.message, 'error');
             event.target.value = '';
         }
     };
-    reader.onerror = function() { 
-        showToast(L==='en'?'Failed to read file':'ফাইল পড়তে ব্যর্থ', 'error'); 
-        event.target.value = ''; 
+    
+    reader.onerror = function() {
+        showToast(L==='en'?'Failed to read file':'ফাইল পড়তে ব্যর্থ', 'error');
+        event.target.value = '';
     };
+    
     reader.readAsText(file);
 }
 
-// ===== Firebase এ ম্যানুয়ালি সেভ করার ফাংশন =====
+// ==================== BACKUP TO ZIP ====================
+function backupToZip() {
+    var L = APP.language;
+    try {
+        // Check if JSZip is loaded
+        if (typeof JSZip === 'undefined') {
+            showToast(L==='en'?'JSZip library not loaded. Please check internet connection.':'JSZip লাইব্রেরি লোড হয়নি। ইন্টারনেট কানেকশন চেক করুন।', 'error');
+            return;
+        }
+        
+        var zip = new JSZip();
+        
+        // Prepare backup data
+        var metersDataCopy = {};
+        for (var meterId in APP.metersData) {
+            if (APP.metersData.hasOwnProperty(meterId)) {
+                var md = APP.metersData[meterId];
+                metersDataCopy[meterId] = {
+                    transactions: md.transactions || [],
+                    monthlyRecharges: md.monthlyRecharges || [],
+                    currentBalance: md.currentBalance || 0,
+                    totalRecharge: md.totalRecharge || 0,
+                    totalExpended: md.totalExpended || 0,
+                    lastDemandChargeMonth: md.lastDemandChargeMonth || "",
+                    initialBalance: md.initialBalance || 0,
+                    meterInfo: md.meterInfo || null,
+                    lastUpdated: md.lastUpdated || new Date().toISOString()
+                };
+            }
+        }
+        
+        var backupData = {
+            meters: JSON.parse(JSON.stringify(APP.meters)),
+            metersData: metersDataCopy,
+            activeMeterId: APP.activeMeterId,
+            settings: JSON.parse(JSON.stringify(APP.settings)),
+            tariffRates: JSON.parse(JSON.stringify(APP.tariffRates)),
+            savingsGoal: APP.savingsGoal || 0,
+            badges: APP.badges || [],
+            language: APP.language || 'bn',
+            timestamp: new Date().toISOString(),
+            type: "zip_backup",
+            version: "2.0"
+        };
+        
+        zip.file('data.json', JSON.stringify(backupData, null, 2));
+        
+        var readmeText = L==='en' ? 
+            'Electricity Bill Management System Backup\n' +
+            'Date: ' + new Date().toLocaleString('en-US') + '\n' +
+            'Version: 2.0\n\n' +
+            'Restore Instructions:\n' +
+            '1. Extract ZIP file\n' +
+            '2. Use data.json to restore\n' +
+            '3. Go to Backup page and select the JSON file' :
+            'বিদ্যুৎ বিল ম্যানেজমেন্ট সিস্টেম ব্যাকআপ\n' +
+            'তারিখ: ' + new Date().toLocaleString('bn-BD') + '\n' +
+            'ভার্সন: 2.0\n\n' +
+            'রিস্টোর করার নিয়ম:\n' +
+            '১. জিপ ফাইল এক্সট্রাক্ট করুন\n' +
+            '২. data.json ফাইল ব্যবহার করে রিস্টোর করুন\n' +
+            '৩. ব্যাকআপ পেজে গিয়ে JSON ফাইল সিলেক্ট করুন';
+        
+        zip.file('README.txt', readmeText);
+        
+        zip.generateAsync({ type: 'blob' }).then(function(content) {
+            var url = URL.createObjectURL(content);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = L==='en' ? 'electricity_bill_zip_'+new Date().toISOString().split('T')[0]+'.zip' : 'বিদ্যুৎ_বিল_জিপ_'+new Date().toISOString().split('T')[0]+'.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(L==='en'?'ZIP backup downloaded':'জিপ ব্যাকআপ ডাউনলোড হয়েছে', 'success');
+        }).catch(function(error) {
+            console.error('ZIP generation error:', error);
+            showToast((L==='en'?'ZIP backup failed: ':'জিপ ব্যাকআপ ব্যর্থ: ')+error.message, 'error');
+        });
+    } catch (error) {
+        console.error('ZIP backup error:', error);
+        showToast((L==='en'?'ZIP backup failed: ':'জিপ ব্যাকআপ ব্যর্থ: ')+error.message, 'error');
+    }
+}
+
+// ==================== CLEAR ALL DATA ====================
+function showClearDataConfirmation() {
+    var L = APP.language;
+    document.getElementById('modalContent').innerHTML = [
+        '<h2>&#x26A0;&#xFE0F; '+(L==='en'?'Delete All Data':'সমস্ত ডাটা মুছে ফেলুন')+'</h2>',
+        '<div style="background: #ffeaa7; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #fdcb6e;">',
+            '<p style="color: #d63031; font-weight: bold;">&#x1F534; '+(L==='en'?'Warning!':'সতর্কতা!')+'</p>',
+            '<p>'+(L==='en'?'This will permanently delete all data and cannot be undone!':'এই অপারেশন সমস্ত ডাটা স্থায়ীভাবে মুছে ফেলবে এবং আন্ডু করা যাবে না!')+'</p>',
+        '</div>',
+        '<div class="form-group">',
+            '<label>'+(L==='en'?'Type "DELETE" to confirm':'নিশ্চিত করতে "ডিলিট" লিখুন')+'</label>',
+            '<input type="text" class="form-control" id="confirmText" placeholder="'+(L==='en'?'Type DELETE':'ডিলিট লিখুন')+'" autocomplete="off">',
+        '</div>',
+        '<div style="display: flex; gap: 10px; margin-top: 20px;">',
+            '<button class="btn btn-danger" onclick="clearAllData()" id="clearDataBtn" disabled style="opacity: 0.5;">&#x1F5D1;&#xFE0F; '+(L==='en'?'Delete All Data':'সব ডাটা মুছুন')+'</button>',
+            '<button class="btn btn-outline" onclick="closeModal()">'+(L==='en'?'Cancel':'বাতিল')+'</button>',
+        '</div>',
+    ].join('');
+    
+    setTimeout(function() {
+        var confirmInput = document.getElementById('confirmText');
+        var clearBtn = document.getElementById('clearDataBtn');
+        if (confirmInput && clearBtn) {
+            confirmInput.addEventListener('input', function(e) {
+                if (APP.language==='en' ? e.target.value==='DELETE' : e.target.value==='ডিলিট') {
+                    clearBtn.disabled = false;
+                    clearBtn.style.opacity = '1';
+                    clearBtn.style.cursor = 'pointer';
+                } else {
+                    clearBtn.disabled = true;
+                    clearBtn.style.opacity = '0.5';
+                    clearBtn.style.cursor = 'default';
+                }
+            });
+            confirmInput.focus();
+        }
+    }, 100);
+    document.getElementById('modal').classList.add('active');
+}
+
+function clearAllData() {
+    var L = APP.language;
+    var confirmText = document.getElementById('confirmText');
+    if (!confirmText) return;
+    
+    var expected = L==='en' ? 'DELETE' : 'ডিলিট';
+    if (confirmText.value !== expected) {
+        showToast(L==='en'?'Please type DELETE correctly':'সঠিকভাবে "ডিলিট" লিখুন', 'error');
+        return;
+    }
+    
+    if (!confirm(L==='en'?'Final confirmation! Delete all data?':'শেষবার নিশ্চিত করুন! সমস্ত ডাটা মুছে ফেলবেন?')) return;
+    
+    try {
+        // Clear all data
+        APP.meters = [];
+        APP.metersData = {};
+        APP.activeMeterId = null;
+        APP.settings = {
+            vatRate: 5,
+            rebateRate: 0.85,
+            demandCharge: 294,
+            darkMode: false,
+            highContrast: false,
+            fontSize: 14,
+            autoBackupTime: '02:00',
+            retentionDays: 30
+        };
+        APP.tariffRates = [
+            { range: [0, 50], rate: 3.5, name: "Lifeline" },
+            { range: [51, 75], rate: 4, name: "1st Slab" },
+            { range: [76, 200], rate: 5.45, name: "2nd Slab" },
+            { range: [201, 300], rate: 5.7, name: "3rd Slab" },
+            { range: [301, 400], rate: 6.02, name: "4th Slab" },
+            { range: [401, 600], rate: 9.3, name: "5th Slab" },
+            { range: [601, null], rate: 10.7, name: "6th Slab" }
+        ];
+        APP.savingsGoal = 0;
+        APP.badges = [];
+        
+        // Save and sync
+        saveData();
+        if (typeof syncAllToCloud === 'function') {
+            syncAllToCloud();
+        }
+        
+        closeModal();
+        showToast(L==='en'?'All data cleared!':'সমস্ত ডাটা মুছে ফেলা হয়েছে!', 'success');
+        setTimeout(function() {
+            navigateTo('dashboard');
+        }, 500);
+    } catch (error) {
+        console.error('Clear data error:', error);
+        showToast((L==='en'?'Failed: ':'ব্যর্থ: ')+error.message, 'error');
+        closeModal();
+    }
+}
+
+// ==================== CLEAR CURRENT METER TRANSACTIONS ====================
+function clearCurrentMeterTransactions() {
+    var L = APP.language;
+    if (!APP.activeMeterId) {
+        showToast(L==='en'?'No meter selected':'কোন মিটার সিলেক্ট করা নেই', 'error');
+        return;
+    }
+    
+    var meter = APP.meters.find(function(m) {
+        return m.id === APP.activeMeterId;
+    });
+    if (!meter) return;
+    
+    if (!confirm(L==='en'?'Clear all transactions of "'+meter.name+'"?':'"'+meter.name+'" মিটারের সব ট্রানজেকশন মুছে ফেলবেন?')) return;
+    
+    try {
+        if (APP.metersData[APP.activeMeterId]) {
+            APP.metersData[APP.activeMeterId].transactions = [];
+            APP.metersData[APP.activeMeterId].currentBalance = 0;
+            APP.metersData[APP.activeMeterId].totalRecharge = 0;
+            APP.metersData[APP.activeMeterId].totalExpended = 0;
+            APP.metersData[APP.activeMeterId].monthlyRecharges = [];
+            APP.metersData[APP.activeMeterId].lastUpdated = new Date().toISOString();
+            
+            saveData();
+            if (typeof syncAllToCloud === 'function') {
+                syncAllToCloud();
+            }
+            
+            showToast(L==='en'?'Transactions cleared':'ট্রানজেকশন ক্লিয়ার হয়েছে', 'success');
+            navigateTo('dashboard');
+        }
+    } catch (error) {
+        console.error('Clear transactions error:', error);
+        showToast((L==='en'?'Failed: ':'ব্যর্থ: ')+error.message, 'error');
+    }
+}
+
+// ==================== SAVE TO FIREBASE ====================
 function saveToFirebase() {
     if (typeof database === "undefined" || !database) {
         console.warn("Firebase not available, saving locally only");
@@ -208,6 +507,27 @@ function saveToFirebase() {
     var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
     var deviceId = getDeviceId ? getDeviceId() : 'device_' + Date.now();
     var timestamp = firebase.database.ServerValue.TIMESTAMP;
+    
+    // Prepare meters data for cloud
+    var metersDataForCloud = {};
+    for (var meterId in APP.metersData) {
+        if (APP.metersData.hasOwnProperty(meterId)) {
+            var md = APP.metersData[meterId];
+            metersDataForCloud[meterId.replace(/[.#$\/\[\]]/g, '_')] = {
+                meterInfo: md.meterInfo || null,
+                transactions: md.transactions || [],
+                monthlyRecharges: md.monthlyRecharges || [],
+                currentBalance: md.currentBalance || 0,
+                totalRecharge: md.totalRecharge || 0,
+                totalExpended: md.totalExpended || 0,
+                lastDemandChargeMonth: md.lastDemandChargeMonth || "",
+                initialBalance: md.initialBalance || 0,
+                lastModifiedBy: APP.currentUser.email,
+                lastModifiedDevice: deviceId,
+                lastModifiedAt: timestamp
+            };
+        }
+    }
     
     // 1. App data save
     var appRef = database.ref('users/' + userEmail + '/app');
@@ -226,30 +546,10 @@ function saveToFirebase() {
         console.error('App save error:', error);
     });
     
-    // 2. Each meter data save
-    APP.meters.forEach(function(meter) {
-        var meterData = APP.metersData[meter.id];
-        if (!meterData) return;
-        
-        var meterRef = database.ref('users/' + userEmail + '/meters/' + meter.id.replace(/[.#$\/\[\]]/g, '_'));
-        
-        var cloudData = {
-            meterInfo: meter,
-            transactions: meterData.transactions || [],
-            monthlyRecharges: meterData.monthlyRecharges || [],
-            currentBalance: meterData.currentBalance || 0,
-            totalRecharge: meterData.totalRecharge || 0,
-            totalExpended: meterData.totalExpended || 0,
-            lastDemandChargeMonth: meterData.lastDemandChargeMonth || "",
-            initialBalance: meterData.initialBalance || 0,
-            lastModifiedBy: APP.currentUser.email,
-            lastModifiedDevice: deviceId,
-            lastModifiedAt: timestamp
-        };
-        
-        meterRef.update(cloudData).catch(function(error) {
-            console.error('Meter save error for', meter.name, ':', error);
-        });
+    // 2. Meters data save
+    var metersRef = database.ref('users/' + userEmail + '/meters');
+    metersRef.update(metersDataForCloud).catch(function(error) {
+        console.error('Meters save error:', error);
     });
     
     console.log('☁️ Data saved to Firebase successfully');

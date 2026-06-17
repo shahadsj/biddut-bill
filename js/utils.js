@@ -416,3 +416,206 @@ function __(key) {
     var translations = APP.translations[L] || APP.translations.bn;
     return translations[key] || key;
 }
+
+// ==================== BADGE SYSTEM ====================
+
+// Badge definitions
+function getBadgeDefinitions(L) {
+    return {
+        'first': { 
+            icon: '🌱', 
+            bn: 'প্রথম বিল', 
+            en: 'First Bill',
+            condition: function(transactions) { return transactions.length >= 1; }
+        },
+        '5_plus': { 
+            icon: '⭐', 
+            bn: '৫টি বিল', 
+            en: '5 Bills',
+            condition: function(transactions) { return transactions.length >= 5; }
+        },
+        '10_plus': { 
+            icon: '🎖️', 
+            bn: '১০টি বিল', 
+            en: '10 Bills',
+            condition: function(transactions) { return transactions.length >= 10; }
+        },
+        '25_plus': { 
+            icon: '🎯', 
+            bn: '২৫টি বিল', 
+            en: '25 Bills',
+            condition: function(transactions) { return transactions.length >= 25; }
+        },
+        '50_plus': { 
+            icon: '🌟', 
+            bn: '৫০টি বিল', 
+            en: '50 Bills',
+            condition: function(transactions) { return transactions.length >= 50; }
+        },
+        '100_plus': { 
+            icon: '💎', 
+            bn: '১০০টি বিল', 
+            en: '100 Bills',
+            condition: function(transactions) { return transactions.length >= 100; }
+        },
+        '200_plus': { 
+            icon: '🥇', 
+            bn: '২০০+ বিল', 
+            en: '200+ Bills',
+            condition: function(transactions) { return transactions.length >= 200; }
+        },
+        '500_plus': { 
+            icon: '🏆', 
+            bn: '৫০০+ বিল', 
+            en: '500+ Bills',
+            condition: function(transactions) { return transactions.length >= 500; }
+        },
+        'recharge_1k': { 
+            icon: '💸', 
+            bn: '১,০০০+ রিচার্জ', 
+            en: '1,000+ Recharge',
+            condition: function(transactions, totalRecharge) { return totalRecharge >= 1000; }
+        },
+        'recharge_5k': { 
+            icon: '🪙', 
+            bn: '৫,০০০+ রিচার্জ', 
+            en: '5,000+ Recharge',
+            condition: function(transactions, totalRecharge) { return totalRecharge >= 5000; }
+        },
+        'recharge_10k': { 
+            icon: '💵', 
+            bn: '১০,০০০+ রিচার্জ', 
+            en: '10,000+ Recharge',
+            condition: function(transactions, totalRecharge) { return totalRecharge >= 10000; }
+        },
+        'recharge_50k': { 
+            icon: '💰', 
+            bn: '৫০,০০০+ রিচার্জ', 
+            en: '50,000+ Recharge',
+            condition: function(transactions, totalRecharge) { return totalRecharge >= 50000; }
+        },
+        'meters_2': { 
+            icon: '⚡', 
+            bn: 'একাধিক মিটার', 
+            en: 'Multiple Meters',
+            condition: function(transactions, totalRecharge, meterCount) { return meterCount >= 2; }
+        },
+        'meters_5': { 
+            icon: '🔌', 
+            bn: '৫+ মিটার', 
+            en: '5+ Meters',
+            condition: function(transactions, totalRecharge, meterCount) { return meterCount >= 5; }
+        },
+        'expense_10k': { 
+            icon: '📈', 
+            bn: '১০,০০০+ খরচ', 
+            en: '10,000+ Expense',
+            condition: function(transactions, totalRecharge, meterCount, totalExpense) { return totalExpense >= 10000; }
+        },
+        'expense_50k': { 
+            icon: '📊', 
+            bn: '৫০,০০০+ খরচ', 
+            en: '50,000+ Expense',
+            condition: function(transactions, totalRecharge, meterCount, totalExpense) { return totalExpense >= 50000; }
+        }
+    };
+}
+
+function getBadgeText(key) {
+    var L = APP.language || 'bn';
+    var defs = getBadgeDefinitions(L);
+    var badge = defs[key];
+    if (!badge) return key;
+    return badge.icon + ' ' + (L === 'bn' ? badge.bn : badge.en);
+}
+
+// ==================== CHECK BADGES ====================
+function checkBadges() {
+    console.log('🏅 Checking badges...');
+    
+    // Get all transactions across all meters
+    var allTransactions = [];
+    var totalRechargeAmount = 0;
+    var totalExpendedAmount = 0;
+    
+    for (var meterId in APP.metersData) {
+        if (APP.metersData.hasOwnProperty(meterId)) {
+            var md = APP.metersData[meterId];
+            if (md.transactions) {
+                allTransactions = allTransactions.concat(md.transactions);
+                totalRechargeAmount += md.totalRecharge || 0;
+                totalExpendedAmount += md.totalExpended || 0;
+            }
+        }
+    }
+    
+    var transactionCount = allTransactions.length;
+    var meterCount = APP.meters.length;
+    
+    console.log('📊 Total transactions:', transactionCount);
+    console.log('💰 Total recharge:', totalRechargeAmount);
+    console.log('💸 Total expense:', totalExpendedAmount);
+    console.log('⚡ Total meters:', meterCount);
+    
+    // Get badge definitions
+    var L = APP.language || 'bn';
+    var defs = getBadgeDefinitions(L);
+    var earnedBadges = [];
+    
+    // Check each badge condition
+    for (var key in defs) {
+        if (defs.hasOwnProperty(key)) {
+            var badge = defs[key];
+            var condition = badge.condition;
+            
+            // Check if condition is met
+            var isEarned = condition(
+                allTransactions,
+                totalRechargeAmount,
+                meterCount,
+                totalExpendedAmount
+            );
+            
+            if (isEarned) {
+                var badgeText = badge.icon + ' ' + (L === 'bn' ? badge.bn : badge.en);
+                if (!APP.badges.includes(badgeText)) {
+                    APP.badges.push(badgeText);
+                    console.log('🏅 New badge earned:', badgeText);
+                    showToast('🎉 ' + (L === 'en' ? 'New badge earned: ' : 'নতুন ব্যাজ অর্জিত: ') + badgeText, 'success');
+                }
+                earnedBadges.push(badgeText);
+            }
+        }
+    }
+    
+    // Save if any changes
+    if (APP.badges.length > 0) {
+        saveData();
+    }
+    
+    console.log('🏅 Total badges:', APP.badges.length);
+    return APP.badges;
+}
+
+function checkBadgesOnLoad() {
+    console.log('🏅 Checking badges on load...');
+    return checkBadges();
+}
+
+// ==================== GET BADGE DISPLAY ====================
+function getBadgeDisplay() {
+    var L = APP.language || 'bn';
+    var badges = APP.badges || [];
+    
+    if (badges.length === 0) {
+        return '<p style="text-align: center; padding: 20px; color: var(--text-light);">' +
+               '🏅 ' + (L === 'en' ? 'No badges earned yet.' : 'এখনও কোন ব্যাজ অর্জিত হয়নি।') + 
+               '<br><small>' + (L === 'en' ? 'Add 5 bills to earn your first badge!' : '৫টি বিল যোগ করে প্রথম ব্যাজ অর্জন করুন!') + '</small></p>';
+    }
+    
+    return '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px;">' +
+           badges.map(function(b) {
+               return '<span style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #333; padding: 10px 20px; border-radius: 25px; font-weight: bold; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">' + b + '</span>';
+           }).join('') +
+           '</div>';
+}
