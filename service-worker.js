@@ -1,4 +1,5 @@
-const CACHE_NAME = 'electricity-bill-v1';
+const CACHE_NAME = 'electricity-bill-v3';  // v2 থেকে v3 করে দিলাম
+
 const ASSETS = [
     '/',
     '/index.html',
@@ -16,44 +17,73 @@ const ASSETS = [
     '/js/admin.js',
     '/js/profile.js',
     '/js/utils.js',
-    '/manifest.json'
+    '/js/firebase-init.js',
+    '/manifest.json',
+    '/favicon.svg'
 ];
 
-// Install Service Worker
+// ===== Install Service Worker =====
 self.addEventListener('install', function(event) {
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
-            console.log('Caching app shell');
-            return cache.addAll(ASSETS);
+            console.log('📦 Caching app shell');
+            return cache.addAll(ASSETS).catch(function(err) {
+                console.warn('Some assets failed to cache:', err);
+            });
         })
     );
+    // নতুন SW instal হলে activate হওয়ার জন্য
+    self.skipWaiting();
 });
 
-// Fetch Strategy: Cache First, then Network
+// ===== Fetch Strategy =====
 self.addEventListener('fetch', function(event) {
+    // CDN ফাইলগুলো নেটওয়ার্ক থেকে fetch করবে, ক্যাশে করবে না
+    if (event.request.url.includes('cdn.jsdelivr.net') || 
+        event.request.url.includes('googleapis.com') ||
+        event.request.url.includes('firebase') ||
+        event.request.url.includes('gstatic.com')) {
+        event.respondWith(
+            fetch(event.request).catch(function() {
+                // CDN না পেলে offline fallback
+                return new Response('Offline', { status: 503 });
+            })
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then(function(response) {
-            // Return cached version or fetch from network
-            return response || fetch(event.request).then(function(fetchResponse) {
-                // Cache new requests for future offline use
-                if (event.request.method === 'GET') {
+            // ক্যাশে থাকলে ক্যাশে থেকে দিন
+            if (response) {
+                return response;
+            }
+            
+            // ক্যাশে না থাকলে নেটওয়ার্ক থেকে fetch করুন
+            return fetch(event.request).then(function(fetchResponse) {
+                // GET request এবং HTML/JS/CSS ফাইল ক্যাশে করুন
+                if (event.request.method === 'GET' && 
+                    (event.request.url.includes('.js') || 
+                     event.request.url.includes('.css') || 
+                     event.request.url.includes('.html'))) {
                     const responseClone = fetchResponse.clone();
                     caches.open(CACHE_NAME).then(function(cache) {
                         cache.put(event.request, responseClone);
                     });
                 }
                 return fetchResponse;
+            }).catch(function() {
+                // Offline fallback
+                return new Response('Offline - Please check your connection', { 
+                    status: 503,
+                    headers: { 'Content-Type': 'text/plain' }
+                });
             });
-        }).catch(function() {
-            // Offline fallback
-            if (event.request.mode === 'navigate') {
-                return caches.match('/index.html');
-            }
         })
     );
 });
 
-// Activate: Clean old caches
+// ===== Activate: Clean old caches =====
 self.addEventListener('activate', function(event) {
     event.waitUntil(
         caches.keys().then(function(cacheNames) {
@@ -61,10 +91,43 @@ self.addEventListener('activate', function(event) {
                 cacheNames.filter(function(name) {
                     return name !== CACHE_NAME;
                 }).map(function(name) {
-                    console.log('Deleting old cache:', name);
+                    console.log('🗑️ Deleting old cache:', name);
                     return caches.delete(name);
                 })
             );
+        }).then(function() {
+            // নতুন SW ক্লায়েন্টদের কন্ট্রোল নিতে
+            return self.clients.claim();
         })
+    );
+});
+
+// ===== Push Notification (optional) =====
+self.addEventListener('push', function(event) {
+    if (!event.data) return;
+    
+    var data = event.data.json();
+    var options = {
+        body: data.body || 'Electricity Bill Update',
+        icon: '/favicon.svg',
+        badge: '/favicon.svg',
+        vibrate: [200, 100, 200],
+        data: {
+            url: data.url || '/'
+        }
+    };
+    
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'Biddut Bill', options)
+    );
+});
+
+// ===== Notification Click =====
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    
+    var url = event.notification.data.url || '/';
+    event.waitUntil(
+        clients.openWindow(url)
     );
 });
