@@ -346,3 +346,73 @@ function saveData() {
         }
     }
 }
+
+// ==================== LANGUAGE TOGGLE ====================
+function toggleLanguage() {
+    // Switch between 'bn' and 'en'
+    if (APP.language === 'bn') {
+        APP.language = 'en';
+    } else {
+        APP.language = 'bn';
+    }
+    
+    // Save to localStorage
+    saveData();
+    
+    // Update all sidebar texts
+    updateAllSidebarTexts();
+    
+    // Update sidebar user info
+    updateSidebarUserInfo();
+    
+    // Reload current page with new language
+    var currentPage = APP.currentPage || 'dashboard';
+    navigateTo(currentPage);
+    
+    // Show toast notification
+    var msg = APP.language === 'en' ? 'Language changed to English' : 'ভাষা পরিবর্তন করে বাংলা করা হয়েছে';
+    showToast(msg, 'success');
+}
+
+// ==================== UPDATE ALL SIDEBAR TEXTS ====================
+function updateAllSidebarTexts() {
+    var L = APP.language;
+    var translations = APP.translations[L] || APP.translations.bn;
+    
+    // Update all nav items with data-key attribute
+    document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
+        var key = el.getAttribute('data-key');
+        if (translations[key]) {
+            el.textContent = translations[key];
+        }
+    });
+    
+    // Update sidebar user role
+    var roleEl = document.getElementById('sidebarUserRole');
+    if (roleEl && APP.currentUser) {
+        if (APP.currentUser.role === 'admin') {
+            roleEl.textContent = L === 'en' ? 'Admin' : 'অ্যাডমিন';
+        } else {
+            roleEl.textContent = L === 'en' ? 'User' : 'ইউজার';
+        }
+    }
+    
+    // Update language toggle button text in meter selector
+    var langToggle = document.querySelector('.lang-toggle-btn span');
+    if (langToggle) {
+        langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
+    }
+    
+    // Update sidebar language toggle if exists
+    var sidebarLangToggle = document.querySelector('.sidebar-lang-toggle span');
+    if (sidebarLangToggle) {
+        sidebarLangToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
+    }
+}
+
+// ==================== TRANSLATION HELPER ====================
+function __(key) {
+    var L = APP.language || 'bn';
+    var translations = APP.translations[L] || APP.translations.bn;
+    return translations[key] || key;
+}

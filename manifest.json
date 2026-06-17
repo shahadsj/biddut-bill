@@ -1,13 +1,13 @@
 {
-  "name": "Biddut Bill",
+  "name": "বিদ্যুৎ বিল - Biddut Bill",
   "short_name": "Biddut Bill",
   "description": "Electricity bill management system",
-  "start_url": "/biddut-bill/",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "orientation": "portrait",
-  "scope": "/biddut-bill/",
+  "scope": "/",
   "lang": "bn-BD",
   "dir": "ltr",
   "icons": [
@@ -15,22 +15,16 @@
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
-  "id": "/biddut-bill/",
+  "id": "/",
   "screenshots": [
     {
       "src": "icon-192.png",

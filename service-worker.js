@@ -1,133 +1,189 @@
-const CACHE_NAME = 'electricity-bill-v3';  // v2 থেকে v3 করে দিলাম
+// ==================== SERVICE WORKER ====================
+// Biddut Bill - PWA Service Worker
+// Version: 2.0.0
 
-const ASSETS = [
-    '/',
-    '/index.html',
-    '/css/style.css',
-    '/js/app.js',
-    '/js/auth.js',
-    '/js/dashboard.js',
-    '/js/meters.js',
-    '/js/transactions.js',
-    '/js/calculator.js',
-    '/js/reports.js',
-    '/js/analytics.js',
-    '/js/settings.js',
-    '/js/backup.js',
-    '/js/admin.js',
-    '/js/profile.js',
-    '/js/utils.js',
-    '/js/firebase-init.js',
-    '/manifest.json',
-    '/favicon.svg'
+const CACHE_NAME = 'biddut-bill-v2.0.0';
+const OFFLINE_URL = '/index.html';
+
+// Files to cache
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/favicon.svg',
+  '/css/style.css',
+  '/js/app.js',
+  '/js/auth.js',
+  '/js/dashboard.js',
+  '/js/meters.js',
+  '/js/transactions.js',
+  '/js/calculator.js',
+  '/js/reports.js',
+  '/js/analytics.js',
+  '/js/settings.js',
+  '/js/backup.js',
+  '/js/admin.js',
+  '/js/profile.js',
+  '/js/utils.js',
+  '/js/firebase-init.js',
+  'https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js'
 ];
 
-// ===== Install Service Worker =====
+// ==================== INSTALL ====================
 self.addEventListener('install', function(event) {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(function(cache) {
-            console.log('📦 Caching app shell');
-            return cache.addAll(ASSETS).catch(function(err) {
-                console.warn('Some assets failed to cache:', err);
-            });
-        })
-    );
-    // নতুন SW instal হলে activate হওয়ার জন্য
-    self.skipWaiting();
+  console.log('[ServiceWorker] Install');
+  
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('[ServiceWorker] Caching app shell');
+        return cache.addAll(urlsToCache);
+      })
+      .then(function() {
+        console.log('[ServiceWorker] Skip waiting');
+        return self.skipWaiting();
+      })
+      .catch(function(error) {
+        console.error('[ServiceWorker] Install failed:', error);
+      })
+  );
 });
 
-// ===== Fetch Strategy =====
-self.addEventListener('fetch', function(event) {
-    // CDN ফাইলগুলো নেটওয়ার্ক থেকে fetch করবে, ক্যাশে করবে না
-    if (event.request.url.includes('cdn.jsdelivr.net') || 
-        event.request.url.includes('googleapis.com') ||
-        event.request.url.includes('firebase') ||
-        event.request.url.includes('gstatic.com')) {
-        event.respondWith(
-            fetch(event.request).catch(function() {
-                // CDN না পেলে offline fallback
-                return new Response('Offline', { status: 503 });
-            })
-        );
-        return;
-    }
+// ==================== ACTIVATE ====================
+self.addEventListener('activate', function(event) {
+  console.log('[ServiceWorker] Activate');
+  
+  event.waitUntil(
+    caches.keys().then(function(keyList) {
+      return Promise.all(keyList.map(function(key) {
+        if (key !== CACHE_NAME) {
+          console.log('[ServiceWorker] Removing old cache:', key);
+          return caches.delete(key);
+        }
+      }));
+    })
+    .then(function() {
+      console.log('[ServiceWorker] Claiming clients');
+      return self.clients.claim();
+    })
+  );
+});
 
-    event.respondWith(
-        caches.match(event.request).then(function(response) {
-            // ক্যাশে থাকলে ক্যাশে থেকে দিন
-            if (response) {
-                return response;
+// ==================== FETCH ====================
+self.addEventListener('fetch', function(event) {
+  console.log('[ServiceWorker] Fetch:', event.request.url);
+  
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+  
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Cache hit - return response
+        if (response) {
+          console.log('[ServiceWorker] Cache hit:', event.request.url);
+          return response;
+        }
+        
+        console.log('[ServiceWorker] Cache miss, fetching:', event.request.url);
+        
+        // Clone the request
+        var fetchRequest = event.request.clone();
+        
+        return fetch(fetchRequest)
+          .then(function(response) {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
             }
             
-            // ক্যাশে না থাকলে নেটওয়ার্ক থেকে fetch করুন
-            return fetch(event.request).then(function(fetchResponse) {
-                // GET request এবং HTML/JS/CSS ফাইল ক্যাশে করুন
-                if (event.request.method === 'GET' && 
-                    (event.request.url.includes('.js') || 
-                     event.request.url.includes('.css') || 
-                     event.request.url.includes('.html'))) {
-                    const responseClone = fetchResponse.clone();
-                    caches.open(CACHE_NAME).then(function(cache) {
-                        cache.put(event.request, responseClone);
-                    });
+            // Clone the response
+            var responseToCache = response.clone();
+            
+            // Cache the fetched response
+            caches.open(CACHE_NAME)
+              .then(function(cache) {
+                try {
+                  cache.put(event.request, responseToCache);
+                  console.log('[ServiceWorker] Cached:', event.request.url);
+                } catch (e) {
+                  console.warn('[ServiceWorker] Cache put failed:', e);
                 }
-                return fetchResponse;
-            }).catch(function() {
-                // Offline fallback
-                return new Response('Offline - Please check your connection', { 
-                    status: 503,
-                    headers: { 'Content-Type': 'text/plain' }
-                });
-            });
-        })
-    );
+              });
+            
+            return response;
+          })
+          .catch(function(error) {
+            console.error('[ServiceWorker] Fetch failed:', error);
+            
+            // If offline, return the offline page
+            return caches.match(OFFLINE_URL);
+          });
+      })
+  );
 });
 
-// ===== Activate: Clean old caches =====
-self.addEventListener('activate', function(event) {
-    event.waitUntil(
-        caches.keys().then(function(cacheNames) {
-            return Promise.all(
-                cacheNames.filter(function(name) {
-                    return name !== CACHE_NAME;
-                }).map(function(name) {
-                    console.log('🗑️ Deleting old cache:', name);
-                    return caches.delete(name);
-                })
-            );
-        }).then(function() {
-            // নতুন SW ক্লায়েন্টদের কন্ট্রোল নিতে
-            return self.clients.claim();
-        })
-    );
+// ==================== MESSAGE HANDLING ====================
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
-// ===== Push Notification (optional) =====
+// ==================== PUSH NOTIFICATION ====================
 self.addEventListener('push', function(event) {
-    if (!event.data) return;
-    
-    var data = event.data.json();
-    var options = {
-        body: data.body || 'Electricity Bill Update',
-        icon: '/favicon.svg',
-        badge: '/favicon.svg',
-        vibrate: [200, 100, 200],
-        data: {
-            url: data.url || '/'
-        }
-    };
-    
-    event.waitUntil(
-        self.registration.showNotification(data.title || 'Biddut Bill', options)
-    );
+  console.log('[ServiceWorker] Push Received');
+  
+  var title = 'বিদ্যুৎ বিল';
+  var options = {
+    body: event.data ? event.data.text() : 'আপনার বিল আপডেট হয়েছে!',
+    icon: '/favicon.svg',
+    badge: '/favicon.svg',
+    vibrate: [200, 100, 200],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    },
+    actions: [
+      {
+        action: 'open',
+        title: 'খুলুন'
+      },
+      {
+        action: 'close',
+        title: 'বন্ধ করুন'
+      }
+    ]
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
 });
 
-// ===== Notification Click =====
+// ==================== NOTIFICATION CLICK ====================
 self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
-    
-    var url = event.notification.data.url || '/';
-    event.waitUntil(
-        clients.openWindow(url)
-    );
+  console.log('[ServiceWorker] Notification click Received.');
+  
+  event.notification.close();
+  
+  if (event.action === 'close') {
+    return;
+  }
+  
+  event.waitUntil(
+    clients.openWindow('/')
+  );
 });

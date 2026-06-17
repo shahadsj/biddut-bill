@@ -474,3 +474,57 @@ window.addEventListener('resize', function() {
         }
     }
 });
+
+// ==================== LANGUAGE FUNCTIONS ====================
+function toggleLanguage() {
+    if (APP.language === 'bn') {
+        APP.language = 'en';
+    } else {
+        APP.language = 'bn';
+    }
+    
+    saveData();
+    updateAllSidebarTexts();
+    updateSidebarUserInfo();
+    
+    var currentPage = APP.currentPage || 'dashboard';
+    navigateTo(currentPage);
+    
+    var msg = APP.language === 'en' ? 'Language changed to English' : 'ভাষা পরিবর্তন করে বাংলা করা হয়েছে';
+    showToast(msg, 'success');
+}
+
+function updateAllSidebarTexts() {
+    var L = APP.language;
+    var translations = APP.translations[L] || APP.translations.bn;
+    
+    document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
+        var key = el.getAttribute('data-key');
+        if (translations[key]) {
+            el.textContent = translations[key];
+        }
+    });
+    
+    // Update role
+    var roleEl = document.getElementById('sidebarUserRole');
+    if (roleEl && APP.currentUser) {
+        roleEl.textContent = APP.currentUser.role === 'admin' ? 
+            (L === 'en' ? 'Admin' : 'অ্যাডমিন') : 
+            (L === 'en' ? 'User' : 'ইউজার');
+    }
+    
+    // Update language toggle button
+    var langToggle = document.querySelector('.lang-toggle-btn span');
+    if (langToggle) {
+        langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
+    }
+}
+
+// Override __ function if not exists
+if (typeof __ === 'undefined') {
+    function __(key) {
+        var L = APP.language || 'bn';
+        var translations = APP.translations[L] || APP.translations.bn;
+        return translations[key] || key;
+    }
+}

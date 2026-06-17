@@ -2,41 +2,54 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <!-- DEPLOY TRIGGER -3706477585416038786 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3498db">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="বিদ্যুৎ বিল">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <title>বিদ্যুৎ বিল | Biddut Bill</title>
-        <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="alternate icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233498db'/><text x='50' y='68' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>⚡</text></svg>">
+    
+    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <!-- Auth Container (Login/Register) - Only visible when not logged in -->
-    <div id="authPage" style="display: none;">
-        <!-- Auth content will be loaded here dynamically -->
-    </div>
+    <!-- Auth Container (Login/Register) -->
+    <div id="authPage" style="display: none;"></div>
 
-    <!-- Main App - Only visible when logged in -->
+    <!-- Main App -->
     <div id="appPage" style="display: none;">
         <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
 
         <div class="app-container">
             <!-- Sidebar -->
             <div class="sidebar" id="sidebar">
-                                <div class="logo">⚡ বিদ্যুৎ বিল</div>
+                <div class="logo">⚡ বিদ্যুৎ বিল</div>
                 <nav>
                     <div class="nav-item active" onclick="navigateTo('dashboard')">
                         <span>📊</span> <span class="nav-text" data-key="sidebarDashboard">ড্যাশবোর্ড</span>
                     </div>
-                                        <div class="nav-item" onclick="navigateTo('meters')">
+                    <div class="nav-item" onclick="navigateTo('meters')">
                         <span>⚡</span> <span class="nav-text" data-key="sidebarMeters">মিটার ম্যানেজমেন্ট</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('transactions')">
@@ -58,20 +71,18 @@
                         <span>💾</span> <span class="nav-text" data-key="sidebarBackup">ব্যাকআপ</span>
                     </div>
                     
-                    <!-- Divider -->
                     <div style="border-top: 1px solid var(--border); margin: 10px 0;"></div>
                     
-                                        <div class="nav-item" onclick="navigateTo('profile')">
+                    <div class="nav-item" onclick="navigateTo('profile')">
                         <span>👤</span> <span class="nav-text" data-key="sidebarProfile">প্রোফাইল</span>
                     </div>
                     
-                    <!-- Admin Panel -->
                     <div class="nav-item" id="adminNav" style="display:none;" onclick="navigateTo('admin')">
                         <span>👑</span> <span class="nav-text" data-key="sidebarAdmin">অ্যাডমিন প্যানেল</span>
                     </div>
                 </nav>
                 
-                <!-- User Info at bottom of sidebar with Logout -->
+                <!-- User Info -->
                 <div id="sidebarUserInfo" style="margin-top: auto; padding: 15px; border-top: 1px solid var(--border); display: block;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-1); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
@@ -79,7 +90,7 @@
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div style="font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="sidebarUserName"></div>
-                            <div style="font-size: 11px; color: var(--text-light);" id="sidebarUserRole"></div>
+                            <div style="font-size: 11px;" id="sidebarUserRole"></div>
                         </div>
                         <div class="nav-logout" onclick="logout()" title="Logout" style="cursor: pointer; padding: 8px; border-radius: 50%; background: rgba(231, 76, 60, 0.1); transition: all 0.3s; border: none; font-size: 14px;">
                             🚪
@@ -103,12 +114,11 @@
         <div class="modal-content" id="modalContent"></div>
     </div>
 
-        <!-- 🔥 Firebase SDK for Realtime Database -->
-        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-        <!-- JavaScript Files -->
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+    <!-- JavaScript Files -->
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
@@ -123,57 +133,250 @@
     <script src="js/profile.js"></script>
     <script src="js/app.js"></script>
     <script src="js/firebase-init.js"></script>
-    <!-- PWA Scripts -->
+
+    <!-- ==================== PWA SCRIPT ==================== -->
     <script>
+        // ============================================================
+        // 1. SERVICE WORKER REGISTRATION
+        // ============================================================
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('service-worker.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful');
-                }).catch(function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(function(registration) {
+                        console.log('✅ ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function(err) {
+                        console.log('❌ ServiceWorker registration failed: ', err);
+                    });
             });
         }
 
+        // ============================================================
+        // 2. PWA INSTALL PROMPT - FULLY WORKING
+        // ============================================================
         let deferredPrompt;
+        let installButton = null;
+        let isInstalled = false;
+
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            isInstalled = true;
+            console.log('✅ App is running in standalone mode (installed)');
+        }
+
         window.addEventListener('beforeinstallprompt', function(e) {
+            // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
+            
+            // Stash the event so it can be triggered later
             deferredPrompt = e;
             
-            setTimeout(() => {
-                if (confirm('এই অ্যাপ ইন্সটল করতে চান?')) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function(choiceResult) {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                }
-            }, 3000);
-        });
-    </script>
-
-<script>
-// FINAL INIT - runs after all scripts loaded
-(function(){
-    var s = localStorage.getItem("biddut_session");
-    if (s) {
-        try {
-            var sd = JSON.parse(s);
-            if (sd && sd.loginTime && Date.now() - sd.loginTime < 604800000) {
-                // Session valid - stay on appPage
-                document.getElementById("authPage").style.display = "none";
-                document.getElementById("appPage").style.display = "block";
+            console.log('✅ beforeinstallprompt event fired - App can be installed');
+            
+            // If already installed, don't show button
+            if (isInstalled) {
+                console.log('App already installed, hiding prompt');
                 return;
             }
-        } catch(e) {}
-        localStorage.removeItem("biddut_session");
-    }
-    // No valid session - show login
-    document.getElementById("authPage").style.display = "block";
-    document.getElementById("appPage").style.display = "none";
-})();
-</script>
+            
+            // Create install button if it doesn't exist
+            if (!installButton) {
+                installButton = document.createElement('button');
+                installButton.id = 'pwaInstallBtn';
+                installButton.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
+                
+                // Add styles
+                installButton.style.cssText = `
+                    position: fixed;
+                    bottom: 80px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 9999;
+                    padding: 16px 32px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 50px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    box-shadow: 0 8px 30px rgba(102,126,234,0.5);
+                    cursor: pointer;
+                    animation: pulseBtn 2s infinite;
+                    transition: all 0.3s ease;
+                    display: none;
+                `;
+                
+                // Add hover effect
+                installButton.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(-50%) scale(1.05)';
+                    this.style.boxShadow = '0 12px 40px rgba(102,126,234,0.7)';
+                });
+                installButton.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(-50%) scale(1)';
+                    this.style.boxShadow = '0 8px 30px rgba(102,126,234,0.5)';
+                });
+                
+                // Add click handler
+                installButton.addEventListener('click', async function() {
+                    if (!deferredPrompt) {
+                        console.log('No deferred prompt available');
+                        return;
+                    }
+                    
+                    console.log('Install button clicked, showing prompt');
+                    this.style.display = 'none';
+                    
+                    // Show the install prompt
+                    deferredPrompt.prompt();
+                    
+                    // Wait for the user to respond to the prompt
+                    const result = await deferredPrompt.userChoice;
+                    
+                    if (result.outcome === 'accepted') {
+                        console.log('✅ User accepted the install prompt');
+                        isInstalled = true;
+                        installButton.style.display = 'none';
+                    } else {
+                        console.log('❌ User dismissed the install prompt');
+                        // Show button again after dismissal
+                        setTimeout(function() {
+                            if (!isInstalled) {
+                                installButton.style.display = 'block';
+                            }
+                        }, 3000);
+                    }
+                    
+                    deferredPrompt = null;
+                });
+                
+                document.body.appendChild(installButton);
+                
+                // Add pulse animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes pulseBtn {
+                        0% { transform: translateX(-50%) scale(1); }
+                        50% { transform: translateX(-50%) scale(1.05); }
+                        100% { transform: translateX(-50%) scale(1); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Show the button
+            if (!isInstalled) {
+                installButton.style.display = 'block';
+            }
+        });
+
+        // ============================================================
+        // 3. APP INSTALLED EVENT
+        // ============================================================
+        window.addEventListener('appinstalled', function(e) {
+            console.log('✅ App installed successfully!');
+            isInstalled = true;
+            if (installButton) {
+                installButton.style.display = 'none';
+            }
+            
+            // Show success toast
+            showToast('📲 অ্যাপ সফলভাবে ইন্সটল হয়েছে!', 'success');
+        });
+
+        // ============================================================
+        // 4. HANDLE INSTALL BUTTON SHOW/HIDE ON RESIZE
+        // ============================================================
+        window.addEventListener('resize', function() {
+            if (installButton && !isInstalled) {
+                // Hide on desktop if not needed
+                if (window.innerWidth > 768) {
+                    // Keep visible on desktop too
+                }
+            }
+        });
+
+        // ============================================================
+        // 5. CHECK INSTALL STATUS ON LOAD
+        // ============================================================
+        window.addEventListener('load', function() {
+            // Check if app is installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                isInstalled = true;
+                if (installButton) {
+                    installButton.style.display = 'none';
+                }
+                console.log('✅ App is in standalone mode');
+            }
+            
+            // Check if the app can be installed
+            if (window.navigator && window.navigator.getInstalledRelatedApps) {
+                window.navigator.getInstalledRelatedApps().then(function(relatedApps) {
+                    if (relatedApps.length > 0) {
+                        isInstalled = true;
+                        if (installButton) {
+                            installButton.style.display = 'none';
+                        }
+                        console.log('✅ App is installed (related apps)');
+                    }
+                });
+            }
+        });
+
+        // ============================================================
+        // 6. FALLBACK: Show install button if beforeinstallprompt doesn't fire
+        // ============================================================
+        setTimeout(function() {
+            // If after 5 seconds the install button is not shown and app is not installed
+            if (!isInstalled && !installButton && !window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('⚠️ beforeinstallprompt not fired, showing fallback button');
+                
+                const fallbackBtn = document.createElement('button');
+                fallbackBtn.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
+                fallbackBtn.style.cssText = `
+                    position: fixed;
+                    bottom: 80px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 9999;
+                    padding: 16px 32px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 50px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    box-shadow: 0 8px 30px rgba(102,126,234,0.5);
+                    cursor: pointer;
+                `;
+                fallbackBtn.onclick = function() {
+                    this.style.display = 'none';
+                    showToast('💡 Chrome মেনু থেকে "Install Biddut Bill" সিলেক্ট করুন', 'info');
+                };
+                document.body.appendChild(fallbackBtn);
+            }
+        }, 5000);
+
+        console.log('✅ PWA Scripts loaded successfully');
+    </script>
+
+    <!-- ==================== FINAL INIT ==================== -->
+    <script>
+        (function(){
+            var s = localStorage.getItem("biddut_session");
+            if (s) {
+                try {
+                    var sd = JSON.parse(s);
+                    if (sd && sd.loginTime && Date.now() - sd.loginTime < 604800000) {
+                        document.getElementById("authPage").style.display = "none";
+                        document.getElementById("appPage").style.display = "block";
+                        return;
+                    }
+                } catch(e) {}
+                localStorage.removeItem("biddut_session");
+            }
+            document.getElementById("authPage").style.display = "block";
+            document.getElementById("appPage").style.display = "none";
+        })();
+    </script>
 </body>
 </html>
