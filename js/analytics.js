@@ -12,27 +12,6 @@ function showAnalytics() {
         return;
     }
     
-    // বাকি কোড...
-}
-
-// ===== Chart.js CDN থেকে লোড করার ফাংশন =====
-function loadChartJsFromCDN() {
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-    script.onload = function() {
-        console.log('✅ Chart.js loaded from CDN');
-        showToast('Chart.js লোড হয়েছে!', 'success');
-        showAnalytics();
-    };
-    script.onerror = function() {
-        console.error('Failed to load Chart.js');
-        showToast('Chart.js লোড করতে ব্যর্থ!', 'error');
-    };
-    document.head.appendChild(script);
-}
-
-// ==================== ANALYTICS ====================
-function showAnalytics() {
     var L = APP.language;
     if (!APP.activeMeterId || APP.meters.length === 0) {
         showToast(L === 'en' ? 'Please add a meter first' : 'প্রথমে একটি মিটার যোগ করুন', 'warning');
@@ -300,11 +279,30 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
         return;
     }
 
+    // ===== HELPER: Destroy chart safely =====
+    function destroyChart(chartInstance) {
+        if (chartInstance && typeof chartInstance === 'object' && typeof chartInstance.destroy === 'function') {
+            try {
+                chartInstance.destroy();
+                console.log('✅ Chart destroyed successfully');
+            } catch(e) {
+                console.warn('Chart destroy error:', e);
+            }
+        }
+        return null;
+    }
+
     // ===== CHART 1: Monthly Trend =====
     var ctx1 = document.getElementById('monthlyTrendChart');
     if (ctx1) {
         try {
-            if (window.monthlyTrendChart) window.monthlyTrendChart.destroy();
+            // Safely destroy existing chart
+            if (window.monthlyTrendChart) {
+                if (typeof window.monthlyTrendChart.destroy === 'function') {
+                    window.monthlyTrendChart.destroy();
+                }
+                window.monthlyTrendChart = null;
+            }
             
             window.monthlyTrendChart = new Chart(ctx1, {
                 type: 'line',
@@ -348,6 +346,7 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
             console.log('✅ Monthly Trend Chart drawn');
         } catch(e) {
             console.error('Monthly Trend Chart error:', e);
+            window.monthlyTrendChart = null;
         }
     }
 
@@ -355,7 +354,13 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
     var ctx2 = document.getElementById('yearlyChart');
     if (ctx2) {
         try {
-            if (window.yearlyChart) window.yearlyChart.destroy();
+            // Safely destroy existing chart
+            if (window.yearlyChart) {
+                if (typeof window.yearlyChart.destroy === 'function') {
+                    window.yearlyChart.destroy();
+                }
+                window.yearlyChart = null;
+            }
             
             var colors = ['rgba(102,126,234,0.7)', 'rgba(245,87,108,0.7)', 'rgba(79,172,254,0.7)'];
             var borderColors = ['#667eea', '#f5576c', '#4facfe'];
@@ -391,6 +396,7 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
             console.log('✅ Yearly Chart drawn');
         } catch(e) {
             console.error('Yearly Chart error:', e);
+            window.yearlyChart = null;
         }
     }
 
@@ -398,7 +404,13 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
     var ctx3 = document.getElementById('costChart');
     if (ctx3) {
         try {
-            if (window.costChart) window.costChart.destroy();
+            // Safely destroy existing chart
+            if (window.costChart) {
+                if (typeof window.costChart.destroy === 'function') {
+                    window.costChart.destroy();
+                }
+                window.costChart = null;
+            }
             
             var costData = [rechargeTotal, expenseTotal, demandTotal, vatTotal];
             var hasCostData = costData.some(function(v) { return v > 0; });
@@ -432,6 +444,23 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
             console.log('✅ Cost Chart drawn');
         } catch(e) {
             console.error('Cost Chart error:', e);
+            window.costChart = null;
         }
     }
+}
+
+// ===== Chart.js CDN থেকে লোড করার ফাংশন =====
+function loadChartJsFromCDN() {
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    script.onload = function() {
+        console.log('✅ Chart.js loaded from CDN');
+        showToast('Chart.js লোড হয়েছে!', 'success');
+        showAnalytics();
+    };
+    script.onerror = function() {
+        console.error('Failed to load Chart.js');
+        showToast('Chart.js লোড করতে ব্যর্থ!', 'error');
+    };
+    document.head.appendChild(script);
 }
