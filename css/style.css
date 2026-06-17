@@ -1896,3 +1896,286 @@ padding: 16px 14px !important;
         min-height: 44px;
     }
 }
+
+
+/* ==================== MOBILE BOTTOM NAVIGATION ==================== */
+
+/* মোবাইলের জন্য নিচের নেভিগেশন বার */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    z-index: 999;
+    padding: 5px 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-bottom-nav::-webkit-scrollbar {
+    height: 0;
+}
+
+.mobile-nav-items {
+    display: flex;
+    gap: 2px;
+    padding: 0 5px;
+    min-width: max-content;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    min-width: 60px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 10px;
+    gap: 2px;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    position: relative;
+}
+
+.mobile-nav-item .nav-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.mobile-nav-item .nav-label {
+    font-size: 9px;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.mobile-nav-item.active {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.mobile-nav-item.active .nav-icon {
+    transform: scale(1.1);
+}
+
+.mobile-nav-item:active {
+    transform: scale(0.9);
+}
+
+/* Admin nav item special */
+.mobile-nav-item.admin-nav {
+    border-left: 2px solid gold;
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.mobile-nav-item.admin-nav.active {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+}
+
+/* ===== মোবাইলে Sidebar লুকান ===== */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 15px 12px;
+        padding-bottom: 75px !important;
+        padding-top: 12px;
+    }
+    
+    .toggle-sidebar {
+        display: none !important;
+    }
+    
+    .mobile-bottom-nav {
+        display: block !important;
+    }
+    
+    /* মিটার সিলেক্টর মোবাইলে ছোট */
+    .meter-selector {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        padding: 10px 12px !important;
+        gap: 8px !important;
+    }
+    
+    .meter-selector label {
+        font-size: 12px !important;
+    }
+    
+    .meter-selector select {
+        min-width: 120px !important;
+        font-size: 12px !important;
+        padding: 6px 30px 6px 10px !important;
+        min-height: 32px !important;
+    }
+    
+    .meter-selector .lang-toggle-btn {
+        font-size: 11px !important;
+        padding: 4px 10px !important;
+        min-height: 30px !important;
+        margin-left: auto !important;
+    }
+    
+    /* Stats grid মোবাইলে */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    
+    .stat-card {
+        padding: 14px !important;
+    }
+    
+    .stat-card .value {
+        font-size: 20px !important;
+    }
+    
+    .stat-card .label {
+        font-size: 11px !important;
+    }
+    
+    /* Auth card মোবাইলে */
+    .auth-card {
+        padding: 25px 18px !important;
+        margin: 10px !important;
+        max-width: 100% !important;
+    }
+    
+    /* Tables */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        font-size: 11px;
+        min-width: 500px;
+    }
+    
+    th, td {
+        padding: 6px 8px;
+        white-space: nowrap;
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 8px 14px;
+        font-size: 13px;
+        min-height: 38px;
+    }
+    
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: 10px;
+        min-height: 30px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        width: 95%;
+        padding: 18px;
+        margin: 10px;
+        max-height: 90vh;
+    }
+    
+    /* Cards */
+    .card {
+        padding: 14px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+    }
+    
+    .card h2 {
+        font-size: 16px;
+    }
+    
+    .card h3 {
+        font-size: 14px;
+    }
+    
+    /* Activity log */
+    .activity-log-card {
+        padding: 10px;
+    }
+    
+    .activity-log-card .log-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    /* Charts */
+    .chart-container {
+        height: 180px;
+    }
+    
+    /* 2x2 grid */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Quick recharge forms */
+    div[style*="grid-template-columns: 1fr 1fr; gap: 20px;"] {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}
+
+/* ===== VERY SMALL MOBILE ===== */
+@media (max-width: 400px) {
+    .mobile-nav-item {
+        min-width: 50px;
+        padding: 4px 8px;
+    }
+    
+    .mobile-nav-item .nav-icon {
+        font-size: 17px;
+    }
+    
+    .mobile-nav-item .nav-label {
+        font-size: 8px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    
+    .stat-card {
+        padding: 10px !important;
+    }
+    
+    .stat-card .value {
+        font-size: 17px !important;
+    }
+    
+    .stat-card .label {
+        font-size: 10px !important;
+    }
+}
+
+/* ===== TOUCH FEEDBACK ===== */
+@media (pointer: coarse) {
+    .mobile-nav-item:active {
+        transform: scale(0.9);
+        background: rgba(102, 126, 234, 0.2);
+    }
+    
+    .mobile-nav-item.active:active {
+        background: rgba(102, 126, 234, 0.3);
+    }
+}

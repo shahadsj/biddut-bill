@@ -343,10 +343,6 @@ function initApp() {
         if (s && s.loginTime && Date.now() - s.loginTime < 604800000) {
             APP.currentUser = {id: s.userId || "1", email: s.email || "", name: s.name || "User", role: s.role || "user"};
             
-            // ===== localStorage থেকে ডাটা লোড করুন (Firebase এর আগে) =====
-            loadFromLocalStorage();
-            
-            // ===== App দেখান =====
             document.getElementById("authPage").style.display = "none";
             document.getElementById("appPage").style.display = "block";
             
@@ -354,25 +350,24 @@ function initApp() {
             if (adminNav && APP.currentUser.role === "admin") adminNav.style.display = "block";
             if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
             
-            // ===== Dashboard দেখান (localStorage ডাটা দিয়ে) =====
-            setTimeout(function() { 
-                navigateTo("dashboard"); 
-            }, 50);
+            // ===== মোবাইল ন্যাভ তৈরি করুন (এই লাইন যোগ করুন) =====
+            setTimeout(function() {
+                if (window.innerWidth <= 768) {
+                    createMobileNav();
+                }
+            }, 500);
             
-            // ===== পটভূমিতে Firebase থেকে ডাটা লোড করুন =====
+            // ===== Dashboard দেখান =====
             if (typeof loadFromCloud === "function") {
-                setTimeout(function() {
-                    loadFromCloud().then(function(hasChanges) {
-                        if (hasChanges) {
-                            console.log('☁️ Background sync completed, updating UI silently');
-                            if (APP.currentPage === 'dashboard' && typeof showDashboard === 'function') {
-                                showDashboard();
-                            } else {
-                                navigateTo(APP.currentPage || 'dashboard');
-                            }
-                        }
-                    });
-                }, 300);
+                loadFromCloud().then(function() {
+                    setTimeout(function() { 
+                        navigateTo("dashboard"); 
+                    }, 100);
+                });
+            } else {
+                setTimeout(function() { 
+                    navigateTo("dashboard"); 
+                }, 100);
             }
             return;
         }
@@ -383,6 +378,8 @@ function initApp() {
     if (typeof showLoginPage === "function") showLoginPage();
     else document.getElementById("authPage").innerHTML = "<h2>Loading...</h2>";
 }
+
+
 
 // ===== localStorage থেকে ডাটা লোড করার ফাংশন =====
 function loadFromLocalStorage() {
@@ -410,3 +407,70 @@ if (document.readyState === "loading") {
 } else {
     initApp();
 }
+
+
+// ==================== MOBILE BOTTOM NAVIGATION ====================
+
+function createMobileNav() {
+    // চেক করুন ইতিমধ্যে তৈরি হয়েছে কিনা
+    if (document.getElementById('mobileBottomNav')) return;
+    
+    var isAdmin = APP.currentUser && APP.currentUser.role === 'admin';
+    
+    var navItems = [
+        { id: 'dashboard', icon: '📊', label: 'ড্যাশ' },
+        { id: 'meters', icon: '⚡', label: 'মিটার' },
+        { id: 'transactions', icon: '💳', label: 'ট্রা.' },
+        { id: 'calculator', icon: '🧮', label: 'ক্যাল.' },
+        { id: 'reports', icon: '📈', label: 'রিপোর্ট' },
+        { id: 'analytics', icon: '📉', label: 'এনা.' },
+        { id: 'settings', icon: '⚙️', label: 'সেট.' },
+        { id: 'profile', icon: '👤', label: 'প্রো.' }
+    ];
+    
+    // Admin হলে admin যোগ করুন
+    if (isAdmin) {
+        navItems.push({ id: 'admin', icon: '👑', label: 'অ্যাডমিন', isAdmin: true });
+    }
+    
+    var html = '<div class="mobile-bottom-nav" id="mobileBottomNav">';
+    html += '<div class="mobile-nav-items">';
+    
+    navItems.forEach(function(item) {
+        var activeClass = APP.currentPage === item.id ? 'active' : '';
+        var adminClass = item.isAdmin ? 'admin-nav' : '';
+        html += '<button class="mobile-nav-item ' + activeClass + ' ' + adminClass + '" onclick="navigateTo(\'' + item.id + '\')" data-page="' + item.id + '">';
+        html += '<span class="nav-icon">' + item.icon + '</span>';
+        html += '<span class="nav-label">' + item.label + '</span>';
+        html += '</button>';
+    });
+    
+    html += '</div>';
+    html += '</div>';
+    
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function updateMobileNavActive(page) {
+    var items = document.querySelectorAll('.mobile-nav-item');
+    items.forEach(function(item) {
+        item.classList.remove('active');
+        if (item.getAttribute('data-page') === page) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// ===== উইন্ডো রিসাইজে চেক করুন =====
+window.addEventListener('resize', function() {
+    var nav = document.getElementById('mobileBottomNav');
+    if (window.innerWidth <= 768) {
+        if (!nav) {
+            createMobileNav();
+        }
+    } else {
+        if (nav) {
+            nav.remove();
+        }
+    }
+});

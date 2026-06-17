@@ -134,9 +134,9 @@ function loadFromCloud() {
         var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
         var changed = false;
         
-        console.log('☁️ Loading data from cloud...');
+        console.log('☁️ Loading data from Firebase...');
         
-        // Load app data
+        // Load app data from Firebase
         database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
             var appData = snapshot.val();
             if (appData) {
@@ -156,13 +156,8 @@ function loadFromCloud() {
                 
                 // Merge meters list
                 if (appData.meters && Array.isArray(appData.meters)) {
-                    appData.meters.forEach(function(cloudMeter) {
-                        var exists = APP.meters.some(function(lm) { return lm.id === cloudMeter.id; });
-                        if (!exists) {
-                            APP.meters.push(cloudMeter);
-                            changed = true;
-                        }
-                    });
+                    APP.meters = appData.meters;
+                    changed = true;
                 }
             }
             
@@ -176,54 +171,18 @@ function loadFromCloud() {
                     var cloudMeterId = cloudMeterData.meterInfo ? cloudMeterData.meterInfo.id : null;
                     if (!cloudMeterId) return;
                     
-                    // Find or create local meter
-                    var localMeter = APP.meters.find(function(m) { return m.id === cloudMeterId; });
-                    if (!localMeter && cloudMeterData.meterInfo) {
-                        APP.meters.push(cloudMeterData.meterInfo);
-                        localMeter = cloudMeterData.meterInfo;
-                        changed = true;
-                    }
-                    
-                    if (!localMeter) return;
-                    
-                    // Merge transactions
-                    var localData = APP.metersData[cloudMeterId];
-                    if (!localData) {
-                        APP.metersData[cloudMeterId] = {
-                            transactions: cloudMeterData.transactions || [],
-                            monthlyRecharges: cloudMeterData.monthlyRecharges || [],
-                            currentBalance: cloudMeterData.currentBalance || 0,
-                            totalRecharge: cloudMeterData.totalRecharge || 0,
-                            totalExpended: cloudMeterData.totalExpended || 0,
-                            lastDemandChargeMonth: cloudMeterData.lastDemandChargeMonth || "",
-                            initialBalance: cloudMeterData.initialBalance || 0,
-                            meterInfo: localMeter,
-                            lastUpdated: new Date().toISOString()
-                        };
-                        changed = true;
-                    } else {
-                        // Merge new cloud transactions
-                        (cloudMeterData.transactions || []).forEach(function(cloudTx) {
-                            var exists = localData.transactions.some(function(localTx) {
-                                return localTx.id === cloudTx.id;
-                            });
-                            if (!exists) {
-                                localData.transactions.push(cloudTx);
-                                changed = true;
-                            }
-                        });
-                        
-                        // Update balances
-                        if (cloudMeterData.currentBalance !== undefined) {
-                            localData.currentBalance = cloudMeterData.currentBalance;
-                        }
-                        if (cloudMeterData.totalRecharge !== undefined) {
-                            localData.totalRecharge = cloudMeterData.totalRecharge;
-                        }
-                        if (cloudMeterData.totalExpended !== undefined) {
-                            localData.totalExpended = cloudMeterData.totalExpended;
-                        }
-                    }
+                    APP.metersData[cloudMeterId] = {
+                        transactions: cloudMeterData.transactions || [],
+                        monthlyRecharges: cloudMeterData.monthlyRecharges || [],
+                        currentBalance: cloudMeterData.currentBalance || 0,
+                        totalRecharge: cloudMeterData.totalRecharge || 0,
+                        totalExpended: cloudMeterData.totalExpended || 0,
+                        lastDemandChargeMonth: cloudMeterData.lastDemandChargeMonth || "",
+                        initialBalance: cloudMeterData.initialBalance || 0,
+                        meterInfo: cloudMeterData.meterInfo || APP.meters.find(function(m) { return m.id === cloudMeterId; }),
+                        lastUpdated: new Date().toISOString()
+                    };
+                    changed = true;
                 });
             }
             
@@ -232,15 +191,10 @@ function loadFromCloud() {
                 APP.activeMeterId = APP.meters[0].id;
             }
             
-            // changed হলে save করুন
-            if (changed) {
-                saveData();
-            }
-            
-            console.log('☁️ Background sync completed. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
+            console.log('☁️ Firebase data loaded. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
             resolve(changed);
         }).catch(function(error) {
-            console.error('❌ Cloud load error:', error);
+            console.error('❌ Firebase load error:', error);
             resolve(false);
         });
     });
