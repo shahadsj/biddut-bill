@@ -1,6 +1,8 @@
-function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
-// Global utility functions
-function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
+// ==================== GLOBAL UTILITY FUNCTIONS ====================
+function escapeHtml(s) {
+    if (!s) return "";
+    return s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#039;").replace(/"/g, "&quot;");
+}
 
 // ==================== APP STATE & INITIALIZATION ====================
 const APP = {
@@ -30,7 +32,7 @@ const APP = {
     savingsGoal: 0,
     badges: [],
     currentPage: 'dashboard',
-    language: 'bn', // 'bn' or 'en'
+    language: 'bn',
     translations: {
         bn: {
             sidebarDashboard: 'ড্যাশবোর্ড',
@@ -86,7 +88,7 @@ const APP = {
             amount: 'পরিমাণ',
             units: 'ইউনিট',
             actions: 'অ্যাকশন',
-                        adminPanel: 'অ্যাডমিন প্যানেল',
+            adminPanel: 'অ্যাডমিন প্যানেল',
             totalUsers: 'মোট রেজিস্টার্ড ইউজার',
             totalMeters: 'মোট মিটার',
             totalTransactions: 'মোট ট্রানজেকশন',
@@ -99,7 +101,7 @@ const APP = {
             regDateCol: 'রেজিস্ট্রেশন তারিখ',
             actionCol: 'অ্যাকশন',
             statusCol: 'স্ট্যাটাস',
-                        userRole: 'ইউজার',
+            userRole: 'ইউজার',
             adminRole: 'অ্যাডমিন',
             you: 'আপনি',
             current: 'বর্তমান',
@@ -114,7 +116,7 @@ const APP = {
             totalRechargeCol: 'মোট রিচার্জ',
             totalExpenseCol: 'মোট খরচ',
             lastUpdate: 'শেষ আপডেট',
-                        noMeters: 'কোন মিটার নেই',
+            noMeters: 'কোন মিটার নেই',
             activityLog: 'ইউজার অ্যাক্টিভিটি লগ',
             allActivity: 'সকল',
             loginActivity: 'লগইন',
@@ -124,7 +126,7 @@ const APP = {
             logoutActivity: 'লগআউট',
             meterActivity: 'মিটার',
             noActivity: 'কোন অ্যাক্টিভিটি নেই',
-                        systemLogs: 'সিস্টেম লগস',
+            systemLogs: 'সিস্টেম লগস',
             settingsTitle: 'সেটিংস',
             billSettings: 'বিল সেটিংস',
             displaySettings: 'ডিসপ্লে সেটিংস',
@@ -150,7 +152,7 @@ const APP = {
             profileUpdated: 'প্রোফাইল আপডেট হয়েছে',
             goalSaved: 'সেভিংস গোল সংরক্ষিত হয়েছে',
         },
-                en: {
+        en: {
             sidebarDashboard: 'Dashboard',
             sidebarMeters: 'Meters',
             sidebarTransactions: 'Transactions',
@@ -204,7 +206,7 @@ const APP = {
             amount: 'Amount',
             units: 'Units',
             actions: 'Actions',
-                        adminPanel: 'Admin Panel',
+            adminPanel: 'Admin Panel',
             totalUsers: 'Total Registered Users',
             totalMeters: 'Total Meters',
             totalTransactions: 'Total Transactions',
@@ -217,7 +219,7 @@ const APP = {
             regDateCol: 'Registration Date',
             actionCol: 'Actions',
             statusCol: 'Status',
-                        userRole: 'User',
+            userRole: 'User',
             adminRole: 'Admin',
             you: 'You',
             current: 'Current',
@@ -232,7 +234,7 @@ const APP = {
             totalRechargeCol: 'Total Recharge',
             totalExpenseCol: 'Total Expense',
             lastUpdate: 'Last Update',
-                        noMeters: 'No meters found',
+            noMeters: 'No meters found',
             activityLog: 'User Activity Log',
             allActivity: 'All',
             loginActivity: 'Login',
@@ -242,7 +244,7 @@ const APP = {
             logoutActivity: 'Logout',
             meterActivity: 'Meter',
             noActivity: 'No activity found',
-                        systemLogs: 'System Logs',
+            systemLogs: 'System Logs',
             settingsTitle: 'Settings',
             billSettings: 'Bill Settings',
             displaySettings: 'Display Settings',
@@ -271,31 +273,19 @@ const APP = {
     }
 };
 
+// ==================== TRANSLATION FUNCTION ====================
+function __(key) {
+    var L = APP.language || 'bn';
+    var translations = APP.translations[L] || APP.translations.bn;
+    return translations[key] || key;
+}
+
 // ==================== NAVIGATION ====================
 function navigateTo(page) {
     APP.currentPage = page;
     
-    // Hide all pages
-    var pages = ["dashboard","meters","transactions","calculator","reports","analytics","settings","backup","admin","profile"];
-    for (var i = 0; i < pages.length; i++) {
-        var el = document.getElementById(pages[i] + "Page");
-        if (el) el.style.display = "none";
-    }
-    
-    // Update active nav class - simpler approach
-    var navItems = document.querySelectorAll(".nav-item");
-    for (var i = 0; i < navItems.length; i++) {
-        navItems[i].classList.remove("active");
-    }
-    
-    // Find and activate the clicked nav item
-    var allNavs = document.querySelectorAll(".nav-item, .sidebar-nav a");
-    for (var i = 0; i < allNavs.length; i++) {
-        var onclick = allNavs[i].getAttribute("onclick") || "";
-        if (onclick.indexOf("navigateTo") >= 0 && onclick.indexOf(page) >= 0) {
-            allNavs[i].classList.add("active");
-        }
-    }
+    // Update mobile nav active
+    updateMobileNavActive(page);
     
     // Show page content
     if (page === "dashboard" && typeof showDashboard === "function") showDashboard();
@@ -309,11 +299,28 @@ function navigateTo(page) {
     else if (page === "admin" && typeof showAdminPanel === "function") showAdminPanel();
     else if (page === "profile" && typeof showProfile === "function") showProfile();
     else if (typeof showDashboard === "function") showDashboard();
+    
+    // Update nav items
+    updateNavItems(page);
+}
+
+function updateNavItems(page) {
+    var allNavs = document.querySelectorAll(".nav-item, .mobile-nav-item");
+    for (var i = 0; i < allNavs.length; i++) {
+        allNavs[i].classList.remove("active");
+        var onclick = allNavs[i].getAttribute("onclick") || "";
+        var dataPage = allNavs[i].getAttribute("data-page") || "";
+        if (onclick.indexOf("navigateTo('" + page + "')") >= 0 || dataPage === page) {
+            allNavs[i].classList.add("active");
+        }
+    }
 }
 
 function toggleSidebar() {
     var sb = document.getElementById("sidebar");
-    if (sb) sb.classList.toggle("collapsed");
+    if (sb) {
+        sb.classList.toggle("active");
+    }
 }
 
 function updateSidebarUserInfo() {
@@ -321,7 +328,10 @@ function updateSidebarUserInfo() {
     var re = document.getElementById("sidebarUserRole");
     if (ne && APP.currentUser) ne.textContent = APP.currentUser.name || "User";
     if (re && APP.currentUser) {
-        re.textContent = APP.currentUser.role === "admin" ? "Admin" : "User";
+        var L = APP.language || 'bn';
+        re.textContent = APP.currentUser.role === "admin" ? 
+            (L === 'en' ? 'Admin' : 'অ্যাডমিন') : 
+            (L === 'en' ? 'User' : 'ইউজার');
         re.className = "badge " + (APP.currentUser.role === "admin" ? "badge-warning" : "badge-success");
     }
 }
@@ -334,6 +344,18 @@ function logout() {
     document.getElementById("appPage").style.display = "none";
     document.getElementById("authPage").style.display = "block";
     if (typeof showLoginPage === "function") showLoginPage();
+}
+
+// ==================== SAVE DATA (ONLY FIREBASE) ====================
+function saveData() {
+    // Only save to Firebase - no localStorage
+    if (typeof saveAllToCloud === 'function') {
+        saveAllToCloud().catch(function(error) {
+            console.warn('⚠️ Save to Firebase failed:', error);
+        });
+    } else {
+        console.warn('⚠️ saveAllToCloud function not available');
+    }
 }
 
 // ==================== INIT ====================
@@ -350,16 +372,25 @@ function initApp() {
             if (adminNav && APP.currentUser.role === "admin") adminNav.style.display = "block";
             if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
             
-            // ===== মোবাইল ন্যাভ তৈরি করুন (এই লাইন যোগ করুন) =====
+            // Apply settings
+            if (typeof applySettings === "function") {
+                applySettings();
+            }
+            
+            // Create mobile nav
             setTimeout(function() {
                 if (window.innerWidth <= 768) {
                     createMobileNav();
                 }
             }, 500);
             
-            // ===== Dashboard দেখান =====
+            // Load from Firebase
             if (typeof loadFromCloud === "function") {
                 loadFromCloud().then(function() {
+                    // Check badges after loading
+                    if (typeof checkBadges === "function") {
+                        checkBadges();
+                    }
                     setTimeout(function() { 
                         navigateTo("dashboard"); 
                     }, 100);
@@ -371,7 +402,9 @@ function initApp() {
             }
             return;
         }
-    } catch(e) {}
+    } catch(e) {
+        console.warn('Session restore error:', e);
+    }
     
     document.getElementById("authPage").style.display = "block";
     document.getElementById("appPage").style.display = "none";
@@ -379,45 +412,8 @@ function initApp() {
     else document.getElementById("authPage").innerHTML = "<h2>Loading...</h2>";
 }
 
-
-
-// ===== localStorage থেকে ডাটা লোড করার ফাংশন =====
-function loadFromLocalStorage() {
-    try {
-        var savedData = localStorage.getItem('biddut_app_data');
-        if (savedData) {
-            var data = JSON.parse(savedData);
-            if (data.meters) APP.meters = data.meters;
-            if (data.metersData) APP.metersData = data.metersData;
-            if (data.activeMeterId) APP.activeMeterId = data.activeMeterId;
-            if (data.settings) APP.settings = Object.assign({}, APP.settings, data.settings);
-            if (data.tariffRates) APP.tariffRates = data.tariffRates;
-            if (data.language) APP.language = data.language;
-            if (data.savingsGoal !== undefined) APP.savingsGoal = data.savingsGoal;
-            if (data.badges) APP.badges = data.badges;
-            console.log('📂 Data loaded from localStorage. Meters:', APP.meters.length, 'Badges:', APP.badges.length);
-            
-            // ✅ Check badges after loading
-            setTimeout(function() {
-                checkBadges();
-            }, 500);
-        }
-    } catch(e) {
-        console.warn('LocalStorage load error:', e);
-    }
-}
-
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initApp);
-} else {
-    initApp();
-}
-
-
 // ==================== MOBILE BOTTOM NAVIGATION ====================
-
 function createMobileNav() {
-    // চেক করুন ইতিমধ্যে তৈরি হয়েছে কিনা
     if (document.getElementById('mobileBottomNav')) return;
     
     var isAdmin = APP.currentUser && APP.currentUser.role === 'admin';
@@ -433,7 +429,6 @@ function createMobileNav() {
         { id: 'profile', icon: '👤', label: 'প্রো.' }
     ];
     
-    // Admin হলে admin যোগ করুন
     if (isAdmin) {
         navItems.push({ id: 'admin', icon: '👑', label: 'অ্যাডমিন', isAdmin: true });
     }
@@ -466,7 +461,7 @@ function updateMobileNavActive(page) {
     });
 }
 
-// ===== উইন্ডো রিসাইজে চেক করুন =====
+// ===== WINDOW RESIZE =====
 window.addEventListener('resize', function() {
     var nav = document.getElementById('mobileBottomNav');
     if (window.innerWidth <= 768) {
@@ -495,7 +490,7 @@ function toggleLanguage() {
     var currentPage = APP.currentPage || 'dashboard';
     navigateTo(currentPage);
     
-    var msg = APP.language === 'en' ? 'Language changed to English' : 'ভাষা পরিবর্তন করে বাংলা করা হয়েছে';
+    var msg = APP.language === 'en' ? '🌐 Language changed to English' : '🌐 ভাষা পরিবর্তন করে বাংলা করা হয়েছে';
     showToast(msg, 'success');
 }
 
@@ -510,7 +505,6 @@ function updateAllSidebarTexts() {
         }
     });
     
-    // Update role
     var roleEl = document.getElementById('sidebarUserRole');
     if (roleEl && APP.currentUser) {
         roleEl.textContent = APP.currentUser.role === 'admin' ? 
@@ -518,18 +512,65 @@ function updateAllSidebarTexts() {
             (L === 'en' ? 'User' : 'ইউজার');
     }
     
-    // Update language toggle button
     var langToggle = document.querySelector('.lang-toggle-btn span');
     if (langToggle) {
         langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
     }
 }
 
-// Override __ function if not exists
-if (typeof __ === 'undefined') {
-    function __(key) {
-        var L = APP.language || 'bn';
-        var translations = APP.translations[L] || APP.translations.bn;
-        return translations[key] || key;
+// ==================== APPLY SETTINGS ====================
+function applySettings() {
+    if (APP.settings.fontSize) {
+        document.documentElement.style.setProperty('--font-size', APP.settings.fontSize + 'px');
     }
+    
+    if (APP.settings.darkMode) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    
+    if (APP.settings.highContrast) {
+        document.body.classList.add('high-contrast');
+    } else {
+        document.body.classList.remove('high-contrast');
+    }
+}
+
+// ==================== TOAST NOTIFICATION ====================
+function showToast(message, type) {
+    var container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    var bgColor = type === 'success' ? '#27ae60' : 
+                  type === 'error' ? '#e74c3c' : 
+                  type === 'warning' ? '#f39c12' : '#3498db';
+    toast.style.background = bgColor;
+    toast.style.color = 'white';
+    toast.style.padding = '12px 20px';
+    toast.style.borderRadius = '10px';
+    toast.style.marginBottom = '10px';
+    toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+    toast.style.animation = 'slideIn 0.3s ease';
+    toast.textContent = message;
+    container.appendChild(toast);
+    
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(function() {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
+// ==================== INIT ON LOAD ====================
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
 }

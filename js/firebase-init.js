@@ -1,7 +1,7 @@
 // ==================== FIREBASE INITIALIZATION (Realtime Database) ====================
 // ⚡ Biddut Bill - Firebase Realtime Database Integration
 
-// Firebase Configuration from Firebase Console
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyB70I3TGtMZitLU4vz5gviENZoBZRH260E",
     authDomain: "biddutbill-360dd.firebaseapp.com",
@@ -17,8 +17,7 @@ let firebaseApp = null;
 let database = null;
 let isFirebaseReady = false;
 let syncListeners = [];
-let syncTimers = {};
-const SYNC_DEBOUNCE_MS = 2000;
+let isSyncing = false;
 
 // ==================== INITIALIZE FIREBASE ====================
 function initFirebase() {
@@ -43,6 +42,10 @@ function initFirebase() {
             if (snap.val() === true) {
                 console.log('✅ Connected to Firebase Realtime Database');
                 startFirebaseSync();
+                // Load data when connected
+                if (APP.currentUser) {
+                    loadFromCloud();
+                }
             } else {
                 console.log('📴 Offline - using local cache');
             }
@@ -66,77 +69,94 @@ function getDeviceId() {
     return deviceId;
 }
 
-// ==================== SYNC ALL TO CLOUD ====================
-function syncAllToCloud() {
-    if (!isFirebaseReady || !APP.currentUser) return;
+// ==================== SAVE ALL TO CLOUD ====================
+function saveAllToCloud() {
+    if (!isFirebaseReady || !APP.currentUser) {
+        console.warn('⚠️ Cannot save: Firebase not ready or no user');
+        return Promise.reject('Firebase not ready');
+    }
+    
+    if (isSyncing) {
+        console.log('⏳ Sync already in progress, skipping...');
+        return Promise.resolve();
+    }
+    
+    isSyncing = true;
     
     var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
     var deviceId = getDeviceId();
     var timestamp = firebase.database.ServerValue.TIMESTAMP;
     
-    // 1. Save app settings
-    var appRef = database.ref('users/' + userEmail + '/app');
-    appRef.update({
-        activeMeterId: APP.activeMeterId || '',
-        settings: APP.settings,
-        tariffRates: APP.tariffRates,
-        savingsGoal: APP.savingsGoal || 0,
-        badges: APP.badges || [],
-        language: APP.language || 'bn',
-        meters: APP.meters,
-        lastModifiedBy: APP.currentUser.email,
-        lastModifiedDevice: deviceId,
-        lastModifiedAt: timestamp
-    }).catch(function(error) {
-        console.error('❌ App sync error:', error);
+    return new Promise(function(resolve, reject) {
+        try {
+            // Prepare meters data
+            var metersDataForCloud = {};
+            for (var meterId in APP.metersData) {
+                if (APP.metersData.hasOwnProperty(meterId)) {
+                    var md = APP.metersData[meterId];
+                    metersDataForCloud[meterId.replace(/[.#$\/\[\]]/g, '_')] = {
+                        meterInfo: md.meterInfo || null,
+                        transactions: md.transactions || [],
+                        monthlyRecharges: md.monthlyRecharges || [],
+                        currentBalance: md.currentBalance || 0,
+                        totalRecharge: md.totalRecharge || 0,
+                        totalExpended: md.totalExpended || 0,
+                        lastDemandChargeMonth: md.lastDemandChargeMonth || "",
+                        initialBalance: md.initialBalance || 0,
+                        lastModifiedBy: APP.currentUser.email,
+                        lastModifiedDevice: deviceId,
+                        lastModifiedAt: timestamp
+                    };
+                }
+            }
+            
+            // Save app data
+            var appRef = database.ref('users/' + userEmail + '/app');
+            appRef.update({
+                activeMeterId: APP.activeMeterId || '',
+                settings: APP.settings,
+                tariffRates: APP.tariffRates,
+                savingsGoal: APP.savingsGoal || 0,
+                badges: APP.badges || [],
+                language: APP.language || 'bn',
+                meters: APP.meters,
+                lastModifiedBy: APP.currentUser.email,
+                lastModifiedDevice: deviceId,
+                lastModifiedAt: timestamp
+            }).then(function() {
+                // Save meters data
+                var metersRef = database.ref('users/' + userEmail + '/meters');
+                return metersRef.update(metersDataForCloud);
+            }).then(function() {
+                console.log('☁️ All data saved to Firebase successfully');
+                isSyncing = false;
+                resolve();
+            }).catch(function(error) {
+                console.error('❌ Save error:', error);
+                isSyncing = false;
+                reject(error);
+            });
+        } catch (error) {
+            console.error('❌ Save error:', error);
+            isSyncing = false;
+            reject(error);
+        }
     });
-    
-    // 2. Save each meter's data separately
-    APP.meters.forEach(function(meter) {
-        var meterData = APP.metersData[meter.id];
-        if (!meterData) return;
-        
-        var meterRef = database.ref('users/' + userEmail + '/meters/' + meter.id.replace(/[.#$\/\[\]]/g, '_'));
-        
-        var cloudData = {
-            meterInfo: meter,
-            transactions: meterData.transactions || [],
-            monthlyRecharges: meterData.monthlyRecharges || [],
-            currentBalance: meterData.currentBalance || 0,
-            totalRecharge: meterData.totalRecharge || 0,
-            totalExpended: meterData.totalExpended || 0,
-            lastDemandChargeMonth: meterData.lastDemandChargeMonth || "",
-            initialBalance: meterData.initialBalance || 0,
-            lastModifiedBy: APP.currentUser.email,
-            lastModifiedDevice: deviceId,
-            lastModifiedAt: timestamp
-        };
-        
-        meterRef.update(cloudData).catch(function(error) {
-            console.error('❌ Meter sync error for', meter.name, ':', error);
-        });
-    });
-    
-    console.log('☁️ Synced all data to cloud');
 }
 
 // ==================== LOAD FROM CLOUD ====================
 function loadFromCloud() {
-    if (typeof APP === "undefined" || !APP) { 
-        console.warn("APP not ready"); 
-        return Promise.resolve(false); 
-    }
     if (!isFirebaseReady || !APP.currentUser) {
+        console.warn('⚠️ Cannot load: Firebase not ready or no user');
         return Promise.resolve(false);
     }
     
     return new Promise(function(resolve) {
         var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
-        var changed = false;
         
         console.log('☁️ Loading data from Firebase...');
         
-        // Load app data from Firebase
+        // Load app data
         database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
             var appData = snapshot.val();
             if (appData) {
@@ -149,19 +169,16 @@ function loadFromCloud() {
                 APP.savingsGoal = appData.savingsGoal || 0;
                 APP.badges = appData.badges || [];
                 
-                // activeMeterId লোড করুন
                 if (appData.activeMeterId) {
                     APP.activeMeterId = appData.activeMeterId;
                 }
                 
-                // Merge meters list
                 if (appData.meters && Array.isArray(appData.meters)) {
                     APP.meters = appData.meters;
-                    changed = true;
                 }
             }
             
-            // Load each meter's data
+            // Load meters data
             return database.ref('users/' + userEmail + '/meters').once('value');
         }).then(function(metersSnapshot) {
             var metersData = metersSnapshot.val();
@@ -182,17 +199,16 @@ function loadFromCloud() {
                         meterInfo: cloudMeterData.meterInfo || APP.meters.find(function(m) { return m.id === cloudMeterId; }),
                         lastUpdated: new Date().toISOString()
                     };
-                    changed = true;
                 });
             }
             
-            // activeMeterId না থাকলে সেট করুন
+            // Set active meter if not set
             if (!APP.activeMeterId && APP.meters.length > 0) {
                 APP.activeMeterId = APP.meters[0].id;
             }
             
             console.log('☁️ Firebase data loaded. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
-            resolve(changed);
+            resolve(true);
         }).catch(function(error) {
             console.error('❌ Firebase load error:', error);
             resolve(false);
@@ -222,7 +238,6 @@ function startFirebaseSync() {
         setTimeout(function() {
             loadFromCloud().then(function(hasChanges) {
                 if (hasChanges && APP.currentUser) {
-                    saveData();
                     if (APP.currentPage) navigateTo(APP.currentPage);
                     showToast(
                         APP.language === 'en' ? '☁️ Data synced from cloud' : '☁️ ক্লাউড থেকে ডাটা সিঙ্ক হয়েছে',
@@ -256,7 +271,6 @@ function startFirebaseSync() {
         setTimeout(function() {
             loadFromCloud().then(function(hasChanges) {
                 if (hasChanges && APP.currentUser) {
-                    saveData();
                     if (APP.currentPage) navigateTo(APP.currentPage);
                     showToast(
                         APP.language === 'en' ? '☁️ Data synced from cloud' : '☁️ ক্লাউড থেকে ডাটা সিঙ্ক হয়েছে',
@@ -275,7 +289,13 @@ function startFirebaseSync() {
 function stopFirebaseSync() {
     if (!database) return;
     syncListeners.forEach(function(listener) {
-        try { database.ref().off(listener.type === 'app' ? 'value' : 'value'); } catch(e) {}
+        try { 
+            if (listener.type === 'app') {
+                database.ref('users/' + APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_') + '/app').off();
+            } else if (listener.type === 'meters') {
+                database.ref('users/' + APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_') + '/meters').off();
+            }
+        } catch(e) {}
     });
     syncListeners = [];
 }
@@ -296,12 +316,9 @@ function tryFirebaseInit() {
     var result = initFirebase();
     if (result) {
         setTimeout(function() {
-            loadFromCloud().then(function(hasChanges) {
-                if (hasChanges) {
-                    saveData();
-                    if (APP.currentUser && APP.currentPage) {
-                        navigateTo(APP.currentPage);
-                    }
+            loadFromCloud().then(function() {
+                if (APP.currentUser && APP.currentPage) {
+                    navigateTo(APP.currentPage);
                 }
             });
         }, 2000);

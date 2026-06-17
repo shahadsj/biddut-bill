@@ -126,7 +126,6 @@ function restoreFromJSON(event) {
         try {
             var backup = JSON.parse(e.target.result);
             
-            // Validate backup
             if (!backup.metersData && !backup.meters) {
                 showToast(L==='en'?'Invalid backup file':'অবৈধ ব্যাকআপ ফাইল', 'error');
                 return;
@@ -137,33 +136,21 @@ function restoreFromJSON(event) {
                 return;
             }
             
-            console.log('📂 Restoring backup...');
-            console.log('Backup meters:', backup.meters ? backup.meters.length : 0);
-            console.log('Backup metersData keys:', backup.metersData ? Object.keys(backup.metersData).length : 0);
-            
-            // ===== 1. CLEAR EXISTING DATA =====
+            // Clear existing data
             APP.meters = [];
             APP.metersData = {};
             APP.activeMeterId = null;
             
-            // ===== 2. RESTORE METERS =====
-            if (backup.meters && Array.isArray(backup.meters) && backup.meters.length > 0) {
+            // Restore meters
+            if (backup.meters && Array.isArray(backup.meters)) {
                 APP.meters = JSON.parse(JSON.stringify(backup.meters));
-                console.log('✅ Restored', APP.meters.length, 'meters');
-            } else {
-                showToast(L==='en'?'No meters found in backup':'ব্যাকআপে কোন মিটার নেই', 'warning');
-                event.target.value = '';
-                return;
             }
             
-            // ===== 3. RESTORE METERS DATA =====
+            // Restore meters data
             if (backup.metersData) {
-                // Restore each meter's data
                 for (var meterId in backup.metersData) {
                     if (backup.metersData.hasOwnProperty(meterId)) {
                         var md = backup.metersData[meterId];
-                        
-                        // Ensure all required fields exist
                         APP.metersData[meterId] = {
                             transactions: md.transactions || [],
                             monthlyRecharges: md.monthlyRecharges || [],
@@ -175,53 +162,37 @@ function restoreFromJSON(event) {
                             meterInfo: md.meterInfo || null,
                             lastUpdated: md.lastUpdated || new Date().toISOString()
                         };
-                        
-                        // Log transaction count for debugging
-                        console.log('📊 Meter', meterId, 'has', APP.metersData[meterId].transactions.length, 'transactions');
                     }
                 }
-                console.log('✅ Restored', Object.keys(APP.metersData).length, 'meter data objects');
             }
             
-            // ===== 4. SET ACTIVE METER =====
+            // Set active meter
             if (backup.activeMeterId && APP.meters.find(function(m){return m.id===backup.activeMeterId;})) {
                 APP.activeMeterId = backup.activeMeterId;
             } else if (APP.meters.length > 0) {
                 APP.activeMeterId = APP.meters[0].id;
             }
             
-            // ===== 5. RESTORE SETTINGS =====
-            if (backup.settings) {
-                APP.settings = Object.assign({}, APP.settings, backup.settings);
-            }
-            if (backup.tariffRates) {
-                APP.tariffRates = JSON.parse(JSON.stringify(backup.tariffRates));
-            }
-            if (backup.language) {
-                APP.language = backup.language;
-            }
-            if (backup.savingsGoal !== undefined) {
-                APP.savingsGoal = backup.savingsGoal || 0;
-            }
-            if (backup.badges) {
-                APP.badges = backup.badges || [];
+            // Restore settings
+            if (backup.settings) APP.settings = Object.assign({}, APP.settings, backup.settings);
+            if (backup.tariffRates) APP.tariffRates = JSON.parse(JSON.stringify(backup.tariffRates));
+            if (backup.language) APP.language = backup.language;
+            if (backup.savingsGoal !== undefined) APP.savingsGoal = backup.savingsGoal || 0;
+            if (backup.badges) APP.badges = backup.badges || [];
+            
+            // Save to Firebase only
+            if (typeof saveAllToCloud === 'function') {
+                saveAllToCloud().then(function() {
+                    console.log('☁️ Data restored and saved to Firebase');
+                });
             }
             
-            // ===== 6. SAVE TO LOCALSTORAGE =====
-            saveData();
-            
-            // ===== 7. SYNC TO FIREBASE =====
-            if (typeof syncAllToCloud === 'function') {
-                syncAllToCloud();
-                console.log('☁️ Data synced to cloud');
-            }
-            
-            // ===== 8. APPLY SETTINGS =====
+            // Apply settings
             if (typeof applySettings === 'function') {
                 applySettings();
             }
             
-            // ===== 9. UPDATE UI =====
+            // Update UI
             if (typeof updateAllSidebarTexts === 'function') {
                 updateAllSidebarTexts();
             }
@@ -229,12 +200,11 @@ function restoreFromJSON(event) {
                 updateSidebarUserInfo();
             }
             
-            // ===== 10. CHECK BADGES =====
-            if (typeof checkBadgesOnLoad === 'function') {
-                checkBadgesOnLoad();
+            // Check badges
+            if (typeof checkBadges === 'function') {
+                checkBadges();
             }
             
-            // ===== 11. SHOW SUCCESS =====
             var totalTransactions = 0;
             for (var mid in APP.metersData) {
                 if (APP.metersData.hasOwnProperty(mid)) {
@@ -247,11 +217,8 @@ function restoreFromJSON(event) {
                 'ডাটা সফলভাবে রিস্টোর হয়েছে! ' + APP.meters.length + 'টি মিটার, ' + totalTransactions + 'টি ট্রানজেকশন।';
             
             showToast(msg, 'success');
-            console.log('✅ Restore complete!', APP.meters.length, 'meters,', totalTransactions, 'transactions');
-            
             event.target.value = '';
             
-            // ===== 12. REFRESH DASHBOARD =====
             setTimeout(function() {
                 navigateTo('dashboard');
             }, 500);

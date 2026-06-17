@@ -185,6 +185,7 @@ function login() {
 
             if (user && user.password === password) {
                 APP.currentUser = user;
+                
                 // Save session for persistence
                 var sessionData = {
                     userId: user.id,
@@ -194,12 +195,11 @@ function login() {
                     loginTime: Date.now()
                 };
                 localStorage.setItem("biddut_session", JSON.stringify(sessionData));
-                localStorage.setItem("currentUserId", user.id);
 
                 document.getElementById("authPage").style.display = "none";
                 document.getElementById("appPage").style.display = "block";
 
-                // Admin check: ONLY k.m.abubakkarsiddek@gmail.com
+                // Admin check
                 if (email === "k.m.abubakkarsiddek@gmail.com") {
                     user.role = "admin";
                     APP.currentUser.role = "admin";
@@ -211,8 +211,12 @@ function login() {
 
                 updateSidebarUserInfo();
 
+                // Load from Firebase
                 if (typeof loadFromCloud === "function") {
                     loadFromCloud().then(function() {
+                        if (typeof checkBadges === "function") {
+                            checkBadges();
+                        }
                         navigateTo("dashboard");
                     });
                 } else {
