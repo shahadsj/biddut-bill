@@ -12,7 +12,9 @@ function showTransactions() {
 
     var meterData = getActiveMeterData();
     var transactions = (meterData.transactions || []).sort(function(a, b) {
-        return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
+        var dateA = a.date || a.timestamp || 0;
+        var dateB = b.date || b.timestamp || 0;
+        return new Date(dateB) - new Date(dateA);
     });
 
     var today = new Date().toISOString().split('T')[0];
@@ -24,7 +26,6 @@ function showTransactions() {
                 <button class="btn" onclick="showAddTransactionForm()">+ ${L==='en'?'New Transaction':'নতুন ট্রানজেকশন'}</button>
             </div>
 
-            <!-- Quick Recharge & Balance Update Forms -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
                 <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
                     <h3 style="color: #2e7d32; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 18px;">💰 ${L==='en'?'Monthly Recharge':'মাসিক রিচার্জ'}</h3>
@@ -65,20 +66,35 @@ function showTransactions() {
                             <th>${L==='en'?'Amount':'পরিমাণ'}</th>
                             <th>${L==='en'?'Units':'ইউনিট'}</th>
                             <th>${L==='en'?'Balance':'ব্যালেন্স'}</th>
-                            <th>${L==='en'?'Description':'বিবরণ'}</th>
+                            <th style="min-width: 200px;">${L==='en'?'Description':'বিবরণ'}</th>
                             <th>${L==='en'?'Actions':'অ্যাকশন'}</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${transactions.map(function(t) {
+                            var dateStr = t.date || t.timestamp;
+                            var displayDate = '-';
+                            try {
+                                if (dateStr) {
+                                    var d = new Date(dateStr);
+                                    if (!isNaN(d.getTime())) {
+                                        displayDate = d.toLocaleDateString(dateLocale);
+                                    }
+                                }
+                            } catch(e) {
+                                displayDate = '-';
+                            }
+                            
+                            var description = t.description || '-';
+                            
                             return `
                             <tr>
-                                <td>${new Date(t.date || t.timestamp).toLocaleDateString(dateLocale)}</td>
+                                <td>${displayDate}</td>
                                 <td><span class="badge ${t.type === 'recharge' ? 'badge-success' : 'badge-warning'}">${t.type === 'recharge' ? (L==='en'?'Recharge':'রিচার্জ') : (L==='en'?'Bill':'বিল')}</span></td>
                                 <td>৳ ${(t.amount || 0).toFixed(2)}</td>
                                 <td>${t.units ? t.units.toFixed(2) : '-'}</td>
                                 <td>৳ ${(t.balanceAfter || 0).toFixed(2)}</td>
-                                <td>${t.description || '-'}</td>
+                                <td style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: 13px; word-break: break-word; max-width: 250px;">${description}</td>
                                 <td>
                                     <button class="btn btn-sm" onclick="editTransaction('${t.id}')">${L==='en'?'Edit':'এডিট'}</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteTransaction('${t.id}')">${L==='en'?'Delete':'ডিলিট'}</button>
@@ -257,9 +273,6 @@ function saveTransaction(transactionId) {
     updateActiveMeterData(updatedData);
     closeModal();
     
-    // Recalculate balance
-    recalculateBalance();
-    
     // Log transaction activity
     var dateStr = new Date(date).toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
     if (type === 'recharge') {
@@ -285,6 +298,7 @@ function editTransaction(transactionId) {
     showAddTransactionForm(transactionId);
 }
 
+// ==================== DELETE TRANSACTION ====================
 function deleteTransaction(transactionId) {
     var L = APP.language;
     if (!confirm(L==='en'?'Are you sure you want to delete this transaction?':'আপনি কি নিশ্চিত এই ট্রানজেকশন ডিলিট করতে?')) {
@@ -299,9 +313,11 @@ function deleteTransaction(transactionId) {
 
     var transaction = null;
     var txs = meterData.transactions || [];
+    var transactionIndex = -1;
     for (var i = 0; i < txs.length; i++) {
         if (String(txs[i].id) === String(transactionId)) {
             transaction = txs[i];
+            transactionIndex = i;
             break;
         }
     }
@@ -311,33 +327,41 @@ function deleteTransaction(transactionId) {
         return;
     }
 
-    var currentBalance = meterData.currentBalance || 0;
-    var totalRecharge = meterData.totalRecharge || 0;
-    var totalExpended = meterData.totalExpended || 0;
+    // ✅ ডিলিট করার আগে ব্যালেন্স নোট করুন
+    var beforeDeleteBalance = meterData.currentBalance || 0;
+    console.log('📊 Before delete balance:', beforeDeleteBalance);
+    console.log('📊 Transaction type:', transaction.type);
+    console.log('📊 Transaction amount:', transaction.amount);
 
-    // Reverse the transaction effect
-    if (transaction.type === 'recharge') {
-        currentBalance -= transaction.amount;
-        totalRecharge -= transaction.amount;
-    } else {
-        currentBalance += transaction.amount;
-        totalExpended -= transaction.amount;
-    }
-
-    // Remove transaction
+    // ✅ ট্রানজেকশন রিমুভ করুন
     var transactions = [];
     for (var i = 0; i < txs.length; i++) {
-        if (txs[i].id !== transactionId) {
+        if (i !== transactionIndex) {
             transactions.push(txs[i]);
         }
     }
 
-    // Update meter data
+    // ✅ সরাসরি ব্যালেন্স ক্যালকুলেট করুন (ডিমান্ড চার্জ, ভ্যাট, রিবেট ছাড়া)
+    var newBalance = beforeDeleteBalance;
+    if (transaction.type === 'recharge') {
+        // রিচার্জ ডিলিট করলে ব্যালেন্স কমবে
+        newBalance = beforeDeleteBalance - transaction.amount;
+    } else if (transaction.type === 'electricity_bill' || transaction.type === 'bill') {
+        // বিল ডিলিট করলে ব্যালেন্স বাড়বে
+        newBalance = beforeDeleteBalance + transaction.amount;
+    }
+
+    console.log('📊 New balance (direct calculation):', newBalance);
+
+    // ✅ টোটাল রি-ক্যালকুলেট করুন (শুধু টোটাল রিচার্জ এবং খরচের জন্য)
+    var totals = calculateTotals(transactions);
+
+    // ✅ মিটার ডাটা আপডেট করুন
     var updatedData = {
         transactions: transactions,
-        currentBalance: currentBalance,
-        totalRecharge: totalRecharge,
-        totalExpended: totalExpended,
+        currentBalance: Math.max(0, newBalance),
+        totalRecharge: totals.totalRecharge,
+        totalExpended: totals.totalExpense,
         meterInfo: meterData.meterInfo,
         monthlyRecharges: meterData.monthlyRecharges || [],
         lastDemandChargeMonth: meterData.lastDemandChargeMonth || "",
@@ -347,19 +371,41 @@ function deleteTransaction(transactionId) {
 
     updateActiveMeterData(updatedData);
     
-    // Recalculate balance
-    recalculateBalance();
-    
-    // Save to cloud
+    // ✅ ক্লাউডে সেভ করুন
     if (typeof syncAllToCloud === 'function') {
         syncAllToCloud();
     }
     
     showTransactions();
-    showToast(L==='en'?'Transaction deleted':'ট্রানজেকশন ডিলিট করা হয়েছে', 'success');
+    showToast(
+        L==='en' 
+            ? '✅ Transaction deleted. Balance: ৳' + newBalance.toFixed(2) 
+            : '✅ ট্রানজেকশন ডিলিট করা হয়েছে। ব্যালেন্স: ৳' + newBalance.toFixed(2), 
+        'success'
+    );
 }
 
-// ==================== QUICK RECHARGE ====================
+// ==================== CALCULATE TOTALS ====================
+function calculateTotals(transactions) {
+    var totalRecharge = 0;
+    var totalExpense = 0;
+    
+    for (var i = 0; i < transactions.length; i++) {
+        var t = transactions[i];
+        if (t.type === 'recharge') {
+            totalRecharge += t.amount || 0;
+        } else if (t.type === 'electricity_bill' || t.type === 'bill') {
+            totalExpense += t.amount || 0;
+        }
+    }
+    
+    return {
+        totalRecharge: totalRecharge,
+        totalExpense: totalExpense
+    };
+}
+
+// ==================== RECALCULATE BALANCE (শুধু রিচার্জের জন্য) ====================
 function recalculateBalance() {
     var meterData = getActiveMeterData();
     if (!meterData) return;
@@ -376,45 +422,27 @@ function recalculateBalance() {
         return da - db;
     });
     
-    // যদি transactions না থাকে, কিছু করি না
-    if (sorted.length === 0) return;
+    if (sorted.length === 0) {
+        meterData.currentBalance = 0;
+        meterData.totalRecharge = 0;
+        meterData.totalExpended = 0;
+        updateActiveMeterData(meterData);
+        return;
+    }
     
     // Track which months already had demand charge
     var monthlyDC = {};
     
-    // প্রথম রিচার্জের আগে ব্যালেন্স = initialBalance (সংরক্ষিত)
+    // Get initial balance
     var initialBalance = meterData.initialBalance;
     if (initialBalance === undefined || initialBalance === null) {
-        // প্রথমবার: currentBalance থেকেই initialBalance বের করি
-        var totalNet = 0;
-        for (var i = 0; i < sorted.length; i++) {
-            var t = sorted[i];
-            if (t.type === 'recharge') {
-                var d = new Date(t.date || t.timestamp);
-                if (isNaN(d.getTime())) continue;
-                var mk = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                var dc = 0;
-                if (!monthlyDC[mk]) { 
-                    dc = demandCharge; 
-                    monthlyDC[mk] = true; 
-                }
-                var net = t.amount - dc - (t.amount * vatRate/100) + (t.amount * rebateRate/100);
-                totalNet += net;
-            } else if (t.type === 'electricity_bill' || t.type === 'bill') {
-                totalNet -= t.amount;
-            }
-        }
-        initialBalance = Math.max(0, (meterData.currentBalance || 0) - totalNet);
+        initialBalance = 0;
     }
     
     // Recalculate from scratch using initialBalance
-    // Reset monthlyDC
-    for (var key in monthlyDC) {
-        delete monthlyDC[key];
-    }
-    
     var balance = initialBalance;
     var totalRechargeAmount = 0;
+    var totalExpenseAmount = 0;
     
     for (var i = 0; i < sorted.length; i++) {
         var t = sorted[i];
@@ -442,22 +470,24 @@ function recalculateBalance() {
             balance += netAmount;
             totalRechargeAmount += t.amount;
             t.balanceAfter = balance;
+            
         } else if (t.type === 'electricity_bill' || t.type === 'bill') {
             balance -= t.amount;
+            totalExpenseAmount += t.amount;
             t.balanceAfter = balance;
         }
     }
     
-    // Save initialBalance for persistence
+    // Save to meterData
     meterData.initialBalance = initialBalance;
     meterData.currentBalance = Math.max(0, balance);
     meterData.totalRecharge = totalRechargeAmount;
+    meterData.totalExpended = totalExpenseAmount;
     
-    // Update the transactions with new balanceAfter values
-    // But keep the original transaction objects
     updateActiveMeterData(meterData);
 }
 
+// ==================== ADD MONTHLY RECHARGE ====================
 function addMonthlyRecharge() {
     var L = APP.language || 'bn';
     
@@ -495,7 +525,6 @@ function addMonthlyRecharge() {
     var rebateRate = APP.settings.rebateRate || 0.85;
     var demandCharge = APP.settings.demandCharge || 294;
 
-    // Check if demand charge already applied this month
     var d = new Date(date);
     var monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     var hasDemandChargeThisMonth = false;
@@ -511,7 +540,6 @@ function addMonthlyRecharge() {
         }
     }
 
-    // Calculate deductions
     var dcAmount = 0;
     if (!hasDemandChargeThisMonth) {
         dcAmount = demandCharge;
@@ -523,8 +551,11 @@ function addMonthlyRecharge() {
     var balanceAfter = currentBalance + netAmount;
     totalRecharge += amount;
 
+    var dateObj = new Date(date);
+    var formattedDate = dateObj.toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
+
     var descriptionParts = [];
-    descriptionParts.push((L === 'en' ? 'Monthly Recharge' : 'মাসিক রিচার্জ') + ' - ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
+    descriptionParts.push('💰 ' + (L === 'en' ? 'Monthly Recharge' : 'মাসিক রিচার্জ') + ' - ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
     if (dcAmount > 0) {
         descriptionParts.push((L === 'en' ? 'Demand Charge' : 'ডিমান্ড চার্জ') + ': ' + dcAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
     } else {
@@ -533,6 +564,7 @@ function addMonthlyRecharge() {
     descriptionParts.push((L === 'en' ? 'VAT' : 'ভ্যাট') + ': ' + vatDeduction.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
     descriptionParts.push((L === 'en' ? 'Rebate' : 'রিবেট') + ': ' + rebateDeduction.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' (' + (L === 'en' ? 'Discount' : 'ছাড়') + ')');
     descriptionParts.push((L === 'en' ? 'Net' : 'নেট') + ': ' + netAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
+    descriptionParts.push('📅 ' + formattedDate);
 
     var transaction = {
         id: 'recharge_' + Date.now().toString(),
@@ -575,21 +607,16 @@ function addMonthlyRecharge() {
     document.getElementById('quickRechargeStatus').innerHTML = detailsHtml;
     document.getElementById('quickRechargeStatus').style.color = '#2e7d32';
     
-    // Log recharge activity
     logActivity('recharge', (L === 'en' ? 'Monthly Recharge: ৳' : 'মাসিক রিচার্জ: ৳') + amount.toFixed(2) + ' | ' + (L === 'en' ? 'Net' : 'নেট') + ': ৳' + netAmount.toFixed(2) + ' | ' + (L === 'en' ? 'Balance after' : 'ব্যালেন্স পর') + ': ৳' + balanceAfter.toFixed(2));
     
-    // Check badges
     checkBadges();
     
-    // Save to cloud
     if (typeof syncAllToCloud === 'function') {
         syncAllToCloud();
     }
     
     showToast((L === 'en' ? '✅ Recharge added: ' : '✅ রিচার্জ হয়েছে: ') + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Net' : 'নেট') + ': ' + netAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'), 'success');
     
-    // Recalculate all balances
-    recalculateBalance();
     showTransactions();
 }
 
@@ -626,15 +653,13 @@ function updateBalance() {
     var currentBalance = meterData.currentBalance || 0;
     var transactions = meterData.transactions ? JSON.parse(JSON.stringify(meterData.transactions)) : [];
 
-    var transactionType, balanceAfter, description, diffAmount;
+    var dateObj = new Date(date);
+    var formattedDate = dateObj.toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
 
     if (amount >= currentBalance) {
-        // Balance increase = recharge
         var rechargeAmount = amount - currentBalance;
-        transactionType = 'recharge';
-        balanceAfter = amount;
-        diffAmount = rechargeAmount;
-        description = (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') + ' - ' + rechargeAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা');
+        var balanceAfter = amount;
+        var description = '💰 ' + (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') + ' - ' + rechargeAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + formattedDate;
         
         var transaction = {
             id: 'balance_update_' + Date.now().toString(),
@@ -663,12 +688,9 @@ function updateBalance() {
         updateActiveMeterData(updatedData);
         
     } else {
-        // Balance decrease = expense
         var spentAmount = currentBalance - amount;
-        transactionType = 'electricity_bill';
-        balanceAfter = amount;
-        diffAmount = spentAmount;
-        description = (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা');
+        var balanceAfter = amount;
+        var description = '📊 ' + (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + formattedDate;
         
         var transaction = {
             id: 'balance_update_' + Date.now().toString(),
@@ -698,20 +720,17 @@ function updateBalance() {
     }
 
     document.getElementById('quickBalanceAmount').value = '';
-    document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + new Date(date).toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
+    document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + formattedDate;
     document.getElementById('quickBalanceStatus').style.color = '#1565c0';
     
-    // Log balance update activity
     var logType = amount >= currentBalance ? 'recharge' : 'bill';
     var logAction = amount >= currentBalance ? 
         (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') : 
         (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)');
-    logActivity(logType, logAction + ': ৳' + diffAmount.toFixed(2) + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ৳' + amount.toFixed(2) + ' - ' + new Date(date).toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD'));
+    logActivity(logType, logAction + ': ৳' + diffAmount.toFixed(2) + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ৳' + amount.toFixed(2) + ' - ' + formattedDate);
     
-    // Check badges
     checkBadges();
     
-    // Save to cloud
     if (typeof syncAllToCloud === 'function') {
         syncAllToCloud();
     }

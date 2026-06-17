@@ -49,9 +49,10 @@ function getMonthlyAvgKWH(meterId) {
 }
 
 function showDashboard() {
-    console.log('showDashboard called, activeMeterId:', APP.activeMeterId, 'meters:', APP.meters.length);
+    console.log('📊 showDashboard called');
+    console.log('ActiveMeterId:', APP.activeMeterId);
+    console.log('Meters:', APP.meters.length);
     
-    // ===== activeMeterId চেক করুন =====
     if (!APP.activeMeterId && APP.meters.length > 0) {
         APP.activeMeterId = APP.meters[0].id;
         saveData();
@@ -76,7 +77,6 @@ function showDashboard() {
         return;
     }
 
-    // ===== Meter Data তৈরি করুন =====
     if (!APP.metersData[APP.activeMeterId]) {
         APP.metersData[APP.activeMeterId] = {
             transactions: [],
@@ -92,39 +92,17 @@ function showDashboard() {
     }
 
     const meterData = APP.metersData[APP.activeMeterId];
+    const transactions = meterData.transactions || [];
+    
     const balance = meterData.currentBalance || 0;
     const totalRecharge = meterData.totalRecharge || 0;
     const totalExpense = meterData.totalExpended || 0;
     const lastExpense = getLastExpense(APP.activeMeterId);
-    const totalTransactions = (meterData.transactions || []).length;
-    
-    // ===== FIX: allTx ডিফাইন করুন =====
-    const allTx = (meterData.transactions || []).filter(t => t.type === 'recharge').sort((a, b) => new Date(b.date) - new Date(a.date));
-    const lastRecharge = allTx.length > 0 ? allTx[0] : null;
-    
+    const totalTransactions = transactions.length;
     const totalKWH = getTotalKWH(APP.activeMeterId);
     const monthlyAvgExpense = getMonthlyAvgExpense(APP.activeMeterId);
     const monthlyAvgKWH = getMonthlyAvgKWH(APP.activeMeterId);
-
-    // ===== Balance Progress Bar =====
-    let maxBalance = balance;
-    if (lastRecharge && lastRecharge.balanceAfter && lastRecharge.balanceAfter > balance) {
-        maxBalance = lastRecharge.balanceAfter;
-    }
-    if (maxBalance < balance) maxBalance = balance;
-    if (maxBalance <= 0) maxBalance = 1;
-
-    const percentage = Math.min((balance / maxBalance) * 100, 100);
-    let barColor;
-    if (percentage > 80) {
-        barColor = '#2ecc71';
-    } else if (percentage > 55) {
-        barColor = '#f1c40f';
-    } else if (percentage > 30) {
-        barColor = '#e67e22';
-    } else {
-        barColor = '#e74c3c';
-    }
+    const recentTx = getRecentTransactions(APP.activeMeterId, 5);
 
     const L = APP.language;
     const dateLocale = L === 'en' ? 'en-US' : 'bn-BD';
@@ -141,7 +119,6 @@ function showDashboard() {
             </div>
         </div>
 
-        <!-- Summary Stats Row -->
         <div class="stats-grid">
             <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
                 <div class="label">💰 ${L === 'en' ? 'Total Recharge' : 'মোট রিচার্জ'}</div>
@@ -169,17 +146,16 @@ function showDashboard() {
             </div>
         </div>
 
-        <!-- Balance & Last Expense Row -->
         <div class="stats-grid" style="margin-top: 15px;">
             <div class="stat-card" style="background: var(--gradient-1);">
                 <div class="label">${__('balance')}</div>
                 <div class="value">${__('taka')} ${balance.toFixed(2)}</div>
                 <div class="progress-bar">
-                    <div id="balanceProgress" class="progress-fill" style="width: ${percentage.toFixed(2)}%; background: ${barColor};"></div>
+                    <div id="balanceProgress" class="progress-fill" style="width: ${Math.min((balance / (balance + 1000 || 1)) * 100, 100)}%; background: ${balance > 1000 ? '#2ecc71' : '#e74c3c'};"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; opacity: 0.9;">
                     <span>${L === 'en' ? '0%' : '০%'}</span>
-                    <span>${L === 'en' ? 'Balance' : 'ব্যালেন্স'}: ${percentage.toFixed(1)}%</span>
+                    <span>${L === 'en' ? 'Balance' : 'ব্যালেন্স'}: ${Math.min((balance / (balance + 1000 || 1)) * 100, 100).toFixed(1)}%</span>
                     <span>${L === 'en' ? '100%' : '১০০%'}</span>
                 </div>
             </div>
@@ -190,7 +166,8 @@ function showDashboard() {
         </div>
 
         <div class="card">
-            <h3>${__('recentTransactions')}</h3>
+            <h3>${__('recentTransactions')} (${recentTx.length})</h3>
+            ${recentTx.length > 0 ? `
             <div class="table-container">
                 <table>
                     <thead>
@@ -199,23 +176,44 @@ function showDashboard() {
                             <th>${__('type')}</th>
                             <th>${__('amount')}</th>
                             <th>${__('units')}</th>
-                            <th>${__('description')}</th>
+                            <th style="min-width: 200px;">${__('description')}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${getRecentTransactions(APP.activeMeterId, 5).map(t => `
+                        ${recentTx.map(function(t) {
+                            // ✅ date ফর্ম্যাট করুন - date ফিল্ড না থাকলে timestamp ব্যবহার করুন
+                            var dateStr = t.date || t.timestamp;
+                            var displayDate = '-';
+                            try {
+                                if (dateStr) {
+                                    var d = new Date(dateStr);
+                                    if (!isNaN(d.getTime())) {
+                                        displayDate = d.toLocaleDateString(dateLocale);
+                                    }
+                                }
+                            } catch(e) {
+                                displayDate = '-';
+                            }
+                            
+                            // ✅ description এ ইমোজি থাকলে সেটা রেখে দিন
+                            var description = t.description || '-';
+                            
+                            return `
                             <tr>
-                                <td>${new Date(t.date || t.timestamp).toLocaleDateString(dateLocale)}</td>
+                                <td>${displayDate}</td>
                                 <td><span class="badge ${t.type === 'recharge' ? 'badge-success' : 'badge-warning'}">${t.type === 'recharge' ? __('recharge') : __('bill')}</span></td>
-                                <td>${__('taka')} ${t.amount.toFixed(2)}</td>
+                                <td>${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
                                 <td>${t.units ? t.units.toFixed(2) : '-'}</td>
-                                <td>${t.description || '-'}</td>
+                                <td style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: 13px; word-break: break-word; max-width: 250px;">${description}</td>
                             </tr>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
-            ${getRecentTransactions(APP.activeMeterId, 5).length === 0 ? '<p style="text-align: center; padding: 20px; color: var(--text-light);">' + __('noTransactions') + '</p>' : ''}
+            ` : `
+            <p style="text-align: center; padding: 20px; color: var(--text-light);">${__('noTransactions')}</p>
+            `}
         </div>
     `;
 }
