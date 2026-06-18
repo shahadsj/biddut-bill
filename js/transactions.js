@@ -44,18 +44,14 @@ function showTransactions() {
                     <div id="quickRechargeStatus" style="margin-top: 10px; font-weight: 500;"></div>
                 </div>
 
-                <!-- Balance Update with Units -->
+                <!-- Balance Update - ইউনিট ইনপুট ছাড়া -->
                 <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
                     <h3 style="color: #1565c0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 18px;">⚖️ ${L==='en'?'Balance Update':'ব্যালেন্স আপডেট'}</h3>
                     <div class="form-group">
                         <label for="quickBalanceAmount" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Enter New Balance':'নতুন ব্যালেন্স ইনপুট দিন'}</label>
                         <input type="number" class="form-control" id="quickBalanceAmount" placeholder="${L==='en'?'e.g. 1000':'যেমন: 1000'}" min="0" step="0.01" style="background: white;">
                     </div>
-                    <!-- ✅ ইউনিট ইনপুট যোগ করুন -->
-                    <div class="form-group">
-                        <label for="quickBalanceUnits" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Units (kWh)':'ইউনিট (kWh)'}</label>
-                        <input type="number" class="form-control" id="quickBalanceUnits" placeholder="${L==='en'?'e.g. 250':'যেমন: ২৫০'}" min="0" step="0.01" style="background: white;">
-                    </div>
+                    <!-- ✅ ইউনিট ইনপুট ফিল্ড সরানো হয়েছে -->
                     <div class="form-group">
                         <label for="quickBalanceDate" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Select Date':'তারিখ নির্বাচন করুন'}</label>
                         <input type="date" class="form-control" id="quickBalanceDate" value="${today}" style="background: white;">
@@ -82,7 +78,6 @@ function showTransactions() {
                     </thead>
                     <tbody>
                         ${transactions.map(function(t) {
-                            // date ফর্ম্যাট করুন
                             var dateStr = t.date || t.timestamp;
                             var displayDate = '-';
                             try {
@@ -667,9 +662,14 @@ function updateBalance() {
     var dateObj = new Date(date);
     var formattedDate = dateObj.toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
 
-    // ✅ ইউনিট ইনপুট নিন
-    var unitsInput = document.getElementById('quickBalanceUnits');
-    var units = unitsInput ? parseFloat(unitsInput.value) || 0 : 0;
+    // ✅ ইউনিট অটো-ক্যালকুলেট করুন
+    var estimatedUnits = 0;
+    var diffAmount = Math.abs(amount - currentBalance);
+    
+    // টাকা থেকে ইউনিট ক্যালকুলেট (গড় রেট 5.7 ধরে)
+    if (diffAmount > 0) {
+        estimatedUnits = Math.round((diffAmount / 5.7) * 100) / 100;
+    }
 
     if (amount >= currentBalance) {
         var rechargeAmount = amount - currentBalance;
@@ -681,7 +681,7 @@ function updateBalance() {
             meterId: APP.activeMeterId,
             type: 'recharge',
             amount: rechargeAmount,
-            units: units,
+            units: 0,  // রিচার্জের জন্য ইউনিট 0
             balanceAfter: balanceAfter,
             date: date,
             description: description,
@@ -705,6 +705,7 @@ function updateBalance() {
     } else {
         var spentAmount = currentBalance - amount;
         var balanceAfter = amount;
+        // ✅ ইউনিট description-এ যোগ করুন
         var description = '📊 ' + (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + formattedDate;
         
         var transaction = {
@@ -712,7 +713,7 @@ function updateBalance() {
             meterId: APP.activeMeterId,
             type: 'electricity_bill',
             amount: spentAmount,
-            units: units,
+            units: estimatedUnits,  // ✅ অটো-ক্যালকুলেটেড ইউনিট
             balanceAfter: balanceAfter,
             date: date,
             description: description,
@@ -735,14 +736,10 @@ function updateBalance() {
     }
 
     document.getElementById('quickBalanceAmount').value = '';
-    if (document.getElementById('quickBalanceUnits')) {
-        document.getElementById('quickBalanceUnits').value = '';
-    }
     
-    document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + formattedDate;
+    document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + formattedDate + (estimatedUnits > 0 ? ' (ইউনিট: ' + estimatedUnits + ' kWh)' : '');
     document.getElementById('quickBalanceStatus').style.color = '#1565c0';
     
-    var diffAmount = Math.abs(amount - currentBalance);
     var logType = amount >= currentBalance ? 'recharge' : 'bill';
     var logAction = amount >= currentBalance ? 
         (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') : 
