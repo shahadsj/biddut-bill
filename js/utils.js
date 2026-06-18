@@ -1,6 +1,13 @@
-function escapeHtml(s){if(!s)return"";return s.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#039;").replace(/"/g,"&quot;");}
+function escapeHtml(s) {
+    if (!s) return "";
+    return s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#039;").replace(/"/g, "&quot;");
+}
 
-function __(k){const l=APP.language||"bn";return APP.translations&&APP.translations[l]&&APP.translations[l][k]?APP.translations[l][k]:APP.translations&&APP.translations["bn"]&&APP.translations["bn"][k]?APP.translations["bn"][k]:k;}
+function __(k) {
+    var l = APP.language || "bn";
+    return APP.translations && APP.translations[l] && APP.translations[l][k] ? APP.translations[l][k] : 
+           APP.translations && APP.translations["bn"] && APP.translations["bn"][k] ? APP.translations["bn"][k] : k;
+}
 
 // ==================== UTILITY FUNCTIONS ====================
 function calculateBalance(meterId) {
@@ -138,20 +145,90 @@ function convertBanglaToEnglish(banglaNum) {
     return result;
 }
 
+// ==================== TOAST NOTIFICATION (STACK VERSION) ====================
 function showToast(message, type) {
     var container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+    }
+    
     var toast = document.createElement('div');
     toast.className = 'toast';
-    toast.style.background = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : type === 'warning' ? 'var(--warning)' : 'var(--primary)';
+    
+    var colors = {
+        success: '#27ae60',
+        error: '#e74c3c',
+        warning: '#f39c12',
+        info: '#3498db'
+    };
+    
+    toast.style.background = colors[type] || colors.info;
+    toast.style.color = 'white';
+    toast.style.padding = '12px 20px';
+    toast.style.borderRadius = '10px';
+    toast.style.marginBottom = '8px';
+    toast.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+    toast.style.animation = 'slideInRight 0.3s ease';
+    toast.style.position = 'relative';
+    toast.style.paddingRight = '35px';
     toast.textContent = message;
+    
+    // Close button
+    var closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = `
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        opacity: 0.7;
+        font-size: 16px;
+        padding: 2px 6px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    `;
+    closeBtn.onmouseover = function() { this.style.opacity = '1'; };
+    closeBtn.onmouseout = function() { this.style.opacity = '0.7'; };
+    closeBtn.onclick = function() {
+        removeToast(toast);
+    };
+    toast.appendChild(closeBtn);
+    
     container.appendChild(toast);
-    setTimeout(function() { toast.remove(); }, 3000);
+    
+    // Auto remove after 3 seconds
+    var timeout = setTimeout(function() {
+        removeToast(toast);
+    }, 3000);
+    
+    // Pause on hover
+    toast.onmouseenter = function() { clearTimeout(timeout); };
+    toast.onmouseleave = function() {
+        timeout = setTimeout(function() {
+            removeToast(toast);
+        }, 2000);
+    };
+}
+
+function removeToast(toast) {
+    if (!toast || !toast.parentNode) return;
+    toast.style.animation = 'slideOutRight 0.3s ease forwards';
+    setTimeout(function() {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
 }
 
 function getRandomColor() {
     var colors = ['#667eea','#764ba2','#f093fb','#f5576c','#4facfe','#00f2fe','#43e97b','#38f9d7'];
     return colors[Math.floor(Math.random() * colors.length)];
 }
+
+// ==================== BADGE SYSTEM ====================
 
 function getBadgeText(key) {
     var L = APP.language || 'bn';
@@ -177,347 +254,10 @@ function getBadgeText(key) {
     return b ? b[L] : key;
 }
 
-function checkBadgesOnLoad() {
-    var allTransactions = Object.values(APP.metersData).reduce(function(sum, meter) { return sum + (meter.transactions ? meter.transactions.length : 0); }, 0);
-    var totalRechargeAmount = Object.values(APP.metersData).reduce(function(sum, meter) { return sum + (meter.totalRecharge || 0); }, 0);
-    var totalExpendedAmount = Object.values(APP.metersData).reduce(function(sum, meter) { return sum + (meter.totalExpended || 0); }, 0);
-    
-    APP.badges = [];
-    if (allTransactions >= 500) APP.badges.push(getBadgeText('500_plus'));
-    if (allTransactions >= 200) APP.badges.push(getBadgeText('200_plus'));
-    if (allTransactions >= 100) APP.badges.push(getBadgeText('100_plus'));
-    if (allTransactions >= 50) APP.badges.push(getBadgeText('50_plus'));
-    if (allTransactions >= 25) APP.badges.push(getBadgeText('25_plus'));
-    if (allTransactions >= 10) APP.badges.push(getBadgeText('10_plus'));
-    if (allTransactions >= 5) APP.badges.push(getBadgeText('5_plus'));
-    if (allTransactions >= 1) APP.badges.push(getBadgeText('first'));
-    if (totalRechargeAmount >= 50000) APP.badges.push(getBadgeText('recharge_50k'));
-    else if (totalRechargeAmount >= 10000) APP.badges.push(getBadgeText('recharge_10k'));
-    else if (totalRechargeAmount >= 5000) APP.badges.push(getBadgeText('recharge_5k'));
-    else if (totalRechargeAmount >= 1000) APP.badges.push(getBadgeText('recharge_1k'));
-    if (totalExpendedAmount >= 50000) APP.badges.push(getBadgeText('expense_50k'));
-    else if (totalExpendedAmount >= 10000) APP.badges.push(getBadgeText('expense_10k'));
-    if (APP.meters.length >= 5) APP.badges.push(getBadgeText('meters_5'));
-    if (APP.meters.length >= 2) APP.badges.push(getBadgeText('meters_2'));
-    saveData();
-}
-
-function checkBadges() {
-    var allTransactions = Object.values(APP.metersData).reduce(function(sum, meter) { return sum + (meter.transactions ? meter.transactions.length : 0); }, 0);
-    var newBadgeEarned = false;
-    
-    if (allTransactions >= 5 && !APP.badges.includes(getBadgeText('5_plus'))) { APP.badges.push(getBadgeText('5_plus')); newBadgeEarned = true; }
-    if (allTransactions >= 10 && !APP.badges.includes(getBadgeText('10_plus'))) { APP.badges.push(getBadgeText('10_plus')); newBadgeEarned = true; }
-    if (allTransactions >= 25 && !APP.badges.includes(getBadgeText('25_plus'))) { APP.badges.push(getBadgeText('25_plus')); newBadgeEarned = true; }
-    if (allTransactions >= 50 && !APP.badges.includes(getBadgeText('50_plus'))) { APP.badges.push(getBadgeText('50_plus')); newBadgeEarned = true; }
-    if (allTransactions >= 100 && !APP.badges.includes(getBadgeText('100_plus'))) { APP.badges.push(getBadgeText('100_plus')); newBadgeEarned = true; }
-    if (allTransactions >= 200 && !APP.badges.includes(getBadgeText('200_plus'))) { APP.badges.push(getBadgeText('200_plus')); newBadgeEarned = true; }
-    if (allTransactions >= 500 && !APP.badges.includes(getBadgeText('500_plus'))) { APP.badges.push(getBadgeText('500_plus')); newBadgeEarned = true; }
-    
-    if (newBadgeEarned) showToast(APP.language==='en'?'New badge earned!':'🎉 নতুন ব্যাজ অর্জিত!', 'success');
-    saveData();
-}
-
-function switchMeter(meterId) {
-    if (APP.activeMeterId === meterId) return;
-    APP.activeMeterId = meterId;
-    saveData();
-    if (APP.currentPage === 'dashboard') showDashboard();
-    else navigateTo('dashboard');
-}
-
-// ==================== MISSING FUNCTIONS ====================
-
-// applySettings - Settings apply করার জন্য
-function applySettings() {
-    // Font size apply
-    if (APP.settings.fontSize) {
-        document.documentElement.style.setProperty('--font-size', APP.settings.fontSize + 'px');
-    }
-    
-    // Dark mode
-    if (APP.settings.darkMode) {
-        document.body.classList.add('dark-mode');
-    } else {
-        document.body.classList.remove('dark-mode');
-    }
-    
-    // High contrast
-    if (APP.settings.highContrast) {
-        document.body.classList.add('high-contrast');
-    } else {
-        document.body.classList.remove('high-contrast');
-    }
-}
-
-// getActiveMeterData - বর্তমান মিটারের ডাটা পাওয়ার জন্য
-function getActiveMeterData() {
-    if (!APP.activeMeterId) return null;
-    return APP.metersData[APP.activeMeterId] || null;
-}
-
-// updateActiveMeterData - বর্তমান মিটারের ডাটা আপডেট করার জন্য
-function updateActiveMeterData(data) {
-    if (!APP.activeMeterId) return;
-    APP.metersData[APP.activeMeterId] = data;
-    saveData();
-}
-
-// getMeterData - নির্দিষ্ট মিটারের ডাটা পাওয়ার জন্য
-function getMeterData(meterId) {
-    return APP.metersData[meterId] || null;
-}
-
-// logActivity - অ্যাক্টিভিটি লগ করার জন্য
-function logActivity(type, details) {
-    if (!APP.currentUser) return;
-    
-    var log = {
-        type: type,
-        userName: APP.currentUser.name || 'User',
-        userEmail: APP.currentUser.email || '',
-        userId: APP.currentUser.id || '',
-        details: details || '',
-        timestamp: Date.now(),
-        deviceInfo: {
-            platform: navigator.platform || 'Unknown',
-            language: navigator.language || 'Unknown',
-            userAgent: navigator.userAgent || 'Unknown'
-        }
-    };
-    
-    // Save to Firebase if available
-    if (typeof database !== "undefined" && database && APP.currentUser) {
-        var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
-        var ref = database.ref('users/' + userEmail + '/activities');
-        ref.push(log).catch(function(err) {
-            console.warn('Activity log save error:', err);
-        });
-    }
-    
-    // Also save locally
-    var logs = JSON.parse(localStorage.getItem('activity_logs') || '[]');
-    logs.push(log);
-    if (logs.length > 1000) logs = logs.slice(-500);
-    localStorage.setItem('activity_logs', JSON.stringify(logs));
-}
-
-// getActivityLogs - অ্যাক্টিভিটি লগ পাওয়ার জন্য
-function getActivityLogs(type, limit) {
-    var logs = JSON.parse(localStorage.getItem('activity_logs') || '[]');
-    
-    if (type && type !== 'all') {
-        logs = logs.filter(function(log) { return log.type === type; });
-    }
-    
-    logs.sort(function(a, b) { return b.timestamp - a.timestamp; });
-    
-    if (limit) {
-        logs = logs.slice(0, limit);
-    }
-    
-    return logs;
-}
-
-// ==================== SAVE DATA (ONLY FIREBASE) ====================
-function saveData() {
-    // Only save to Firebase - no localStorage
-    if (typeof saveAllToCloud === 'function') {
-        saveAllToCloud().catch(function(error) {
-            console.warn('⚠️ Save to Firebase failed:', error);
-        });
-    } else {
-        console.warn('⚠️ saveAllToCloud function not available');
-    }
-}
-
-// ==================== LANGUAGE TOGGLE ====================
-function toggleLanguage() {
-    // Switch between 'bn' and 'en'
-    if (APP.language === 'bn') {
-        APP.language = 'en';
-    } else {
-        APP.language = 'bn';
-    }
-    
-    // Save to localStorage
-    saveData();
-    
-    // Update all sidebar texts
-    updateAllSidebarTexts();
-    
-    // Update sidebar user info
-    updateSidebarUserInfo();
-    
-    // Reload current page with new language
-    var currentPage = APP.currentPage || 'dashboard';
-    navigateTo(currentPage);
-    
-    // Show toast notification
-    var msg = APP.language === 'en' ? 'Language changed to English' : 'ভাষা পরিবর্তন করে বাংলা করা হয়েছে';
-    showToast(msg, 'success');
-}
-
-// ==================== UPDATE ALL SIDEBAR TEXTS ====================
-function updateAllSidebarTexts() {
-    var L = APP.language;
-    var translations = APP.translations[L] || APP.translations.bn;
-    
-    // Update all nav items with data-key attribute
-    document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
-        var key = el.getAttribute('data-key');
-        if (translations[key]) {
-            el.textContent = translations[key];
-        }
-    });
-    
-    // Update sidebar user role
-    var roleEl = document.getElementById('sidebarUserRole');
-    if (roleEl && APP.currentUser) {
-        if (APP.currentUser.role === 'admin') {
-            roleEl.textContent = L === 'en' ? 'Admin' : 'অ্যাডমিন';
-        } else {
-            roleEl.textContent = L === 'en' ? 'User' : 'ইউজার';
-        }
-    }
-    
-    // Update language toggle button text in meter selector
-    var langToggle = document.querySelector('.lang-toggle-btn span');
-    if (langToggle) {
-        langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
-    }
-    
-    // Update sidebar language toggle if exists
-    var sidebarLangToggle = document.querySelector('.sidebar-lang-toggle span');
-    if (sidebarLangToggle) {
-        sidebarLangToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
-    }
-}
-
-// ==================== TRANSLATION HELPER ====================
-function __(key) {
-    var L = APP.language || 'bn';
-    var translations = APP.translations[L] || APP.translations.bn;
-    return translations[key] || key;
-}
-
-// ==================== BADGE SYSTEM ====================
-
-// Badge definitions
-function getBadgeDefinitions(L) {
-    return {
-        'first': { 
-            icon: '🌱', 
-            bn: 'প্রথম বিল', 
-            en: 'First Bill',
-            condition: function(transactions) { return transactions.length >= 1; }
-        },
-        '5_plus': { 
-            icon: '⭐', 
-            bn: '৫টি বিল', 
-            en: '5 Bills',
-            condition: function(transactions) { return transactions.length >= 5; }
-        },
-        '10_plus': { 
-            icon: '🎖️', 
-            bn: '১০টি বিল', 
-            en: '10 Bills',
-            condition: function(transactions) { return transactions.length >= 10; }
-        },
-        '25_plus': { 
-            icon: '🎯', 
-            bn: '২৫টি বিল', 
-            en: '25 Bills',
-            condition: function(transactions) { return transactions.length >= 25; }
-        },
-        '50_plus': { 
-            icon: '🌟', 
-            bn: '৫০টি বিল', 
-            en: '50 Bills',
-            condition: function(transactions) { return transactions.length >= 50; }
-        },
-        '100_plus': { 
-            icon: '💎', 
-            bn: '১০০টি বিল', 
-            en: '100 Bills',
-            condition: function(transactions) { return transactions.length >= 100; }
-        },
-        '200_plus': { 
-            icon: '🥇', 
-            bn: '২০০+ বিল', 
-            en: '200+ Bills',
-            condition: function(transactions) { return transactions.length >= 200; }
-        },
-        '500_plus': { 
-            icon: '🏆', 
-            bn: '৫০০+ বিল', 
-            en: '500+ Bills',
-            condition: function(transactions) { return transactions.length >= 500; }
-        },
-        'recharge_1k': { 
-            icon: '💸', 
-            bn: '১,০০০+ রিচার্জ', 
-            en: '1,000+ Recharge',
-            condition: function(transactions, totalRecharge) { return totalRecharge >= 1000; }
-        },
-        'recharge_5k': { 
-            icon: '🪙', 
-            bn: '৫,০০০+ রিচার্জ', 
-            en: '5,000+ Recharge',
-            condition: function(transactions, totalRecharge) { return totalRecharge >= 5000; }
-        },
-        'recharge_10k': { 
-            icon: '💵', 
-            bn: '১০,০০০+ রিচার্জ', 
-            en: '10,000+ Recharge',
-            condition: function(transactions, totalRecharge) { return totalRecharge >= 10000; }
-        },
-        'recharge_50k': { 
-            icon: '💰', 
-            bn: '৫০,০০০+ রিচার্জ', 
-            en: '50,000+ Recharge',
-            condition: function(transactions, totalRecharge) { return totalRecharge >= 50000; }
-        },
-        'meters_2': { 
-            icon: '⚡', 
-            bn: 'একাধিক মিটার', 
-            en: 'Multiple Meters',
-            condition: function(transactions, totalRecharge, meterCount) { return meterCount >= 2; }
-        },
-        'meters_5': { 
-            icon: '🔌', 
-            bn: '৫+ মিটার', 
-            en: '5+ Meters',
-            condition: function(transactions, totalRecharge, meterCount) { return meterCount >= 5; }
-        },
-        'expense_10k': { 
-            icon: '📈', 
-            bn: '১০,০০০+ খরচ', 
-            en: '10,000+ Expense',
-            condition: function(transactions, totalRecharge, meterCount, totalExpense) { return totalExpense >= 10000; }
-        },
-        'expense_50k': { 
-            icon: '📊', 
-            bn: '৫০,০০০+ খরচ', 
-            en: '50,000+ Expense',
-            condition: function(transactions, totalRecharge, meterCount, totalExpense) { return totalExpense >= 50000; }
-        }
-    };
-}
-
-function getBadgeText(key) {
-    var L = APP.language || 'bn';
-    var defs = getBadgeDefinitions(L);
-    var badge = defs[key];
-    if (!badge) return key;
-    return badge.icon + ' ' + (L === 'bn' ? badge.bn : badge.en);
-}
-
 // ==================== CHECK BADGES ====================
 function checkBadges() {
     console.log('🏅 Checking badges...');
     
-    // Get all transactions across all meters
     var allTransactions = [];
     var totalRechargeAmount = 0;
     var totalExpendedAmount = 0;
@@ -541,42 +281,82 @@ function checkBadges() {
     console.log('💸 Total expense:', totalExpendedAmount);
     console.log('⚡ Total meters:', meterCount);
     
-    // Get badge definitions
     var L = APP.language || 'bn';
-    var defs = getBadgeDefinitions(L);
-    var earnedBadges = [];
+    var newBadgeEarned = false;
     
-    // Check each badge condition
-    for (var key in defs) {
-        if (defs.hasOwnProperty(key)) {
-            var badge = defs[key];
-            var condition = badge.condition;
-            
-            // Check if condition is met
-            var isEarned = condition(
-                allTransactions,
-                totalRechargeAmount,
-                meterCount,
-                totalExpendedAmount
-            );
-            
-            if (isEarned) {
-                var badgeText = badge.icon + ' ' + (L === 'bn' ? badge.bn : badge.en);
-                if (!APP.badges.includes(badgeText)) {
-                    APP.badges.push(badgeText);
-                    console.log('🏅 New badge earned:', badgeText);
-                    showToast('🎉 ' + (L === 'en' ? 'New badge earned: ' : 'নতুন ব্যাজ অর্জিত: ') + badgeText, 'success');
-                }
-                earnedBadges.push(badgeText);
-            }
-        }
+    if (transactionCount >= 1 && !APP.badges.includes(getBadgeText('first'))) { 
+        APP.badges.push(getBadgeText('first')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 5 && !APP.badges.includes(getBadgeText('5_plus'))) { 
+        APP.badges.push(getBadgeText('5_plus')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 10 && !APP.badges.includes(getBadgeText('10_plus'))) { 
+        APP.badges.push(getBadgeText('10_plus')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 25 && !APP.badges.includes(getBadgeText('25_plus'))) { 
+        APP.badges.push(getBadgeText('25_plus')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 50 && !APP.badges.includes(getBadgeText('50_plus'))) { 
+        APP.badges.push(getBadgeText('50_plus')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 100 && !APP.badges.includes(getBadgeText('100_plus'))) { 
+        APP.badges.push(getBadgeText('100_plus')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 200 && !APP.badges.includes(getBadgeText('200_plus'))) { 
+        APP.badges.push(getBadgeText('200_plus')); 
+        newBadgeEarned = true; 
+    }
+    if (transactionCount >= 500 && !APP.badges.includes(getBadgeText('500_plus'))) { 
+        APP.badges.push(getBadgeText('500_plus')); 
+        newBadgeEarned = true; 
     }
     
-    // Save if any changes
-    if (APP.badges.length > 0) {
-        saveData();
+    if (totalRechargeAmount >= 1000 && !APP.badges.includes(getBadgeText('recharge_1k'))) { 
+        APP.badges.push(getBadgeText('recharge_1k')); 
+        newBadgeEarned = true; 
+    }
+    if (totalRechargeAmount >= 5000 && !APP.badges.includes(getBadgeText('recharge_5k'))) { 
+        APP.badges.push(getBadgeText('recharge_5k')); 
+        newBadgeEarned = true; 
+    }
+    if (totalRechargeAmount >= 10000 && !APP.badges.includes(getBadgeText('recharge_10k'))) { 
+        APP.badges.push(getBadgeText('recharge_10k')); 
+        newBadgeEarned = true; 
+    }
+    if (totalRechargeAmount >= 50000 && !APP.badges.includes(getBadgeText('recharge_50k'))) { 
+        APP.badges.push(getBadgeText('recharge_50k')); 
+        newBadgeEarned = true; 
     }
     
+    if (totalExpendedAmount >= 10000 && !APP.badges.includes(getBadgeText('expense_10k'))) { 
+        APP.badges.push(getBadgeText('expense_10k')); 
+        newBadgeEarned = true; 
+    }
+    if (totalExpendedAmount >= 50000 && !APP.badges.includes(getBadgeText('expense_50k'))) { 
+        APP.badges.push(getBadgeText('expense_50k')); 
+        newBadgeEarned = true; 
+    }
+    
+    if (meterCount >= 2 && !APP.badges.includes(getBadgeText('meters_2'))) { 
+        APP.badges.push(getBadgeText('meters_2')); 
+        newBadgeEarned = true; 
+    }
+    if (meterCount >= 5 && !APP.badges.includes(getBadgeText('meters_5'))) { 
+        APP.badges.push(getBadgeText('meters_5')); 
+        newBadgeEarned = true; 
+    }
+    
+    if (newBadgeEarned) {
+        showToast(APP.language === 'en' ? '🎉 New badge earned!' : '🎉 নতুন ব্যাজ অর্জিত!', 'success');
+    }
+    
+    saveData();
     console.log('🏅 Total badges:', APP.badges.length);
     return APP.badges;
 }
@@ -586,20 +366,154 @@ function checkBadgesOnLoad() {
     return checkBadges();
 }
 
-// ==================== GET BADGE DISPLAY ====================
-function getBadgeDisplay() {
-    var L = APP.language || 'bn';
-    var badges = APP.badges || [];
-    
-    if (badges.length === 0) {
-        return '<p style="text-align: center; padding: 20px; color: var(--text-light);">' +
-               '🏅 ' + (L === 'en' ? 'No badges earned yet.' : 'এখনও কোন ব্যাজ অর্জিত হয়নি।') + 
-               '<br><small>' + (L === 'en' ? 'Add 5 bills to earn your first badge!' : '৫টি বিল যোগ করে প্রথম ব্যাজ অর্জন করুন!') + '</small></p>';
+function switchMeter(meterId) {
+    if (APP.activeMeterId === meterId) return;
+    APP.activeMeterId = meterId;
+    saveData();
+    if (APP.currentPage === 'dashboard') showDashboard();
+    else navigateTo('dashboard');
+}
+
+// ==================== MISSING FUNCTIONS ====================
+
+function applySettings() {
+    if (APP.settings.fontSize) {
+        document.documentElement.style.setProperty('--font-size', APP.settings.fontSize + 'px');
     }
     
-    return '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px;">' +
-           badges.map(function(b) {
-               return '<span style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #333; padding: 10px 20px; border-radius: 25px; font-weight: bold; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">' + b + '</span>';
-           }).join('') +
-           '</div>';
+    if (APP.settings.darkMode) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    
+    if (APP.settings.highContrast) {
+        document.body.classList.add('high-contrast');
+    } else {
+        document.body.classList.remove('high-contrast');
+    }
+}
+
+function getActiveMeterData() {
+    if (!APP.activeMeterId) return null;
+    return APP.metersData[APP.activeMeterId] || null;
+}
+
+function updateActiveMeterData(data) {
+    if (!APP.activeMeterId) return;
+    APP.metersData[APP.activeMeterId] = data;
+    saveData();
+}
+
+function getMeterData(meterId) {
+    return APP.metersData[meterId] || null;
+}
+
+// ==================== ACTIVITY LOG ====================
+function logActivity(type, details) {
+    if (!APP.currentUser) return;
+    
+    var log = {
+        type: type,
+        userName: APP.currentUser.name || 'User',
+        userEmail: APP.currentUser.email || '',
+        userId: APP.currentUser.id || '',
+        details: details || '',
+        timestamp: Date.now(),
+        deviceInfo: {
+            platform: navigator.platform || 'Unknown',
+            language: navigator.language || 'Unknown',
+            userAgent: navigator.userAgent || 'Unknown'
+        }
+    };
+    
+    if (typeof database !== "undefined" && database && APP.currentUser) {
+        var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+        var ref = database.ref('users/' + userEmail + '/activities');
+        ref.push(log).catch(function(err) {
+            console.warn('Activity log save error:', err);
+        });
+    }
+    
+    var logs = JSON.parse(localStorage.getItem('activity_logs') || '[]');
+    logs.push(log);
+    if (logs.length > 1000) logs = logs.slice(-500);
+    localStorage.setItem('activity_logs', JSON.stringify(logs));
+}
+
+function getActivityLogs(type, limit) {
+    var logs = JSON.parse(localStorage.getItem('activity_logs') || '[]');
+    
+    if (type && type !== 'all') {
+        logs = logs.filter(function(log) { return log.type === type; });
+    }
+    
+    logs.sort(function(a, b) { return b.timestamp - a.timestamp; });
+    
+    if (limit) {
+        logs = logs.slice(0, limit);
+    }
+    
+    return logs;
+}
+
+// ==================== SAVE DATA (ONLY FIREBASE) ====================
+function saveData() {
+    if (typeof saveAllToCloud === 'function') {
+        saveAllToCloud().catch(function(error) {
+            console.warn('⚠️ Save to Firebase failed:', error);
+        });
+    } else {
+        console.warn('⚠️ saveAllToCloud function not available');
+    }
+}
+
+// ==================== LANGUAGE TOGGLE ====================
+function toggleLanguage() {
+    if (APP.language === 'bn') {
+        APP.language = 'en';
+    } else {
+        APP.language = 'bn';
+    }
+    
+    saveData();
+    updateAllSidebarTexts();
+    updateSidebarUserInfo();
+    
+    var currentPage = APP.currentPage || 'dashboard';
+    navigateTo(currentPage);
+    
+    var msg = APP.language === 'en' ? '🌐 Language changed to English' : '🌐 ভাষা পরিবর্তন করে বাংলা করা হয়েছে';
+    showToast(msg, 'success');
+}
+
+function updateAllSidebarTexts() {
+    var L = APP.language;
+    var translations = APP.translations[L] || APP.translations.bn;
+    
+    document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
+        var key = el.getAttribute('data-key');
+        if (translations[key]) {
+            el.textContent = translations[key];
+        }
+    });
+    
+    var roleEl = document.getElementById('sidebarUserRole');
+    if (roleEl && APP.currentUser) {
+        roleEl.textContent = APP.currentUser.role === 'admin' ? 
+            (L === 'en' ? 'Admin' : 'অ্যাডমিন') : 
+            (L === 'en' ? 'User' : 'ইউজার');
+    }
+    
+    var langToggle = document.querySelector('.lang-toggle-btn span');
+    if (langToggle) {
+        langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
+    }
+}
+
+// ==================== TRANSLATION HELPER ====================
+function __(key) {
+    var L = APP.language || 'bn';
+    var translations = APP.translations[L] || APP.translations.bn;
+    return translations[key] || key;
 }
