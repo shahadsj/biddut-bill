@@ -26,7 +26,10 @@ function showTransactions() {
                 <button class="btn" onclick="showAddTransactionForm()">+ ${L==='en'?'New Transaction':'নতুন ট্রানজেকশন'}</button>
             </div>
 
+            <!-- Quick Recharge & Balance Update Forms -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                
+                <!-- Monthly Recharge -->
                 <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
                     <h3 style="color: #2e7d32; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 18px;">💰 ${L==='en'?'Monthly Recharge':'মাসিক রিচার্জ'}</h3>
                     <div class="form-group">
@@ -41,11 +44,17 @@ function showTransactions() {
                     <div id="quickRechargeStatus" style="margin-top: 10px; font-weight: 500;"></div>
                 </div>
 
+                <!-- Balance Update with Units -->
                 <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
                     <h3 style="color: #1565c0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 18px;">⚖️ ${L==='en'?'Balance Update':'ব্যালেন্স আপডেট'}</h3>
                     <div class="form-group">
                         <label for="quickBalanceAmount" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Enter New Balance':'নতুন ব্যালেন্স ইনপুট দিন'}</label>
                         <input type="number" class="form-control" id="quickBalanceAmount" placeholder="${L==='en'?'e.g. 1000':'যেমন: 1000'}" min="0" step="0.01" style="background: white;">
+                    </div>
+                    <!-- ✅ ইউনিট ইনপুট যোগ করুন -->
+                    <div class="form-group">
+                        <label for="quickBalanceUnits" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Units (kWh)':'ইউনিট (kWh)'}</label>
+                        <input type="number" class="form-control" id="quickBalanceUnits" placeholder="${L==='en'?'e.g. 250':'যেমন: ২৫০'}" min="0" step="0.01" style="background: white;">
                     </div>
                     <div class="form-group">
                         <label for="quickBalanceDate" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Select Date':'তারিখ নির্বাচন করুন'}</label>
@@ -56,6 +65,7 @@ function showTransactions() {
                 </div>
             </div>
 
+            <!-- All Transactions Table -->
             <h3 style="margin-bottom: 15px; color: var(--text); font-size: 18px;">📋 ${L==='en'?'All Transactions':'সব ট্রানজেকশন'}</h3>
             <div class="table-container">
                 <table>
@@ -72,6 +82,7 @@ function showTransactions() {
                     </thead>
                     <tbody>
                         ${transactions.map(function(t) {
+                            // date ফর্ম্যাট করুন
                             var dateStr = t.date || t.timestamp;
                             var displayDate = '-';
                             try {
@@ -656,6 +667,10 @@ function updateBalance() {
     var dateObj = new Date(date);
     var formattedDate = dateObj.toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
 
+    // ✅ ইউনিট ইনপুট নিন
+    var unitsInput = document.getElementById('quickBalanceUnits');
+    var units = unitsInput ? parseFloat(unitsInput.value) || 0 : 0;
+
     if (amount >= currentBalance) {
         var rechargeAmount = amount - currentBalance;
         var balanceAfter = amount;
@@ -666,7 +681,7 @@ function updateBalance() {
             meterId: APP.activeMeterId,
             type: 'recharge',
             amount: rechargeAmount,
-            units: 0,
+            units: units,
             balanceAfter: balanceAfter,
             date: date,
             description: description,
@@ -697,7 +712,7 @@ function updateBalance() {
             meterId: APP.activeMeterId,
             type: 'electricity_bill',
             amount: spentAmount,
-            units: 0,
+            units: units,
             balanceAfter: balanceAfter,
             date: date,
             description: description,
@@ -720,9 +735,14 @@ function updateBalance() {
     }
 
     document.getElementById('quickBalanceAmount').value = '';
+    if (document.getElementById('quickBalanceUnits')) {
+        document.getElementById('quickBalanceUnits').value = '';
+    }
+    
     document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + formattedDate;
     document.getElementById('quickBalanceStatus').style.color = '#1565c0';
     
+    var diffAmount = Math.abs(amount - currentBalance);
     var logType = amount >= currentBalance ? 'recharge' : 'bill';
     var logAction = amount >= currentBalance ? 
         (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') : 
