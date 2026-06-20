@@ -20,14 +20,15 @@ const APP = {
         autoBackupTime: '02:00',
         retentionDays: 30
     },
+    // ✅ ট্যারিফ রেট - increasePercent যোগ করা হয়েছে
     tariffRates: [
-        { range: [0, 50], rate: 3.5, name: "Lifeline" },
-        { range: [51, 75], rate: 4, name: "1st Slab" },
-        { range: [76, 200], rate: 5.45, name: "2nd Slab" },
-        { range: [201, 300], rate: 5.7, name: "3rd Slab" },
-        { range: [301, 400], rate: 6.02, name: "4th Slab" },
-        { range: [401, 600], rate: 9.3, name: "5th Slab" },
-        { range: [601, null], rate: 10.7, name: "6th Slab" }
+        { range: [0, 50], rate: 3.5, name: "Lifeline", increasePercent: 0 },
+        { range: [51, 75], rate: 4, name: "1st Slab", increasePercent: 0 },
+        { range: [76, 200], rate: 5.45, name: "2nd Slab", increasePercent: 0 },
+        { range: [201, 300], rate: 5.7, name: "3rd Slab", increasePercent: 0 },
+        { range: [301, 400], rate: 6.02, name: "4th Slab", increasePercent: 0 },
+        { range: [401, 600], rate: 9.3, name: "5th Slab", increasePercent: 0 },
+        { range: [601, null], rate: 10.7, name: "6th Slab", increasePercent: 0 }
     ],
     savingsGoal: 0,
     badges: [],

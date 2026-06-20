@@ -84,8 +84,16 @@ function getMonthlySummary(meterId) {
     var meterData = APP.metersData[meterId];
     if (!meterData || !meterData.transactions) return summary;
     
-    meterData.transactions.forEach(function(t) {
+    var transactions = meterData.transactions || [];
+    var tariffRates = APP.tariffRates || [];
+    
+    // মাস অনুযায়ী গ্রুপিং
+    var monthlyData = {};
+    
+    for (var i = 0; i < transactions.length; i++) {
+        var t = transactions[i];
         var date, dateStr = t.date || t.timestamp || '';
+        
         try {
             if (dateStr.indexOf('T') !== -1 || dateStr.indexOf('-') !== -1) {
                 date = new Date(dateStr);
@@ -116,33 +124,92 @@ function getMonthlySummary(meterId) {
         var banglaMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
         var monthIndex = date.getMonth();
         var year = date.getFullYear();
-        var monthKey = year + '-' + String(monthIndex + 1).padStart(2, '0') + '-' + monthNames[monthIndex];
+        var monthKey = year + '-' + String(monthIndex + 1).padStart(2, '0');
         var displayMonth = banglaMonths[monthIndex] + ' ' + year;
         
-        if (!summary[monthKey]) {
-            summary[monthKey] = { recharge: 0, bill: 0, balance: 0, units: 0, displayMonth: displayMonth, sortKey: '' + year + String(monthIndex + 1).padStart(2, '0') };
+        if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = {
+                displayMonth: displayMonth,
+                transactions: [],
+                rechargeTotal: 0,
+                rechargeCount: 0,
+                billTotal: 0,
+                billCount: 0,
+                totalUnits: 0
+            };
         }
-        if (t.type === 'recharge') { summary[monthKey].recharge += (t.amount||0); summary[monthKey].balance += (t.amount||0); }
-        else if (t.type === 'electricity_bill' || t.type === 'bill') { summary[monthKey].bill += (t.amount||0); summary[monthKey].balance -= (t.amount||0); summary[monthKey].units += (t.units||0); }
-    });
-    
-    var sortedSummary = {};
-    var sortedKeys = Object.keys(summary).sort(function(a, b) { return (summary[a].sortKey||'').localeCompare(summary[b].sortKey||''); });
-    sortedKeys.forEach(function(key) { sortedSummary[key] = summary[key]; });
-    return sortedSummary;
-}
-
-function convertBanglaToEnglish(banglaNum) {
-    if (!banglaNum && banglaNum !== 0) return '0';
-    var banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    var englishDigits = ['0','1','2','3','4','5','6','7','8','9'];
-    var result = '';
-    var str = String(banglaNum).trim();
-    for (var i = 0; i < str.length; i++) {
-        var index = banglaDigits.indexOf(str[i]);
-        result += (index !== -1) ? englishDigits[index] : str[i];
+        
+        monthlyData[monthKey].transactions.push(t);
+        
+        if (t.type === 'recharge') {
+            monthlyData[monthKey].rechargeTotal += (t.amount || 0);
+            monthlyData[monthKey].rechargeCount++;
+        } else if (t.type === 'electricity_bill' || t.type === 'bill') {
+            monthlyData[monthKey].billTotal += (t.amount || 0);
+            monthlyData[monthKey].billCount++;
+            monthlyData[monthKey].totalUnits += (t.units || 0);
+        }
     }
-    return result;
+    
+    // প্রতিটি মাসের জন্য স্ল্যাব ডিস্ট্রিবিউশন করুন
+    var sortedKeys = Object.keys(monthlyData).sort();
+    
+    for (var m = 0; m < sortedKeys.length; m++) {
+        var key = sortedKeys[m];
+        var data = monthlyData[key];
+        var totalUnits = data.totalUnits || 0;
+        var remainingUnits = totalUnits;
+        
+        var slabData = {};
+        var slabCost = {};
+        var slabRates = {};
+        
+        // ✅ সঠিক স্ল্যাব ডিস্ট্রিবিউশন (Lifeline ৫০ ইউনিট)
+        for (var s = 0; s < tariffRates.length; s++) {
+            if (remainingUnits <= 0) break;
+            
+            var slab = tariffRates[s];
+            var min = slab.range[0];
+            var max = slab.range[1];
+            var rate = slab.rate;
+            
+            var maxUnitsInSlab = (max === null || max === undefined) ? Infinity : max - min + 1;
+            var unitsInThisSlab = Math.min(remainingUnits, maxUnitsInSlab);
+            
+            // ✅ বিশেষ চেক: Lifeline স্ল্যাব ৫০ ইউনিটের বেশি হবে না
+            // স্ল্যাবের নাম চেক করুন (বাংলা বা ইংরেজি)
+            var slabName = slab.name || '';
+            if (slabName === 'Lifeline' || 
+                slabName === 'Lifeline (0-50)' || 
+                slabName === 'Lifeline (০-৫০)' ||
+                slabName.indexOf('Lifeline') !== -1) {
+                unitsInThisSlab = Math.min(unitsInThisSlab, 50);
+            }
+            
+            slabData[slab.name] = unitsInThisSlab;
+            slabRates[slab.name] = rate;
+            slabCost[slab.name] = unitsInThisSlab * rate;
+            
+            remainingUnits -= unitsInThisSlab;
+        }
+        
+        // summary-তে যোগ করুন
+        summary[key] = {
+            displayMonth: data.displayMonth,
+            recharge: data.rechargeTotal,
+            bill: data.billTotal,
+            balance: data.rechargeTotal - data.billTotal,
+            units: data.totalUnits,
+            billCount: data.billCount,
+            rechargeCount: data.rechargeCount,
+            slabData: slabData,
+            slabRates: slabRates,
+            slabCost: slabCost,
+            sortKey: key
+        };
+    }
+    
+    return summary;
 }
 
 // ==================== TOAST NOTIFICATION (STACK VERSION) ====================
@@ -511,9 +578,70 @@ function updateAllSidebarTexts() {
     }
 }
 
+// ==================== SLAB BASED UNIT CALCULATOR ====================
+function calculateUnitsFromAmount(amount, currentBalance, meterId) {
+    var diffAmount = Math.abs(amount - currentBalance);
+    if (diffAmount <= 0) return 0;
+    
+    var meterData = APP.metersData[meterId];
+    if (!meterData) return 0;
+    
+    var transactions = meterData.transactions || [];
+    
+    // বর্তমান মাসের ব্যবহার করা ইউনিট ট্র্যাক করুন
+    var now = new Date();
+    var currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    
+    var usedUnitsThisMonth = 0;
+    for (var i = 0; i < transactions.length; i++) {
+        var t = transactions[i];
+        if (t.type === 'electricity_bill' || t.type === 'bill') {
+            var tDate = new Date(t.date || t.timestamp);
+            if (isNaN(tDate.getTime())) continue;
+            var tMonth = tDate.getFullYear() + '-' + String(tDate.getMonth() + 1).padStart(2, '0');
+            if (tMonth === currentMonth) {
+                usedUnitsThisMonth += (t.units || 0);
+            }
+        }
+    }
+    
+    var tariffRates = APP.tariffRates || [];
+    var remainingTaka = diffAmount;
+    var totalUnits = 0;
+    var usedUnits = usedUnitsThisMonth;
+    
+    for (var i = 0; i < tariffRates.length; i++) {
+        if (remainingTaka <= 0) break;
+        
+        var slab = tariffRates[i];
+        var min = slab.range[0];
+        var max = slab.range[1];
+        var rate = slab.rate;
+        
+        var maxUnitsInSlab = (max === null || max === undefined) ? Infinity : max - min + 1;
+        
+        // এই স্ল্যাবে ইতিমধ্যে কত ইউনিট ব্যবহার হয়েছে
+        var usedInThisSlab = Math.max(0, Math.min(usedUnits - min + 1, maxUnitsInSlab));
+        var remainingInThisSlab = maxUnitsInSlab - usedInThisSlab;
+        
+        if (remainingInThisSlab <= 0) continue;
+        
+        var costForRemainingUnits = remainingInThisSlab * rate;
+        var takaInThisSlab = Math.min(remainingTaka, costForRemainingUnits);
+        var unitsInThisSlab = takaInThisSlab / rate;
+        
+        totalUnits += unitsInThisSlab;
+        remainingTaka -= takaInThisSlab;
+        usedUnits += unitsInThisSlab;
+    }
+    
+    return Math.round(totalUnits * 100) / 100;
+}
+
 // ==================== TRANSLATION HELPER ====================
 function __(key) {
     var L = APP.language || 'bn';
     var translations = APP.translations[L] || APP.translations.bn;
     return translations[key] || key;
 }
+

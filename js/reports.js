@@ -126,13 +126,25 @@ function getMonthlySlabAnalysis(meterId) {
         monthlyData[monthKey].billCount++;
     });
     
+    // ✅ সঠিক স্ল্যাব ডিস্ট্রিবিউশন (Lifeline ৫০ লিমিট)
     Object.keys(monthlyData).forEach(function(key) {
         var m = monthlyData[key];
         var remainingUnits = m.totalUnits;
         slabDefs.forEach(function(slab) {
             if (remainingUnits <= 0) return;
-            var slabUnits = slab.max === Infinity ? remainingUnits : Math.min(remainingUnits, slab.max - slab.min + 1);
-            if (slabUnits > 0) { m.slabData[slab.name] = slabUnits; m.slabCost[slab.name] = slabUnits * slab.rate; remainingUnits -= slabUnits; }
+            var maxUnitsInSlab = slab.max === Infinity ? Infinity : slab.max - slab.min + 1;
+            var slabUnits = Math.min(remainingUnits, maxUnitsInSlab);
+            
+            // ✅ Lifeline ৫০-এর বেশি হবে না
+            if (slab.name.indexOf('Lifeline') !== -1) {
+                slabUnits = Math.min(slabUnits, 50);
+            }
+            
+            if (slabUnits > 0) { 
+                m.slabData[slab.name] = slabUnits; 
+                m.slabCost[slab.name] = slabUnits * slab.rate; 
+                remainingUnits -= slabUnits; 
+            }
         });
     });
     

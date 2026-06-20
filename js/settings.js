@@ -14,32 +14,46 @@ function showSettings() {
                 '<input type="number" class="form-control" id="demandCharge" value="'+APP.settings.demandCharge+'"></div>',
             
             '<h3>&#x1F4CA; '+(L==='en'?'Tariff Rates (Slab Based)':'ট্যারিফ রেট (স্ল্যাব ভিত্তিক)')+'</h3>',
+            '<p style="color: var(--text-light); font-size: 13px; margin-bottom: 10px;">'+
+                (L==='en'?'Edit rate to see increase percentage automatically.':'রেট এডিট করলে বৃদ্ধির শতাংশ অটো দেখাবে।')+
+            '</p>',
             '<div id="tariffRates">',
+                '<div class="table-container"><table><thead><tr>',
+                    '<th>'+(L==='en'?'Slab Name':'স্ল্যাব নাম')+'</th>',
+                    '<th>'+(L==='en'?'Rate (Taka)':'রেট (টাকা)')+'</th>',
+                    '<th>'+(L==='en'?'Increase %':'বৃদ্ধি %')+'</th>',
+                '</tr></thead><tbody>',
                 APP.tariffRates.map(function(rate, index) {
-                    return '<div class="form-group" style="display: flex; gap: 10px; align-items: center;">'+
-                        '<span style="min-width: 100px;">'+rate.name+':</span>'+
-                        '<input type="number" class="form-control" placeholder="'+(L==='en'?'Min':'সর্বনিম্ন')+'" value="'+rate.range[0]+'" data-index="'+index+'" data-field="min" style="flex: 1;"'+(index===0?' disabled':'')+'>'+
-                        '<input type="number" class="form-control" placeholder="'+(L==='en'?'Max':'সর্বোচ্চ')+'" value="'+(rate.range[1]||'')+'" data-index="'+index+'" data-field="max" style="flex: 1;">'+
-                        '<input type="number" class="form-control" placeholder="'+(L==='en'?'Rate':'রেট')+'" value="'+rate.rate+'" data-index="'+index+'" data-field="rate" style="flex: 1;" step="0.01">'+
-                    '</div>';
+                    // স্ল্যাবের নাম তৈরি করুন (রেঞ্জ সহ)
+                    var slabName = rate.name;
+                    var range = rate.range || [];
+                    var rangeText = '';
+                    if (range.length >= 2) {
+                        var min = range[0];
+                        var max = range[1];
+                        if (max === null || max === undefined) {
+                            rangeText = ' (' + min + '+)';
+                        } else {
+                            rangeText = ' (' + min + '-' + max + ')';
+                        }
+                    }
+                    var fullName = slabName + rangeText;
+                    
+                    var currentRate = rate.rate;
+                    var increasePercent = rate.increasePercent || 0;
+                    
+                    return '<tr>'+
+                        '<td><strong>'+fullName+'</strong></td>'+
+                        '<td><input type="number" class="form-control" style="width:120px;display:inline-block;" value="'+currentRate.toFixed(2)+'" data-index="'+index+'" data-field="rate" step="0.01" oninput="calculateTariffPercent(this)"> ৳</td>'+
+                        '<td><strong id="percentDisplay_'+index+'" style="color: '+(increasePercent > 0 ? '#27ae60' : '#666')+';">'+(increasePercent > 0 ? '+'+increasePercent.toFixed(2)+'%' : '0%')+'</strong></td>'+
+                    '</tr>';
                 }).join(''),
+                '</tbody></table></div>',
             '</div>',
-            
-            '<h3>&#x1F3A8; '+(L==='en'?'Display Settings':'ডিসপ্লে সেটিংস')+'</h3>',
-            '<div class="form-group"><label>'+(L==='en'?'Font Size':'ফন্ট সাইজ')+': <span id="fontSizeValue">'+(APP.settings.fontSize||14)+'px</span></label>',
-                '<input type="range" min="12" max="20" value="'+(APP.settings.fontSize||14)+'" class="form-control" oninput="changeFontSize(this.value)"></div>',
-            '<div class="form-group"><label><input type="checkbox" '+(APP.settings.darkMode?'checked':'')+' onchange="toggleDarkMode()"> &#x1F319; '+(L==='en'?'Dark Mode':'ডার্ক মোড')+'</label></div>',
-            '<div class="form-group"><label><input type="checkbox" '+(APP.settings.highContrast?'checked':'')+' onchange="toggleHighContrast()"> &#x1F441;&#xFE0F; '+(L==='en'?'High Contrast':'হাই কনট্রাস্ট')+'</label></div>',
-            
-            '<h3>&#x1F310; '+(L==='en'?'Language Settings':'ল্যাংগুয়েজ সেটিংস')+'</h3>',
-            '<div class="form-group"><label>'+(L==='en'?'Interface Language':'ইন্টারফেস ভাষা')+'</label>',
-                '<div style="display: flex; gap: 10px; margin-top: 8px;">'+
-                    '<button class="btn '+(APP.language==='bn'?'':'btn-outline')+'" onclick="setLanguage(\'bn\')" style="flex: 1;">&#x1F1E7;&#x1F1E9; বাংলা '+(APP.language==='bn'?'&#x2705;':'')+'</button>'+
-                    '<button class="btn '+(APP.language==='en'?'':'btn-outline')+'" onclick="setLanguage(\'en\')" style="flex: 1;">&#x1F1FA;&#x1F1F8; English '+(APP.language==='en'?'&#x2705;':'')+'</button>'+
-                '</div></div>',
             
             '<button class="btn" onclick="saveSettings()">'+(L==='en'?'Save Settings':'সেটিংস সংরক্ষণ')+'</button>',
             
+            // Danger Zone
             '<div style="margin-top: 40px; padding-top: 20px; border-top: 3px solid var(--danger);">',
                 '<h2 style="color: var(--danger);">&#x26A0;&#xFE0F; '+(L==='en'?'Danger Zone':'ডেঞ্জার জোন')+'</h2>',
                 '<div class="card" style="background: #fff5f5; border: 2px solid var(--danger); margin-top: 15px;">',
@@ -58,23 +72,56 @@ function showSettings() {
     ].join('');
 }
 
+// ✅ রেট ইনপুট দিলে % অটো-ক্যালকুলেট (আগের মানের সাথে তুলনা করে)
+function calculateTariffPercent(input) {
+    var index = parseInt(input.dataset.index);
+    var newRate = parseFloat(input.value) || 0;
+    var rate = APP.tariffRates[index];
+    
+    // আগের রেট (যেটা সেভ করা ছিল)
+    var previousRate = rate.rate;
+    
+    var percentDisplay = document.getElementById('percentDisplay_' + index);
+    if (!percentDisplay) return;
+    
+    if (newRate > 0 && previousRate > 0) {
+        // আগের রেট থেকে কত % পরিবর্তন হয়েছে
+        var percent = ((newRate - previousRate) / previousRate) * 100;
+        var displayText = percent > 0 ? '+'+percent.toFixed(2)+'%' : (percent < 0 ? percent.toFixed(2)+'%' : '0%');
+        percentDisplay.textContent = displayText;
+        percentDisplay.style.color = percent > 0 ? '#27ae60' : (percent < 0 ? '#e74c3c' : '#666');
+        
+        // টেম্পোরারি স্টোরেজে রাখুন (সেভ বাটনে সেভ হবে)
+        input.dataset.percent = percent;
+        input.dataset.newRate = newRate;
+    } else {
+        percentDisplay.textContent = '0%';
+        percentDisplay.style.color = '#666';
+    }
+}
+
+// ✅ সেভ সেটিংস
 function saveSettings() {
     var L = APP.language;
     APP.settings.vatRate = parseFloat(document.getElementById('vatRate').value) || 5;
     APP.settings.rebateRate = parseFloat(document.getElementById('rebateRate').value) || 0.85;
     APP.settings.demandCharge = parseFloat(document.getElementById('demandCharge').value) || 294;
     
-    document.querySelectorAll('#tariffRates input[data-field="min"]').forEach(function(input) {
-        var index = parseInt(input.dataset.index);
-        if (index > 0) { APP.tariffRates[index].range[0] = parseInt(input.value) || 0; }
-    });
-    document.querySelectorAll('#tariffRates input[data-field="max"]').forEach(function(input) {
-        var index = parseInt(input.dataset.index);
-        APP.tariffRates[index].range[1] = input.value ? parseInt(input.value) : null;
-    });
+    // ✅ ট্যারিফ রেট আপডেট করুন
     document.querySelectorAll('#tariffRates input[data-field="rate"]').forEach(function(input) {
         var index = parseInt(input.dataset.index);
-        APP.tariffRates[index].rate = parseFloat(input.value) || 0;
+        var newRate = parseFloat(input.value) || 0;
+        var rate = APP.tariffRates[index];
+        var previousRate = rate.rate;
+        
+        if (newRate > 0 && previousRate > 0) {
+            var percent = ((newRate - previousRate) / previousRate) * 100;
+            APP.tariffRates[index].rate = newRate;
+            APP.tariffRates[index].increasePercent = percent;
+        } else if (newRate > 0) {
+            APP.tariffRates[index].rate = newRate;
+            APP.tariffRates[index].increasePercent = 0;
+        }
     });
     
     saveData();
@@ -82,6 +129,7 @@ function saveSettings() {
     showToast(L==='en'?'Settings saved':'সেটিংস সংরক্ষিত হয়েছে', 'success');
 }
 
+// বাকি ফাংশনগুলো আগের মতোই থাকবে...
 function toggleDarkMode() {
     APP.settings.darkMode = !APP.settings.darkMode;
     if (APP.settings.darkMode) { document.body.classList.add('dark-mode'); }

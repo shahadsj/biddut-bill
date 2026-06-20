@@ -636,10 +636,11 @@ function updateBalance() {
         return;
     }
 
-    var amount = parseFloat(document.getElementById('quickBalanceAmount').value);
+    var rawAmount = document.getElementById('quickBalanceAmount').value.trim();
+    var amount = parseFloat(rawAmount.replace(/,/g, ''));
     var date = document.getElementById('quickBalanceDate').value;
 
-    if (isNaN(amount) || amount === undefined || amount === null) {
+    if (isNaN(amount) || amount === undefined || amount === null || amount < 0) {
         document.getElementById('quickBalanceStatus').innerHTML = '❌ ' + (L === 'en' ? 'Please enter a valid balance!' : 'দয়া করে সঠিক ব্যালেন্স ইনপুট দিন!');
         document.getElementById('quickBalanceStatus').style.color = 'red';
         return;
@@ -662,26 +663,30 @@ function updateBalance() {
     var dateObj = new Date(date);
     var formattedDate = dateObj.toLocaleDateString(L === 'en' ? 'en-US' : 'bn-BD');
 
-    // ✅ ইউনিট অটো-ক্যালকুলেট করুন
-    var estimatedUnits = 0;
     var diffAmount = Math.abs(amount - currentBalance);
+    var estimatedUnits = 0;
     
-    // টাকা থেকে ইউনিট ক্যালকুলেট (গড় রেট 5.7 ধরে)
-    if (diffAmount > 0) {
-        estimatedUnits = Math.round((diffAmount / 5.7) * 100) / 100;
+    // ✅ শুধু খরচ হলে ইউনিট ক্যালকুলেট করুন (স্ল্যাব ভিত্তিক)
+    if (amount < currentBalance) {
+        estimatedUnits = calculateUnitsFromAmount(amount, currentBalance, APP.activeMeterId);
+        console.log('⚡ Estimated Units (Slab based):', estimatedUnits);
     }
 
     if (amount >= currentBalance) {
-        var rechargeAmount = amount - currentBalance;
+        // রিচার্জ - ইউনিট লাগবে না
+        var rechargeAmount = diffAmount;
         var balanceAfter = amount;
-        var description = '💰 ' + (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') + ' - ' + rechargeAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + formattedDate;
+        var description = '💰 ' + (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') + 
+            ' - ' + rechargeAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
+            ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
+            ' - ' + formattedDate;
         
         var transaction = {
             id: 'balance_update_' + Date.now().toString(),
             meterId: APP.activeMeterId,
             type: 'recharge',
             amount: rechargeAmount,
-            units: 0,  // রিচার্জের জন্য ইউনিট 0
+            units: 0,
             balanceAfter: balanceAfter,
             date: date,
             description: description,
@@ -703,17 +708,22 @@ function updateBalance() {
         updateActiveMeterData(updatedData);
         
     } else {
-        var spentAmount = currentBalance - amount;
+        // খরচ - ইউনিট সহ
+        var spentAmount = diffAmount;
         var balanceAfter = amount;
-        // ✅ ইউনিট description-এ যোগ করুন
-        var description = '📊 ' + (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ' - ' + formattedDate;
+        
+        var description = '📊 ' + (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + 
+            ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
+            ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
+            ' - ' + formattedDate + 
+            (estimatedUnits > 0 ? ' (Units: ' + estimatedUnits + ' kWh)' : '');
         
         var transaction = {
             id: 'balance_update_' + Date.now().toString(),
             meterId: APP.activeMeterId,
             type: 'electricity_bill',
             amount: spentAmount,
-            units: estimatedUnits,  // ✅ অটো-ক্যালকুলেটেড ইউনিট
+            units: estimatedUnits,
             balanceAfter: balanceAfter,
             date: date,
             description: description,
@@ -737,14 +747,20 @@ function updateBalance() {
 
     document.getElementById('quickBalanceAmount').value = '';
     
-    document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + formattedDate + (estimatedUnits > 0 ? ' (ইউনিট: ' + estimatedUnits + ' kWh)' : '');
+    document.getElementById('quickBalanceStatus').innerHTML = '✅ ' + (L === 'en' ? 'Balance updated' : 'ব্যালেন্স আপডেট হয়েছে') + 
+        ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
+        ', ' + (L === 'en' ? 'Date' : 'তারিখ') + ': ' + formattedDate + 
+        (estimatedUnits > 0 ? ' (Units: ' + estimatedUnits + ' kWh)' : '');
     document.getElementById('quickBalanceStatus').style.color = '#1565c0';
     
     var logType = amount >= currentBalance ? 'recharge' : 'bill';
     var logAction = amount >= currentBalance ? 
         (L === 'en' ? 'Balance Update (Recharge)' : 'ব্যালেন্স আপডেট (রিচার্জ)') : 
         (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)');
-    logActivity(logType, logAction + ': ৳' + diffAmount.toFixed(2) + ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ৳' + amount.toFixed(2) + ' - ' + formattedDate);
+    logActivity(logType, logAction + ': ৳' + diffAmount.toFixed(2) + 
+        ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ৳' + amount.toFixed(2) + 
+        ' - ' + formattedDate + 
+        (estimatedUnits > 0 ? ' (Units: ' + estimatedUnits + ' kWh)' : ''));
     
     checkBadges();
     
