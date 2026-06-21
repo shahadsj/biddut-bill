@@ -41,7 +41,7 @@ function showBackup() {
                     '<div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">',
                         '<div style="flex: 1;">',
                             '<h3 style="color: var(--danger); margin-bottom: 10px;">&#x1F5D1;&#xFE0F; '+(L==='en'?'Delete All Data':'সমস্ত ডাটা মুছে ফেলুন')+'</h3>',
-                            '<p style="color: #666; margin-bottom: 10px;">'+(L==='en'?'This will permanently delete all meters, transactions, settings and backup data.':'এই অপারেশন আপনার সমস্ত মিটার, ট্রানজেকশন, সেটিংস এবং ব্যাকআপ ডাটা স্থায়ীভাবে মুছে ফেলবে।')+'</p>',
+                            '<p style="color: #666; margin-bottom: 10px;">'+(L==='en'?'This will permanently delete all meters, transactions, settings, rent, expenses and backup data.':'এই অপারেশন আপনার সমস্ত মিটার, ট্রানজেকশন, সেটিংস, ভাড়া, খরচ এবং ব্যাকআপ ডাটা স্থায়ীভাবে মুছে ফেলবে।')+'</p>',
                         '</div>',
                         '<button class="btn btn-danger" onclick="showClearDataConfirmation()" style="white-space: nowrap;">&#x1F5D1;&#xFE0F; '+(L==='en'?'Clear All':'সব ক্লিয়ার করুন')+'</button>',
                     '</div>',
@@ -84,6 +84,39 @@ function backupToJSON() {
             }
         }
         
+        // ✅ রেন্ট ডাটা সংগ্রহ
+        var rentDataCopy = null;
+        if (APP.rentData) {
+            rentDataCopy = {
+                records: APP.rentData.records || [],
+                totalRent: APP.rentData.totalRent || 0,
+                totalService: APP.rentData.totalService || 0,
+                totalParking: APP.rentData.totalParking || 0,
+                totalOverall: APP.rentData.totalOverall || 0
+            };
+        }
+        
+        // ✅ এক্সপেন্স ডাটা সংগ্রহ (ইউজার ভিত্তিক)
+        var expenseDataCopy = null;
+        if (APP.currentUser) {
+            var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+            var key = 'expenseData_' + userId;
+            if (APP[key]) {
+                expenseDataCopy = {
+                    records: APP[key].records || [],
+                    totalBazar: APP[key].totalBazar || 0,
+                    totalGas: APP[key].totalGas || 0,
+                    totalInternet: APP[key].totalInternet || 0,
+                    totalMobile: APP[key].totalMobile || 0,
+                    totalElectricity: APP[key].totalElectricity || 0,
+                    totalWater: APP[key].totalWater || 0,
+                    totalGrocery: APP[key].totalGrocery || 0,
+                    totalOther: APP[key].totalOther || 0,
+                    totalOverall: APP[key].totalOverall || 0
+                };
+            }
+        }
+        
         var backupData = {
             meters: JSON.parse(JSON.stringify(APP.meters)),
             metersData: metersDataCopy,
@@ -93,9 +126,12 @@ function backupToJSON() {
             savingsGoal: APP.savingsGoal || 0,
             badges: APP.badges || [],
             language: APP.language || 'bn',
+            // ✅ রেন্ট ও এক্সপেন্স যোগ করা হলো
+            rentData: rentDataCopy,
+            expenseData: expenseDataCopy,
             timestamp: new Date().toISOString(),
             type: "manual_backup",
-            version: "2.0"
+            version: "2.1"
         };
         
         var jsonString = JSON.stringify(backupData, null, 2);
@@ -141,6 +177,18 @@ function restoreFromJSON(event) {
             APP.metersData = {};
             APP.activeMeterId = null;
             
+            // ✅ রেন্ট ও এক্সপেন্স ক্লিয়ার
+            if (APP.rentData) {
+                APP.rentData = { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 };
+            }
+            if (APP.currentUser) {
+                var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                var key = 'expenseData_' + userId;
+                if (APP[key]) {
+                    APP[key] = { records: [], totalBazar: 0, totalGas: 0, totalInternet: 0, totalMobile: 0, totalElectricity: 0, totalWater: 0, totalGrocery: 0, totalOther: 0, totalOverall: 0 };
+                }
+            }
+            
             // Restore meters
             if (backup.meters && Array.isArray(backup.meters)) {
                 APP.meters = JSON.parse(JSON.stringify(backup.meters));
@@ -166,11 +214,44 @@ function restoreFromJSON(event) {
                 }
             }
             
+            // ✅ রেন্ট ডাটা রিস্টোর
+            if (backup.rentData) {
+                APP.rentData = {
+                    records: backup.rentData.records || [],
+                    totalRent: backup.rentData.totalRent || 0,
+                    totalService: backup.rentData.totalService || 0,
+                    totalParking: backup.rentData.totalParking || 0,
+                    totalOverall: backup.rentData.totalOverall || 0
+                };
+                console.log('✅ Rent data restored:', APP.rentData.records.length, 'records');
+            }
+            
+            // ✅ এক্সপেন্স ডাটা রিস্টোর
+            if (backup.expenseData && APP.currentUser) {
+                var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                var key = 'expenseData_' + userId;
+                APP[key] = {
+                    records: backup.expenseData.records || [],
+                    totalBazar: backup.expenseData.totalBazar || 0,
+                    totalGas: backup.expenseData.totalGas || 0,
+                    totalInternet: backup.expenseData.totalInternet || 0,
+                    totalMobile: backup.expenseData.totalMobile || 0,
+                    totalElectricity: backup.expenseData.totalElectricity || 0,
+                    totalWater: backup.expenseData.totalWater || 0,
+                    totalGrocery: backup.expenseData.totalGrocery || 0,
+                    totalOther: backup.expenseData.totalOther || 0,
+                    totalOverall: backup.expenseData.totalOverall || 0
+                };
+                console.log('✅ Expense data restored:', APP[key].records.length, 'records');
+            }
+            
             // Set active meter
             if (backup.activeMeterId && APP.meters.find(function(m){return m.id===backup.activeMeterId;})) {
                 APP.activeMeterId = backup.activeMeterId;
+                localStorage.setItem('biddut_activeMeterId', backup.activeMeterId);
             } else if (APP.meters.length > 0) {
                 APP.activeMeterId = APP.meters[0].id;
+                localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
             }
             
             // Restore settings
@@ -180,7 +261,7 @@ function restoreFromJSON(event) {
             if (backup.savingsGoal !== undefined) APP.savingsGoal = backup.savingsGoal || 0;
             if (backup.badges) APP.badges = backup.badges || [];
             
-            // Save to Firebase only
+            // Save to Firebase
             if (typeof saveAllToCloud === 'function') {
                 saveAllToCloud().then(function() {
                     console.log('☁️ Data restored and saved to Firebase');
@@ -216,6 +297,17 @@ function restoreFromJSON(event) {
                 'Data restored successfully! ' + APP.meters.length + ' meters, ' + totalTransactions + ' transactions.' :
                 'ডাটা সফলভাবে রিস্টোর হয়েছে! ' + APP.meters.length + 'টি মিটার, ' + totalTransactions + 'টি ট্রানজেকশন।';
             
+            if (APP.rentData && APP.rentData.records && APP.rentData.records.length > 0) {
+                msg += L==='en' ? ' Rent: ' + APP.rentData.records.length + ' records.' : ' ভাড়া: ' + APP.rentData.records.length + 'টি রেকর্ড।';
+            }
+            if (APP.currentUser) {
+                var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                var key = 'expenseData_' + userId;
+                if (APP[key] && APP[key].records && APP[key].records.length > 0) {
+                    msg += L==='en' ? ' Expenses: ' + APP[key].records.length + ' records.' : ' খরচ: ' + APP[key].records.length + 'টি রেকর্ড।';
+                }
+            }
+            
             showToast(msg, 'success');
             event.target.value = '';
             
@@ -242,7 +334,6 @@ function restoreFromJSON(event) {
 function backupToZip() {
     var L = APP.language;
     try {
-        // Check if JSZip is loaded
         if (typeof JSZip === 'undefined') {
             showToast(L==='en'?'JSZip library not loaded. Please check internet connection.':'JSZip লাইব্রেরি লোড হয়নি। ইন্টারনেট কানেকশন চেক করুন।', 'error');
             return;
@@ -250,37 +341,53 @@ function backupToZip() {
         
         var zip = new JSZip();
         
-        // Prepare backup data
-        var metersDataCopy = {};
-        for (var meterId in APP.metersData) {
-            if (APP.metersData.hasOwnProperty(meterId)) {
-                var md = APP.metersData[meterId];
-                metersDataCopy[meterId] = {
-                    transactions: md.transactions || [],
-                    monthlyRecharges: md.monthlyRecharges || [],
-                    currentBalance: md.currentBalance || 0,
-                    totalRecharge: md.totalRecharge || 0,
-                    totalExpended: md.totalExpended || 0,
-                    lastDemandChargeMonth: md.lastDemandChargeMonth || "",
-                    initialBalance: md.initialBalance || 0,
-                    meterInfo: md.meterInfo || null,
-                    lastUpdated: md.lastUpdated || new Date().toISOString()
+        // ✅ রেন্ট ডাটা সংগ্রহ
+        var rentDataCopy = null;
+        if (APP.rentData) {
+            rentDataCopy = {
+                records: APP.rentData.records || [],
+                totalRent: APP.rentData.totalRent || 0,
+                totalService: APP.rentData.totalService || 0,
+                totalParking: APP.rentData.totalParking || 0,
+                totalOverall: APP.rentData.totalOverall || 0
+            };
+        }
+        
+        // ✅ এক্সপেন্স ডাটা সংগ্রহ
+        var expenseDataCopy = null;
+        if (APP.currentUser) {
+            var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+            var key = 'expenseData_' + userId;
+            if (APP[key]) {
+                expenseDataCopy = {
+                    records: APP[key].records || [],
+                    totalBazar: APP[key].totalBazar || 0,
+                    totalGas: APP[key].totalGas || 0,
+                    totalInternet: APP[key].totalInternet || 0,
+                    totalMobile: APP[key].totalMobile || 0,
+                    totalElectricity: APP[key].totalElectricity || 0,
+                    totalWater: APP[key].totalWater || 0,
+                    totalGrocery: APP[key].totalGrocery || 0,
+                    totalOther: APP[key].totalOther || 0,
+                    totalOverall: APP[key].totalOverall || 0
                 };
             }
         }
         
         var backupData = {
             meters: JSON.parse(JSON.stringify(APP.meters)),
-            metersData: metersDataCopy,
+            metersData: JSON.parse(JSON.stringify(APP.metersData)),
             activeMeterId: APP.activeMeterId,
             settings: JSON.parse(JSON.stringify(APP.settings)),
             tariffRates: JSON.parse(JSON.stringify(APP.tariffRates)),
             savingsGoal: APP.savingsGoal || 0,
             badges: APP.badges || [],
             language: APP.language || 'bn',
+            rentData: rentDataCopy,
+            expenseData: expenseDataCopy,
             timestamp: new Date().toISOString(),
             type: "zip_backup",
-            version: "2.0"
+            version: "2.1"
         };
         
         zip.file('data.json', JSON.stringify(backupData, null, 2));
@@ -288,14 +395,16 @@ function backupToZip() {
         var readmeText = L==='en' ? 
             'Electricity Bill Management System Backup\n' +
             'Date: ' + new Date().toLocaleString('en-US') + '\n' +
-            'Version: 2.0\n\n' +
+            'Version: 2.1\n\n' +
+            'Includes: Meters, Transactions, Rent, Expenses\n\n' +
             'Restore Instructions:\n' +
             '1. Extract ZIP file\n' +
             '2. Use data.json to restore\n' +
             '3. Go to Backup page and select the JSON file' :
             'বিদ্যুৎ বিল ম্যানেজমেন্ট সিস্টেম ব্যাকআপ\n' +
             'তারিখ: ' + new Date().toLocaleString('bn-BD') + '\n' +
-            'ভার্সন: 2.0\n\n' +
+            'ভার্সন: 2.1\n\n' +
+            'অন্তর্ভুক্ত: মিটার, ট্রানজেকশন, ভাড়া, খরচ\n\n' +
             'রিস্টোর করার নিয়ম:\n' +
             '১. জিপ ফাইল এক্সট্রাক্ট করুন\n' +
             '২. data.json ফাইল ব্যবহার করে রিস্টোর করুন\n' +
@@ -381,6 +490,17 @@ function clearAllData() {
         APP.meters = [];
         APP.metersData = {};
         APP.activeMeterId = null;
+        
+        // ✅ রেন্ট ক্লিয়ার
+        APP.rentData = { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 };
+        
+        // ✅ এক্সপেন্স ক্লিয়ার
+        if (APP.currentUser) {
+            var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+            var key = 'expenseData_' + userId;
+            APP[key] = { records: [], totalBazar: 0, totalGas: 0, totalInternet: 0, totalMobile: 0, totalElectricity: 0, totalWater: 0, totalGrocery: 0, totalOther: 0, totalOverall: 0 };
+        }
+        
         APP.settings = {
             vatRate: 5,
             rebateRate: 0.85,
@@ -402,6 +522,7 @@ function clearAllData() {
         ];
         APP.savingsGoal = 0;
         APP.badges = [];
+        localStorage.removeItem('biddut_activeMeterId');
         
         // Save and sync
         saveData();
@@ -506,6 +627,8 @@ function saveToFirebase() {
         badges: APP.badges || [],
         language: APP.language || 'bn',
         meters: APP.meters,
+        rentData: APP.rentData || null,
+        expenseData: APP.currentUser ? APP['expenseData_' + (APP.currentUser.id || APP.currentUser.email || 'default')] : null,
         lastModifiedBy: APP.currentUser.email,
         lastModifiedDevice: deviceId,
         lastModifiedAt: timestamp
@@ -520,106 +643,4 @@ function saveToFirebase() {
     });
     
     console.log('☁️ Data saved to Firebase successfully');
-}
-
-function backupToZip() {
-    var L = APP.language;
-    try {
-        var zip = new JSZip();
-        var backupData = {
-            meters: APP.meters, metersData: APP.metersData, activeMeterId: APP.activeMeterId,
-            settings: APP.settings, tariffRates: APP.tariffRates, savingsGoal: APP.savingsGoal || 0,
-            badges: APP.badges || [], language: APP.language || 'bn',
-            timestamp: new Date().toISOString(), type: "zip_backup", version: "2.0"
-        };
-        zip.file('data.json', JSON.stringify(backupData, null, 2));
-        zip.file('README.txt', (L==='en'?'Electricity Bill Management System Backup\nDate: ':'বিদ্যুৎ বিল ম্যানেজমেন্ট সিস্টেম ব্যাকআপ\nতারিখ: ') + new Date().toLocaleString(L==='en'?'en-US':'bn-BD') + (L==='en'?'\nVersion: 2.0\n\nRestore Instructions:\n1. Extract ZIP file\n2. Use data.json to restore\n':'\nভার্সন: 2.0\n\nরিস্টোর করার নিয়ম:\n১. জিপ ফাইল এক্সট্রাক্ট করুন\n২. data.json ফাইল ব্যবহার করে রিস্টোর করুন\n'));
-        zip.generateAsync({ type: 'blob' }).then(function(content) {
-            var url = URL.createObjectURL(content);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = L==='en' ? 'electricity_bill_zip_'+new Date().toISOString().split('T')[0]+'.zip' : 'বিদ্যুৎ_বিল_জিপ_'+new Date().toISOString().split('T')[0]+'.zip';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast(L==='en'?'ZIP backup downloaded':'জিপ ব্যাকআপ ডাউনলোড হয়েছে', 'success');
-        });
-    } catch (error) { showToast((L==='en'?'ZIP backup failed: ':'জিপ ব্যাকআপ ব্যর্থ: ')+error.message, 'error'); }
-}
-
-function showClearDataConfirmation() {
-    var L = APP.language;
-    document.getElementById('modalContent').innerHTML = [
-        '<h2>&#x26A0;&#xFE0F; '+(L==='en'?'Delete All Data':'সমস্ত ডাটা মুছে ফেলুন')+'</h2>',
-        '<div style="background: #ffeaa7; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #fdcb6e;">',
-            '<p style="color: #d63031; font-weight: bold;">&#x1F534; '+(L==='en'?'Warning!':'সতর্কতা!')+'</p>',
-            '<p>'+(L==='en'?'This will permanently delete all data and cannot be undone!':'এই অপারেশন সমস্ত ডাটা স্থায়ীভাবে মুছে ফেলবে এবং আন্ডু করা যাবে না!')+'</p>',
-        '</div>',
-        '<div class="form-group">',
-            '<label>'+(L==='en'?'Type "DELETE" to confirm':'নিশ্চিত করতে "ডিলিট" লিখুন')+'</label>',
-            '<input type="text" class="form-control" id="confirmText" placeholder="'+(L==='en'?'Type DELETE':'ডিলিট লিখুন')+'" autocomplete="off">',
-        '</div>',
-        '<div style="display: flex; gap: 10px; margin-top: 20px;">',
-            '<button class="btn btn-danger" onclick="clearAllData()" id="clearDataBtn" disabled style="opacity: 0.5;">&#x1F5D1;&#xFE0F; '+(L==='en'?'Delete All Data':'সব ডাটা মুছুন')+'</button>',
-            '<button class="btn btn-outline" onclick="closeModal()">'+(L==='en'?'Cancel':'বাতিল')+'</button>',
-        '</div>',
-    ].join('');
-    
-    setTimeout(function() {
-        var confirmInput = document.getElementById('confirmText');
-        var clearBtn = document.getElementById('clearDataBtn');
-        if (confirmInput && clearBtn) {
-            confirmInput.addEventListener('input', function(e) {
-                if (APP.language==='en' ? e.target.value==='DELETE' : e.target.value==='ডিলিট') {
-                    clearBtn.disabled = false; clearBtn.style.opacity = '1';
-                } else { clearBtn.disabled = true; clearBtn.style.opacity = '0.5'; }
-            });
-            confirmInput.focus();
-        }
-    }, 100);
-    document.getElementById('modal').classList.add('active');
-}
-
-function clearAllData() {
-    var L = APP.language;
-    if (L==='en' ? document.getElementById('confirmText').value !== 'DELETE' : document.getElementById('confirmText').value !== 'ডিলিট') {
-        showToast(L==='en'?'Please type DELETE':'"ডিলিট" লিখুন', 'error');
-        return;
-    }
-    if (!confirm(L==='en'?'Final confirmation! Delete all data?':'শেষবার নিশ্চিত করুন! সমস্ত ডাটা মুছে ফেলবেন?')) return;
-    
-    try {
-        APP.meters = []; APP.metersData = {}; APP.activeMeterId = null;
-        APP.settings = { vatRate: 5, rebateRate: 0.85, demandCharge: 294, darkMode: false, highContrast: false, fontSize: 14 };
-        APP.tariffRates = [
-            { range: [0, 50], rate: 3.5, name: "Lifeline" }, { range: [51, 75], rate: 4, name: "1st Slab" },
-            { range: [76, 200], rate: 5.45, name: "2nd Slab" }, { range: [201, 300], rate: 5.7, name: "3rd Slab" },
-            { range: [301, 400], rate: 6.02, name: "4th Slab" }, { range: [401, 600], rate: 9.3, name: "5th Slab" },
-            { range: [601, null], rate: 10.7, name: "6th Slab" }
-        ];
-        APP.savingsGoal = 0; APP.badges = [];
-        saveData(); closeModal();
-        showToast(L==='en'?'All data cleared!':'সমস্ত ডাটা মুছে ফেলা হয়েছে!', 'success');
-        setTimeout(function(){ navigateTo('dashboard'); }, 500);
-    } catch (error) { showToast((L==='en'?'Failed: ':'ব্যর্থ: ')+error.message, 'error'); closeModal(); }
-}
-
-function clearCurrentMeterTransactions() {
-    var L = APP.language;
-    if (!APP.activeMeterId) { showToast(L==='en'?'No meter selected':'কোন মিটার সিলেক্ট করা নেই', 'error'); return; }
-    var meter = APP.meters.find(function(m){return m.id===APP.activeMeterId;});
-    if (!meter) return;
-    if (!confirm(L==='en'?'Clear all transactions of "'+meter.name+'"?':'"'+meter.name+'" মিটারের সব ট্রানজেকশন মুছে ফেলবেন?')) return;
-    try {
-        if (APP.metersData[APP.activeMeterId]) {
-            APP.metersData[APP.activeMeterId].transactions = [];
-            APP.metersData[APP.activeMeterId].currentBalance = 0;
-            APP.metersData[APP.activeMeterId].totalRecharge = 0;
-            APP.metersData[APP.activeMeterId].totalExpended = 0;
-            APP.metersData[APP.activeMeterId].monthlyRecharges = [];
-            APP.metersData[APP.activeMeterId].lastUpdated = new Date().toISOString();
-        }
-        saveData();
-        showToast(L==='en'?'Transactions cleared':'ট্রানজেকশন ক্লিয়ার হয়েছে', 'success');
-        navigateTo('dashboard');
-    } catch (error) { showToast((L==='en'?'Failed: ':'ব্যর্থ: ')+error.message, 'error'); }
 }

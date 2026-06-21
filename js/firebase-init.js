@@ -37,12 +37,10 @@ function initFirebase() {
         isFirebaseReady = true;
         console.log('✅ Firebase Realtime Database initialized successfully');
         
-        // Enable offline persistence
         database.ref('.info/connected').on('value', function(snap) {
             if (snap.val() === true) {
                 console.log('✅ Connected to Firebase Realtime Database');
                 startFirebaseSync();
-                // Load data when connected
                 if (APP.currentUser) {
                     loadFromCloud();
                 }
@@ -110,9 +108,42 @@ function saveAllToCloud() {
                 }
             }
             
+            // ✅ রেন্ট ডাটা প্রস্তুত করুন
+            var rentDataForCloud = null;
+            if (APP.rentData) {
+                rentDataForCloud = {
+                    records: APP.rentData.records || [],
+                    totalRent: APP.rentData.totalRent || 0,
+                    totalService: APP.rentData.totalService || 0,
+                    totalParking: APP.rentData.totalParking || 0,
+                    totalOverall: APP.rentData.totalOverall || 0
+                };
+            }
+            
+            // ✅ এক্সপেন্স ডাটা প্রস্তুত করুন
+            var expenseDataForCloud = null;
+            if (APP.currentUser) {
+                var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                var key = 'expenseData_' + userId;
+                if (APP[key]) {
+                    expenseDataForCloud = {
+                        records: APP[key].records || [],
+                        totalBazar: APP[key].totalBazar || 0,
+                        totalGas: APP[key].totalGas || 0,
+                        totalInternet: APP[key].totalInternet || 0,
+                        totalMobile: APP[key].totalMobile || 0,
+                        totalElectricity: APP[key].totalElectricity || 0,
+                        totalWater: APP[key].totalWater || 0,
+                        totalGrocery: APP[key].totalGrocery || 0,
+                        totalOther: APP[key].totalOther || 0,
+                        totalOverall: APP[key].totalOverall || 0
+                    };
+                }
+            }
+            
             // Save app data
             var appRef = database.ref('users/' + userEmail + '/app');
-            appRef.update({
+            var updateData = {
                 activeMeterId: APP.activeMeterId || '',
                 settings: APP.settings,
                 tariffRates: APP.tariffRates,
@@ -123,8 +154,19 @@ function saveAllToCloud() {
                 lastModifiedBy: APP.currentUser.email,
                 lastModifiedDevice: deviceId,
                 lastModifiedAt: timestamp
-            }).then(function() {
-                // Save meters data
+            };
+            
+            // ✅ রেন্ট ডাটা যোগ করুন
+            if (rentDataForCloud) {
+                updateData.rentData = rentDataForCloud;
+            }
+            
+            // ✅ এক্সপেন্স ডাটা যোগ করুন
+            if (expenseDataForCloud) {
+                updateData.expenseData = expenseDataForCloud;
+            }
+            
+            appRef.update(updateData).then(function() {
                 var metersRef = database.ref('users/' + userEmail + '/meters');
                 return metersRef.update(metersDataForCloud);
             }).then(function() {
@@ -146,21 +188,22 @@ function saveAllToCloud() {
 
 // ==================== LOAD FROM CLOUD ====================
 function loadFromCloud() {
-    if (!isFirebaseReady || !APP.currentUser) {
+    if (!isFirebaseReady || !database || !APP.currentUser) {
         console.warn('⚠️ Cannot load: Firebase not ready or no user');
         return Promise.resolve(false);
     }
     
     return new Promise(function(resolve) {
         var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+        var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+        var expenseKey = 'expenseData_' + userId;
         
         console.log('☁️ Loading data from Firebase...');
         
-        // Load app data
         database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
             var appData = snapshot.val();
             if (appData) {
-                // Merge settings
+                // Settings
                 if (appData.settings) {
                     APP.settings = Object.assign({}, APP.settings, appData.settings);
                 }
@@ -171,14 +214,55 @@ function loadFromCloud() {
                 
                 if (appData.activeMeterId) {
                     APP.activeMeterId = appData.activeMeterId;
+                    localStorage.setItem('biddut_activeMeterId', appData.activeMeterId);
                 }
                 
                 if (appData.meters && Array.isArray(appData.meters)) {
                     APP.meters = appData.meters;
                 }
+                
+                // ✅✅✅ রেন্ট ডাটা লোড ✅✅✅
+                if (appData.rentData) {
+                    APP.rentData = appData.rentData;
+                    console.log('✅ Rent data loaded. Records:', APP.rentData?.records?.length || 0);
+                } else {
+                    if (!APP.rentData) {
+                        APP.rentData = {
+                            records: [],
+                            totalRent: 0,
+                            totalService: 0,
+                            totalParking: 0,
+                            totalOverall: 0
+                        };
+                    }
+                    console.log('ℹ️ No rent data found, initialized empty');
+                }
+                
+                // ✅✅✅ এক্সপেন্স ডাটা লোড ✅✅✅
+                if (appData.expenseData) {
+                    APP[expenseKey] = appData.expenseData;
+                    console.log('✅ Expense data loaded. Records:', APP[expenseKey]?.records?.length || 0);
+                } else {
+                    if (!APP[expenseKey]) {
+                        APP[expenseKey] = {
+                            records: [],
+                            totalBazar: 0,
+                            totalGas: 0,
+                            totalInternet: 0,
+                            totalMobile: 0,
+                            totalElectricity: 0,
+                            totalWater: 0,
+                            totalGrocery: 0,
+                            totalOther: 0,
+                            totalOverall: 0
+                        };
+                    }
+                    console.log('ℹ️ No expense data found, initialized empty');
+                }
+            } else {
+                console.log('ℹ️ No app data found in Firebase');
             }
             
-            // Load meters data
             return database.ref('users/' + userEmail + '/meters').once('value');
         }).then(function(metersSnapshot) {
             var metersData = metersSnapshot.val();
@@ -202,12 +286,14 @@ function loadFromCloud() {
                 });
             }
             
-            // Set active meter if not set
             if (!APP.activeMeterId && APP.meters.length > 0) {
                 APP.activeMeterId = APP.meters[0].id;
+                localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
             }
             
             console.log('☁️ Firebase data loaded. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
+            console.log('☁️ Rent records:', APP.rentData?.records?.length || 0);
+            console.log('☁️ Expense records:', APP[expenseKey]?.records?.length || 0);
             resolve(true);
         }).catch(function(error) {
             console.error('❌ Firebase load error:', error);
@@ -225,12 +311,9 @@ function startFirebaseSync() {
     var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
     var deviceId = getDeviceId();
     
-    // Listen for app data changes
     var appListener = database.ref('users/' + userEmail + '/app').on('value', function(snapshot) {
         var data = snapshot.val();
         if (!data || !data.lastModifiedDevice) return;
-        
-        // Skip own changes
         if (data.lastModifiedDevice === deviceId) return;
         
         console.log('☁️ Remote change detected in app data');
@@ -250,12 +333,10 @@ function startFirebaseSync() {
     
     syncListeners.push({ type: 'app', ref: appListener });
     
-    // Listen for meter data changes
     var metersListener = database.ref('users/' + userEmail + '/meters').on('value', function(snapshot) {
         var data = snapshot.val();
         if (!data) return;
         
-        // Check if change is from another device
         var hasRemoteChange = false;
         Object.keys(data).forEach(function(key) {
             var meterData = data[key];
@@ -325,7 +406,6 @@ function tryFirebaseInit() {
     }
 }
 
-// Auto init when app loads
 if (document.readyState === 'complete') {
     setTimeout(tryFirebaseInit, 1500);
 } else {

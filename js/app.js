@@ -33,9 +33,10 @@ const APP = {
     savingsGoal: 0,
     badges: [],
     currentPage: 'dashboard',
-    language: 'bn',
+    language: 'bn', // ✅ ডিফল্ট ভাষা বাংলা
     translations: {
         bn: {
+            // ===== Sidebar =====
             sidebarDashboard: 'ড্যাশবোর্ড',
             sidebarMeters: 'মিটার ম্যানেজমেন্ট',
             sidebarTransactions: 'ট্রানজেকশন',
@@ -46,7 +47,10 @@ const APP = {
             sidebarBackup: 'ব্যাকআপ',
             sidebarProfile: 'প্রোফাইল',
             sidebarAdmin: 'অ্যাডমিন প্যানেল',
+            sidebarRent: 'ভাড়া ব্যবস্থাপনা',
+            sidebarExpenses: 'অতিরিক্ত খরচ',
             sidebarLogout: 'লগআউট',
+            // ===== Common =====
             currentMeter: 'বর্তমান মিটার:',
             langLabel: 'EN',
             langBtn: 'বাংলা',
@@ -63,6 +67,7 @@ const APP = {
             addMeter: 'মিটার যোগ করুন',
             welcome: 'স্বাগতম!',
             welcomeMsg: 'প্রথমে একটি মিটার যোগ করুন',
+            // ===== Auth =====
             login: 'লগইন',
             register: 'রেজিস্টার',
             email: 'ইমেইল',
@@ -79,6 +84,7 @@ const APP = {
             passwordLength: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে',
             emailExists: 'এই ইমেইল ইতিমধ্যে রেজিস্টার্ড',
             invalidCred: 'ইমেইল বা পাসওয়ার্ড ভুল',
+            // ===== Common Actions =====
             save: 'সংরক্ষণ',
             cancel: 'বাতিল',
             edit: 'এডিট',
@@ -89,6 +95,7 @@ const APP = {
             amount: 'পরিমাণ',
             units: 'ইউনিট',
             actions: 'অ্যাকশন',
+            // ===== Admin =====
             adminPanel: 'অ্যাডমিন প্যানেল',
             totalUsers: 'মোট রেজিস্টার্ড ইউজার',
             totalMeters: 'মোট মিটার',
@@ -118,6 +125,7 @@ const APP = {
             totalExpenseCol: 'মোট খরচ',
             lastUpdate: 'শেষ আপডেট',
             noMeters: 'কোন মিটার নেই',
+            // ===== Activity =====
             activityLog: 'ইউজার অ্যাক্টিভিটি লগ',
             allActivity: 'সকল',
             loginActivity: 'লগইন',
@@ -128,6 +136,7 @@ const APP = {
             meterActivity: 'মিটার',
             noActivity: 'কোন অ্যাক্টিভিটি নেই',
             systemLogs: 'সিস্টেম লগস',
+            // ===== Settings =====
             settingsTitle: 'সেটিংস',
             billSettings: 'বিল সেটিংস',
             displaySettings: 'ডিসপ্লে সেটিংস',
@@ -139,6 +148,7 @@ const APP = {
             resetData: 'সমস্ত ডাটা রিসেট করুন',
             resetDataMsg: 'ফ্যাক্টরি ডিফল্টে ফিরে যান। সমস্ত মিটার, ট্রানজেকশন এবং কাস্টম সেটিংস স্থায়ীভাবে মুছে যাবে।',
             clearAll: 'সব ক্লিয়ার করুন',
+            // ===== Profile =====
             profile: 'প্রোফাইল',
             newPassword: 'নতুন পাসওয়ার্ড (পরিবর্তন না করতে চাইলে খালি রাখুন)',
             updateProfile: 'আপডেট প্রোফাইল',
@@ -154,6 +164,7 @@ const APP = {
             goalSaved: 'সেভিংস গোল সংরক্ষিত হয়েছে',
         },
         en: {
+            // ===== Sidebar =====
             sidebarDashboard: 'Dashboard',
             sidebarMeters: 'Meters',
             sidebarTransactions: 'Transactions',
@@ -164,7 +175,10 @@ const APP = {
             sidebarBackup: 'Backup',
             sidebarProfile: 'Profile',
             sidebarAdmin: 'Admin Panel',
+            sidebarRent: 'Rent Management',
+            sidebarExpenses: 'Extra Expenses',
             sidebarLogout: 'Logout',
+            // ===== Common =====
             currentMeter: 'Current Meter:',
             langLabel: 'BN',
             langBtn: 'English',
@@ -181,6 +195,7 @@ const APP = {
             addMeter: 'Add Meter',
             welcome: 'Welcome!',
             welcomeMsg: 'Please add a meter first',
+            // ===== Auth =====
             login: 'Login',
             register: 'Register',
             email: 'Email',
@@ -197,6 +212,7 @@ const APP = {
             passwordLength: 'Password must be at least 6 characters',
             emailExists: 'This email is already registered',
             invalidCred: 'Invalid email or password',
+            // ===== Common Actions =====
             save: 'Save',
             cancel: 'Cancel',
             edit: 'Edit',
@@ -207,6 +223,7 @@ const APP = {
             amount: 'Amount',
             units: 'Units',
             actions: 'Actions',
+            // ===== Admin =====
             adminPanel: 'Admin Panel',
             totalUsers: 'Total Registered Users',
             totalMeters: 'Total Meters',
@@ -236,6 +253,7 @@ const APP = {
             totalExpenseCol: 'Total Expense',
             lastUpdate: 'Last Update',
             noMeters: 'No meters found',
+            // ===== Activity =====
             activityLog: 'User Activity Log',
             allActivity: 'All',
             loginActivity: 'Login',
@@ -246,6 +264,7 @@ const APP = {
             meterActivity: 'Meter',
             noActivity: 'No activity found',
             systemLogs: 'System Logs',
+            // ===== Settings =====
             settingsTitle: 'Settings',
             billSettings: 'Bill Settings',
             displaySettings: 'Display Settings',
@@ -257,6 +276,7 @@ const APP = {
             resetData: 'Reset All Data',
             resetDataMsg: 'Reset to factory defaults. All meters, transactions and custom settings will be permanently deleted.',
             clearAll: 'Clear All',
+            // ===== Profile =====
             profile: 'Profile',
             newPassword: 'New Password (leave blank to keep current)',
             updateProfile: 'Update Profile',
@@ -288,6 +308,17 @@ function navigateTo(page) {
     // Update mobile nav active
     updateMobileNavActive(page);
     
+    // ✅ ডাটা লোড না হলে অপেক্ষা করুন
+    if (page === "dashboard" && APP.meters.length === 0) {
+        // loadFromCloud চেষ্টা করুন
+        if (typeof loadFromCloud === 'function') {
+            loadFromCloud().then(function() {
+                if (typeof showDashboard === "function") showDashboard();
+            });
+            return;
+        }
+    }
+    
     // Show page content
     if (page === "dashboard" && typeof showDashboard === "function") showDashboard();
     else if (page === "meters" && typeof showMeters === "function") showMeters();
@@ -299,6 +330,8 @@ function navigateTo(page) {
     else if (page === "backup" && typeof showBackup === "function") showBackup();
     else if (page === "admin" && typeof showAdminPanel === "function") showAdminPanel();
     else if (page === "profile" && typeof showProfile === "function") showProfile();
+    else if (page === "rent" && typeof showRentPage === "function") showRentPage();
+    else if (page === "expenses" && typeof showExpensesPage === "function") showExpensesPage();
     else if (typeof showDashboard === "function") showDashboard();
     
     // Update nav items
@@ -349,6 +382,12 @@ function logout() {
 
 // ==================== SAVE DATA (ONLY FIREBASE) ====================
 function saveData() {
+    // ✅ localStorage-এ activeMeterId সেভ করুন
+    if (APP.activeMeterId) {
+        localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
+        console.log('💾 Active meter saved to localStorage:', APP.activeMeterId);
+    }
+    
     // Only save to Firebase - no localStorage
     if (typeof saveAllToCloud === 'function') {
         saveAllToCloud().catch(function(error) {
@@ -373,30 +412,85 @@ function initApp() {
             if (adminNav && APP.currentUser.role === "admin") adminNav.style.display = "block";
             if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
             
-            // Apply settings
             if (typeof applySettings === "function") {
                 applySettings();
             }
             
-            // Create mobile nav
             setTimeout(function() {
                 if (window.innerWidth <= 768) {
                     createMobileNav();
                 }
             }, 500);
             
-            // Load from Firebase
             if (typeof loadFromCloud === "function") {
                 loadFromCloud().then(function() {
-                    // Check badges after loading
                     if (typeof checkBadges === "function") {
                         checkBadges();
                     }
+                    if (APP.settings && APP.settings.language) {
+                        APP.language = APP.settings.language;
+                    }
+                    updateAllSidebarTexts();
+                    
+                    // ✅✅✅ database চেক সহ রেন্ট ডাটা লোড ✅✅✅
+                    setTimeout(function() {
+                        // ✅ database চেক করুন
+                        if (APP.currentUser && typeof database !== 'undefined' && database !== null && isFirebaseReady) {
+                            var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+                            var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                            var expenseKey = 'expenseData_' + userId;
+                            
+                            database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
+                                var data = snapshot.val();
+                                if (data) {
+                                    if (data.rentData) {
+                                        APP.rentData = data.rentData;
+                                        console.log('✅ রিফ্রেশে রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData?.records?.length || 0);
+                                    }
+                                    if (data.expenseData) {
+                                        APP[expenseKey] = data.expenseData;
+                                        console.log('✅ রিফ্রেশে এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey]?.records?.length || 0);
+                                    }
+                                    if (APP.currentPage === 'rent') {
+                                        showRentReport();
+                                    }
+                                }
+                            }).catch(function(err) {
+                                console.warn('⚠️ রেন্ট ডাটা লোড করতে ব্যর্থ:', err);
+                            });
+                        } else {
+                            console.log('⏳ Firebase এখনও প্রস্তুত নয়, পরে চেষ্টা করা হবে...');
+                            // 2 সেকেন্ড পর আবার চেষ্টা করুন
+                            setTimeout(function() {
+                                if (APP.currentUser && typeof database !== 'undefined' && database !== null) {
+                                    var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+                                    var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                                    var expenseKey = 'expenseData_' + userId;
+                                    
+                                    database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
+                                        var data = snapshot.val();
+                                        if (data && data.rentData) {
+                                            APP.rentData = data.rentData;
+                                            console.log('✅ রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData?.records?.length || 0);
+                                            if (APP.currentPage === 'rent') {
+                                                showRentReport();
+                                            }
+                                        }
+                                    });
+                                }
+                            }, 2000);
+                        }
+                    }, 500);
+                    
                     setTimeout(function() { 
                         navigateTo("dashboard"); 
-                    }, 100);
+                    }, 700);
                 });
             } else {
+                if (APP.settings && APP.settings.language) {
+                    APP.language = APP.settings.language;
+                }
+                updateAllSidebarTexts();
                 setTimeout(function() { 
                     navigateTo("dashboard"); 
                 }, 100);
@@ -420,18 +514,19 @@ function createMobileNav() {
     var isAdmin = APP.currentUser && APP.currentUser.role === 'admin';
     
     var navItems = [
-        { id: 'dashboard', icon: '📊', label: 'ড্যাশ' },
-        { id: 'meters', icon: '⚡', label: 'মিটার' },
-        { id: 'transactions', icon: '💳', label: 'ট্রা.' },
-        { id: 'calculator', icon: '🧮', label: 'ক্যাল.' },
-        { id: 'reports', icon: '📈', label: 'রিপোর্ট' },
-        { id: 'analytics', icon: '📉', label: 'এনা.' },
-        { id: 'settings', icon: '⚙️', label: 'সেট.' },
-        { id: 'profile', icon: '👤', label: 'প্রো.' }
+        { id: 'dashboard', icon: '📊', label: __('sidebarDashboard') },
+        { id: 'meters', icon: '⚡', label: __('sidebarMeters') },
+        { id: 'transactions', icon: '💳', label: __('sidebarTransactions') },
+        { id: 'calculator', icon: '🧮', label: __('sidebarCalculator') },
+        { id: 'reports', icon: '📈', label: __('sidebarReports') },
+        { id: 'analytics', icon: '📉', label: __('sidebarAnalytics') },
+        { id: 'settings', icon: '⚙️', label: __('sidebarSettings') },
+        { id: 'profile', icon: '👤', label: __('sidebarProfile') },
+        { id: 'rent', icon: '🏠', label: __('sidebarRent') }
     ];
     
     if (isAdmin) {
-        navItems.push({ id: 'admin', icon: '👑', label: 'অ্যাডমিন', isAdmin: true });
+        navItems.push({ id: 'admin', icon: '👑', label: __('sidebarAdmin'), isAdmin: true });
     }
     
     var html = '<div class="mobile-bottom-nav" id="mobileBottomNav">';
@@ -484,6 +579,19 @@ function toggleLanguage() {
         APP.language = 'bn';
     }
     
+    // ✅ সেটিংসে ভাষা সেভ করুন
+    if (APP.settings) {
+        APP.settings.language = APP.language;
+    }
+    
+    // ✅ HTML lang সেট করুন
+    document.documentElement.lang = APP.language;
+    
+    // ✅ মিটার সিলেক্টর আপডেট করুন
+    if (typeof fixMeterSelectorLanguage === 'function') {
+        fixMeterSelectorLanguage();
+    }
+    
     saveData();
     updateAllSidebarTexts();
     updateSidebarUserInfo();
@@ -499,6 +607,7 @@ function updateAllSidebarTexts() {
     var L = APP.language;
     var translations = APP.translations[L] || APP.translations.bn;
     
+    // ✅ সাইডবার টেক্সট আপডেট
     document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
         var key = el.getAttribute('data-key');
         if (translations[key]) {
@@ -506,6 +615,21 @@ function updateAllSidebarTexts() {
         }
     });
     
+    // ✅ মোবাইল নেভিগেশন আপডেট
+    document.querySelectorAll('.mobile-nav-item .nav-label').forEach(function(el) {
+        var parent = el.closest('.mobile-nav-item');
+        if (parent) {
+            var page = parent.getAttribute('data-page');
+            if (page) {
+                var key = 'sidebar' + page.charAt(0).toUpperCase() + page.slice(1);
+                if (translations[key]) {
+                    el.textContent = translations[key];
+                }
+            }
+        }
+    });
+    
+    // ✅ ইউজার রোল আপডেট
     var roleEl = document.getElementById('sidebarUserRole');
     if (roleEl && APP.currentUser) {
         roleEl.textContent = APP.currentUser.role === 'admin' ? 
@@ -513,6 +637,7 @@ function updateAllSidebarTexts() {
             (L === 'en' ? 'User' : 'ইউজার');
     }
     
+    // ✅ ল্যাঙ্গুয়েজ টগল বাটন আপডেট
     var langToggle = document.querySelector('.lang-toggle-btn span');
     if (langToggle) {
         langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
@@ -535,6 +660,11 @@ function applySettings() {
         document.body.classList.add('high-contrast');
     } else {
         document.body.classList.remove('high-contrast');
+    }
+    
+    // ✅ ভাষা সেট করুন
+    if (APP.settings && APP.settings.language) {
+        APP.language = APP.settings.language;
     }
 }
 
@@ -569,9 +699,141 @@ function showToast(message, type) {
     }, 3000);
 }
 
+// ==================== DROPDOWN FUNCTIONS ====================
+
+// ড্রপডাউন টগল
+function toggleDropdown() {
+    var menu = document.getElementById('dropdownMenu');
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+// ড্রপডাউন বন্ধ (বাইরে ক্লিক করলে)
+document.addEventListener('click', function(e) {
+    var selector = document.querySelector('.user-selector');
+    var menu = document.getElementById('dropdownMenu');
+    if (selector && menu && !selector.contains(e.target)) {
+        menu.classList.remove('show');
+    }
+});
+
+// ড্যাশবোর্ড সুইচ
+function switchDashboard(type) {
+    var newDashboard = document.getElementById('newDashboard');
+    var oldDashboard = document.getElementById('oldDashboard');
+    var label = document.getElementById('currentViewLabel');
+
+    if (!newDashboard || !oldDashboard) {
+        console.warn('Dashboard elements not found');
+        return;
+    }
+
+    document.querySelectorAll('.dropdown-menu li').forEach(function(li) {
+        li.classList.remove('active-option');
+    });
+
+    if (type === 'new') {
+        newDashboard.style.display = 'block';
+        oldDashboard.style.display = 'none';
+        if (label) label.textContent = __('sidebarDashboard');
+        var activeItem = document.querySelector('.dropdown-menu li[data-view="new"]');
+        if (activeItem) activeItem.classList.add('active-option');
+        
+        setTimeout(function() {
+            if (window.usageChart) window.usageChart.resize();
+            if (window.pieChart) window.pieChart.resize();
+        }, 100);
+    } else {
+        newDashboard.style.display = 'none';
+        oldDashboard.style.display = 'block';
+        if (label) label.textContent = 'পুরনো ড্যাশ';
+        var activeItem = document.querySelector('.dropdown-menu li[data-view="old"]');
+        if (activeItem) activeItem.classList.add('active-option');
+    }
+
+    var menu = document.getElementById('dropdownMenu');
+    if (menu) menu.classList.remove('show');
+}
+
 // ==================== INIT ON LOAD ====================
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initApp);
+    document.addEventListener("DOMContentLoaded", function() {
+        // ✅ সেটিংস থেকে ভাষা লোড করুন
+        if (APP.settings && APP.settings.language) {
+            APP.language = APP.settings.language;
+        }
+        initApp();
+    });
 } else {
+    // ✅ সেটিংস থেকে ভাষা লোড করুন
+    if (APP.settings && APP.settings.language) {
+        APP.language = APP.settings.language;
+    }
     initApp();
 }
+
+// ============================================================
+// রিফ্রেশের পর রেন্ট ও এক্সপেন্স ডাটা অটো-লোড (সরলীকৃত)
+// ============================================================
+(function autoLoadAllData() {
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            // ✅ সরাসরি চেক - isFirebaseReady ব্যবহার না করে
+            if (APP && APP.currentUser && typeof database !== 'undefined' && database !== null) {
+                var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+                var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                var expenseKey = 'expenseData_' + userId;
+                
+                database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
+                    var data = snapshot.val();
+                    if (data) {
+                        // রেন্ট
+                        if (data.rentData) {
+                            APP.rentData = data.rentData;
+                            console.log('✅ রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData?.records?.length || 0);
+                        }
+                        // এক্সপেন্স
+                        if (data.expenseData) {
+                            APP[expenseKey] = data.expenseData;
+                            console.log('✅ এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey]?.records?.length || 0);
+                        }
+                        // পেজ রিফ্রেশ
+                        if (APP.currentPage === 'rent') {
+                            showRentReport();
+                        } else if (APP.currentPage === 'expenses') {
+                            showExpenseReport();
+                        } else {
+                            // ড্যাশবোর্ডে থাকলে রিফ্রেশ
+                            if (APP.currentPage === 'dashboard') {
+                                showDashboard();
+                            }
+                        }
+                    }
+                }).catch(function(err) {
+                    console.warn('⚠️ ডাটা লোড করতে ব্যর্থ:', err);
+                });
+            } else {
+                console.log('⏳ Firebase এখনও প্রস্তুত নয়, 2 সেকেন্ড পর চেষ্টা...');
+                setTimeout(function() {
+                    if (APP && APP.currentUser && typeof database !== 'undefined' && database !== null) {
+                        var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+                        var userId = APP.currentUser.id || APP.currentUser.email || 'default';
+                        var expenseKey = 'expenseData_' + userId;
+                        
+                        database.ref('users/' + userEmail + '/app').once('value').then(function(snapshot) {
+                            var data = snapshot.val();
+                            if (data && data.expenseData) {
+                                APP[expenseKey] = data.expenseData;
+                                console.log('✅ এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey]?.records?.length || 0);
+                                if (APP.currentPage === 'expenses') {
+                                    showExpenseReport();
+                                }
+                            }
+                        });
+                    }
+                }, 2000);
+            }
+        }, 1000);
+    });
+})();

@@ -44,14 +44,13 @@ function showTransactions() {
                     <div id="quickRechargeStatus" style="margin-top: 10px; font-weight: 500;"></div>
                 </div>
 
-                <!-- Balance Update - ইউনিট ইনপুট ছাড়া -->
+                <!-- Balance Update -->
                 <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
                     <h3 style="color: #1565c0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 18px;">⚖️ ${L==='en'?'Balance Update':'ব্যালেন্স আপডেট'}</h3>
                     <div class="form-group">
                         <label for="quickBalanceAmount" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Enter New Balance':'নতুন ব্যালেন্স ইনপুট দিন'}</label>
-                        <input type="number" class="form-control" id="quickBalanceAmount" placeholder="${L==='en'?'e.g. 1000':'যেমন: 1000'}" min="0" step="0.01" style="background: white;">
+                        <input type="number" class="form-control" id="quickBalanceAmount" placeholder="${L==='en'?'e.g. 1000':'যেমন: 1000'}" min="0" step="0.01" style="background: white;" inputmode="decimal">
                     </div>
-                    <!-- ✅ ইউনিট ইনপুট ফিল্ড সরানো হয়েছে -->
                     <div class="form-group">
                         <label for="quickBalanceDate" style="font-weight: 600; display: block; margin-bottom: 5px;">${L==='en'?'Select Date':'তারিখ নির্বাচন করুন'}</label>
                         <input type="date" class="form-control" id="quickBalanceDate" value="${today}" style="background: white;">
@@ -91,15 +90,21 @@ function showTransactions() {
                                 displayDate = '-';
                             }
                             
+                            // ✅ ইউনিট দেখান (যদি থাকে)
+                            var unitsDisplay = (t.units !== undefined && t.units !== null && t.units > 0) ? t.units.toFixed(2) : '-';
+                            
+                            // ✅ ডিসক্রিপশন ক্লিন করুন (দশমিকের সমস্যা)
                             var description = t.description || '-';
+                            // 44.620000000000005 → 44.62
+                            description = description.replace(/(\d+)\.(\d{2})\d+/g, '$1.$2');
                             
                             return `
                             <tr>
                                 <td>${displayDate}</td>
                                 <td><span class="badge ${t.type === 'recharge' ? 'badge-success' : 'badge-warning'}">${t.type === 'recharge' ? (L==='en'?'Recharge':'রিচার্জ') : (L==='en'?'Bill':'বিল')}</span></td>
-                                <td>৳ ${(t.amount || 0).toFixed(2)}</td>
-                                <td>${t.units ? t.units.toFixed(2) : '-'}</td>
-                                <td>৳ ${(t.balanceAfter || 0).toFixed(2)}</td>
+                                <td>${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
+                                <td>${unitsDisplay}</td>
+                                <td>${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
                                 <td style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: 13px; word-break: break-word; max-width: 250px;">${description}</td>
                                 <td>
                                     <button class="btn btn-sm" onclick="editTransaction('${t.id}')">${L==='en'?'Edit':'এডিট'}</button>

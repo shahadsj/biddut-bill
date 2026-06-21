@@ -1,5 +1,32 @@
 // ==================== METER MANAGEMENT ====================
+
+// ✅ showMeterManagement - পুরনো মিটারের জন্য nameBn সেট করার ফাংশন (হার্ডকোড মুক্ত)
+function ensureMeterNameBn() {
+    if (!APP.meters || APP.meters.length === 0) return;
+    
+    var updated = 0;
+    
+    APP.meters.forEach(function(meter) {
+        // যদি nameBn না থাকে তাহলে name কে nameBn হিসেবে সেট করুন
+        if (!meter.nameBn || meter.nameBn.trim() === '') {
+            meter.nameBn = meter.name; // ✅ name কে nameBn হিসেবে কপি করুন
+            updated++;
+        }
+    });
+    
+    if (updated > 0) {
+        saveData();
+        console.log('✅ ' + updated + ' মিটারের জন্য nameBn সেট করা হয়েছে');
+    }
+}
+
+// ============================================================
+// ✅ showMeterManagement
+// ============================================================
 function showMeterManagement() {
+    // ✅ পুরনো মিটারের nameBn সেট করুন (হার্ডকোড মুক্ত)
+    ensureMeterNameBn();
+    
     var L = APP.language;
     document.getElementById('pageContent').innerHTML = [
         '<div class="card">',
@@ -18,8 +45,10 @@ function showMeterManagement() {
                     '<th>'+(L==='en'?'Actions':'অ্যাকশন')+'</th>',
                 '</tr></thead><tbody>',
                 (APP.meters.length > 0 ? APP.meters.map(function(m) {
+                    // ✅ বাংলা নাম দেখান (nameBn থাকলে সেটা, না হলে name)
+                    var displayName = m.nameBn || m.name;
                     return '<tr>'+
-                        '<td><strong>'+escapeHtml(m.name)+'</strong></td>'+
+                        '<td><strong>'+escapeHtml(displayName)+'</strong></td>'+
                         '<td>'+(m.meterNumber || m.meterNo || '-')+'</td>'+
                         '<td>'+(m.accountNumber || m.accountNo || '-')+'</td>'+
                         '<td>'+(m.address || '-')+'</td>'+
@@ -42,6 +71,9 @@ function showMeterManagement() {
     ].join('');
 }
 
+// ============================================================
+// ✅ showAddMeterForm
+// ============================================================
 function showAddMeterForm(meterId) {
     var L = APP.language;
     var meter = meterId ? APP.meters.find(function(m) { return m.id === meterId; }) : null;
@@ -51,6 +83,12 @@ function showAddMeterForm(meterId) {
         '<div class="form-group">',
             '<label>'+(L==='en'?'Meter Name *':'মিটারের নাম *')+'</label>',
             '<input type="text" class="form-control" id="meterName" value="'+(meter?.name || '')+'" placeholder="'+(L==='en'?'e.g. Home Meter':'যেমন: বাড়ির মিটার')+'">',
+        '</div>',
+        // ✅ বাংলা নামের জন্য নতুন ফিল্ড
+        '<div class="form-group">',
+            '<label>'+(L==='en'?'Meter Name (Bengali)':'মিটারের নাম (বাংলা)')+'</label>',
+            '<input type="text" class="form-control" id="meterNameBn" value="'+(meter?.nameBn || '')+'" placeholder="'+(L==='en'?'e.g. বাড়ির মিটার':'যেমন: বাড়ির মিটার')+'">',
+            '<small style="color: var(--text-light);">'+ (L==='en'?'Leave blank to use English name':'ফাঁকা রাখলে ইংরেজি নাম ব্যবহার হবে') +'</small>',
         '</div>',
         '<div class="form-group">',
             '<label>'+(L==='en'?'Meter Number *':'মিটার নম্বর *')+'</label>',
@@ -77,9 +115,13 @@ function showAddMeterForm(meterId) {
     document.getElementById('modal').classList.add('active');
 }
 
+// ============================================================
+// ✅ saveMeter - বাংলা নাম সংরক্ষণ
+// ============================================================
 function saveMeter(meterId) {
     var L = APP.language;
     var name = document.getElementById('meterName').value.trim();
+    var nameBn = document.getElementById('meterNameBn').value.trim();
     var meterNumber = document.getElementById('meterNumber').value.trim();
     var accountNumber = document.getElementById('accountNumber').value.trim();
     var address = document.getElementById('address').value.trim();
@@ -93,9 +135,15 @@ function saveMeter(meterId) {
     });
     if (duplicate) { showToast(L==='en'?'This meter number already exists':'এই মিটার নম্বর ইতিমধ্যে আছে', 'error'); return; }
 
+    // ✅ বাংলা নাম না থাকলে ইংরেজি নাম ব্যবহার করুন
+    if (!nameBn) {
+        nameBn = name;
+    }
+
     var meterData = {
         id: meterId || 'meter_' + Date.now().toString(),
         name: name,
+        nameBn: nameBn,  // ✅ বাংলা নাম
         meterNumber: meterNumber,
         meterNo: meterNumber,
         accountNumber: accountNumber,
@@ -174,6 +222,23 @@ function deleteMeter(meterId) {
     showToast(L==='en'?'Meter deleted':'মিটার ডিলিট করা হয়েছে', 'success');
 }
 
-
 // Alias for app.js compatibility
 function showMeters() { showMeterManagement(); }
+
+// ==================== SWITCH METER ====================
+function switchMeter(meterId) {
+    var L = APP.language;
+    if (APP.activeMeterId === meterId) {
+        showToast(L === 'en' ? 'This meter is already selected' : 'এই মিটারটি ইতিমধ্যে সিলেক্ট করা আছে', 'warning');
+        return;
+    }
+    APP.activeMeterId = meterId;
+    
+    // ✅ localStorage-এ সেভ করুন
+    localStorage.setItem('biddut_activeMeterId', meterId);
+    console.log('💾 Meter switched to:', meterId);
+    
+    saveData();
+    showToast(L === 'en' ? 'Meter switched' : 'মিটার সুইচ করা হয়েছে', 'success');
+    navigateTo('dashboard');
+}

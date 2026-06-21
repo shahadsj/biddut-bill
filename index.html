@@ -9,6 +9,10 @@
     <meta name="apple-mobile-web-app-title" content="বিদ্যুৎ বিল">
     <meta name="mobile-web-app-capable" content="yes">
     
+    <!-- ✅ অটো-ট্রান্সলেট বন্ধ -->
+    <meta name="google" content="notranslate">
+    <meta name="google-translate-custom" content="notranslate">
+    
     <title>বিদ্যুৎ বিল | Biddut Bill</title>
     
     <!-- PWA Manifest -->
@@ -23,10 +27,13 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts - বাংলা -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -71,6 +78,15 @@
                         <span>💾</span> <span class="nav-text" data-key="sidebarBackup">ব্যাকআপ</span>
                     </div>
                     
+                    <!-- ✅ Rent Management Sidebar Item -->
+                    <div class="nav-item" onclick="navigateTo('rent')">
+                        <span>🏠</span> <span class="nav-text" data-key="sidebarRent">ভাড়া ব্যবস্থাপনা</span>
+                    </div>
+
+                    <div class="nav-item" onclick="navigateTo('expenses')">
+                        <span>🛒</span> <span class="nav-text" data-key="sidebarExpenses">অতিরিক্ত খরচ</span>
+                    </div>
+                    
                     <div style="border-top: 1px solid var(--border); margin: 10px 0;"></div>
                     
                     <div class="nav-item" onclick="navigateTo('profile')">
@@ -109,7 +125,157 @@
     <!-- Toast Container -->
     <div id="toastContainer"></div>
 
-    <!-- Modal -->
+    <!-- ============================================================
+    ✅ RENT MODAL
+    ============================================================ -->
+    <div class="modal" id="rentModal">
+        <div class="modal-content" style="max-width: 540px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">🏠 <span id="rentModalTitle">ভাড়া যোগ করুন</span></h2>
+                <button onclick="closeRentModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light);">✕</button>
+            </div>
+            
+            <div class="form-group">
+                <label>মিটার নির্বাচন করুন <span style="color: #ef4444;">*</span></label>
+                <select class="form-control" id="rentMeterSelect">
+                    <option value="">-- মিটার নির্বাচন করুন --</option>
+                </select>
+            </div>
+            
+            <!-- ✅ কাস্টম ক্যালেন্ডার -->
+            <div class="form-group">
+                <label>মাস <span style="color: #ef4444;">*</span></label>
+                <div style="position: relative;">
+                    <input type="text" class="form-control" id="rentMonthDisplay" 
+                           placeholder="মাস নির্বাচন করুন" readonly 
+                           style="cursor: pointer; background: #fff;" 
+                           onclick="toggleCalendar()">
+                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none;">📅</span>
+                    <input type="hidden" id="rentMonthValue">
+                    
+                    <div id="calendarPopup" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: #fff; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); padding: 16px; width: 320px; margin-top: 4px; border: 1px solid #e2e8f0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <button onclick="changeMonth(-1)" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #475569; padding: 4px 8px; border-radius: 6px;">◀</button>
+                            <span id="calendarMonthYear" style="font-weight: 600; font-size: 16px; color: #0f172a;">জুন ২০২৬</span>
+                            <button onclick="changeMonth(1)" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #475569; padding: 4px 8px; border-radius: 6px;">▶</button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 8px;">
+                            <span>স</span><span>ম</span><span>ব</span><span>ব</span><span>শ</span><span>শ</span><span>র</span>
+                        </div>
+                        <div id="calendarDays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;"></div>
+                        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                            <button onclick="closeCalendar()" style="padding: 6px 16px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; color: #475569; cursor: pointer; font-size: 13px;">বাতিল</button>
+                            <button onclick="confirmDate()" style="padding: 6px 16px; border: none; border-radius: 6px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; cursor: pointer; font-size: 13px; font-weight: 600;">নির্বাচন</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>ভাড়া (টাকা) <span style="color: #ef4444;">*</span></label>
+                <input type="number" class="form-control" id="rentAmount" placeholder="যেমন: 12500" step="0.01" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label>সার্ভিস চার্জ (টাকা)</label>
+                <input type="number" class="form-control" id="serviceCharge" placeholder="যেমন: 2500" step="0.01" min="0" value="0">
+            </div>
+            
+            <!-- ✅ পার্কিং চার্জ -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>পার্কিং টাইপ</label>
+                    <select class="form-control" id="parkingType" onchange="updateParkingLabel()">
+                        <option value="none">— নেই —</option>
+                        <option value="bike">🛵 বাইক</option>
+                        <option value="car">🚗 গাড়ি</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>পার্কিং চার্জ (টাকা)</label>
+                    <input type="number" class="form-control" id="parkingCharge" placeholder="যেমন: 500" step="0.01" min="0" value="0">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>স্ট্যাটাস</label>
+                <select class="form-control" id="rentStatus">
+                    <option value="paid">পরিশোধিত ✅</option>
+                    <option value="pending">বাকি ⏳</option>
+                    <option value="overdue">অতিদিন ⚠️</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn" onclick="saveRent()" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706);">💾 সংরক্ষণ করুন</button>
+                <button class="btn btn-outline" onclick="closeRentModal()" style="flex: 1;">বাতিল</button>
+            </div>
+        </div>
+    </div>
+
+
+<!-- ============================================================
+✅ EXPENSE TRACKER MODAL
+============================================================ -->
+<div class="modal" id="expenseModal">
+    <div class="modal-content" style="max-width: 540px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">🛒 <span id="expenseModalTitle">খরচ যোগ করুন</span></h2>
+            <button onclick="closeExpenseModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light);">✕</button>
+        </div>
+        
+        <!-- ✅ মিটার সিলেক্টর সরানো হয়েছে -->
+        
+        <div class="form-group">
+            <label>খরচের ধরণ <span style="color: #ef4444;">*</span></label>
+            <select class="form-control" id="expenseType">
+                <option value="bazar">🛒 বাজার</option>
+                <option value="gas">🪔 গ্যাস সিলিন্ডার</option>
+                <option value="internet">🌐 ইন্টারনেট</option>
+                <option value="mobile">📱 মোবাইল রিচার্জ</option>
+                <option value="electricity">💡 বিদ্যুৎ বিল</option>
+                <option value="water">💧 পানি বিল</option>
+                <option value="grocery">🛍️ মুদি</option>
+                <option value="other">📦 অন্যান্য</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>মাস <span style="color: #ef4444;">*</span></label>
+            <div style="position: relative;">
+                <input type="text" class="form-control" id="expenseMonthDisplay" 
+                       placeholder="মাস নির্বাচন করুন" readonly 
+                       style="cursor: pointer; background: #fff;" 
+                       onclick="toggleExpenseCalendar()">
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none;">📅</span>
+                <input type="hidden" id="expenseMonthValue">
+                
+                <div id="expenseCalendarPopup" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: #fff; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); padding: 16px; width: 320px; margin-top: 4px; border: 1px solid #e2e8f0;">
+                    <!-- ক্যালেন্ডার HTML (আগের মতো) -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>খরচের বিবরণ</label>
+            <input type="text" class="form-control" id="expenseDescription" placeholder="যেমন: মাসিক বাজার">
+        </div>
+        
+        <div class="form-group">
+            <label>পরিমাণ (টাকা) <span style="color: #ef4444;">*</span></label>
+            <input type="number" class="form-control" id="expenseAmount" placeholder="যেমন: 5000" step="0.01" min="0">
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn" onclick="saveExpense()" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706);">💾 সংরক্ষণ করুন</button>
+            <button class="btn btn-outline" onclick="closeExpenseModal()" style="flex: 1;">বাতিল</button>
+        </div>
+    </div>
+</div>
+
+    <!-- ============================================================
+    MODAL (Generic)
+    ============================================================ -->
     <div class="modal" id="modal">
         <div class="modal-content" id="modalContent"></div>
     </div>
@@ -120,19 +286,21 @@
 
     <!-- JavaScript Files -->
     <script src="js/utils.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/meters.js"></script>
-    <script src="js/transactions.js"></script>
-    <script src="js/calculator.js"></script>
-    <script src="js/reports.js"></script>
-    <script src="js/analytics.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/backup.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/profile.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/firebase-init.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script src="js/firebase-init.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/meters.js"></script>
+<script src="js/transactions.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/backup.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/rent.js"></script>
+<script src="js/expenses.js"></script>
 
     <!-- ==================== PWA SCRIPT ==================== -->
     <script>
@@ -158,34 +326,25 @@
         let installButton = null;
         let isInstalled = false;
 
-        // Check if already installed
         if (window.matchMedia('(display-mode: standalone)').matches) {
             isInstalled = true;
             console.log('✅ App is running in standalone mode (installed)');
         }
 
         window.addEventListener('beforeinstallprompt', function(e) {
-            // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
-            
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
-            
             console.log('✅ beforeinstallprompt event fired - App can be installed');
             
-            // If already installed, don't show button
             if (isInstalled) {
                 console.log('App already installed, hiding prompt');
                 return;
             }
             
-            // Create install button if it doesn't exist
             if (!installButton) {
                 installButton = document.createElement('button');
                 installButton.id = 'pwaInstallBtn';
                 installButton.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
-                
-                // Add styles
                 installButton.style.cssText = `
                     position: fixed;
                     bottom: 80px;
@@ -206,7 +365,6 @@
                     display: none;
                 `;
                 
-                // Add hover effect
                 installButton.addEventListener('mouseenter', function() {
                     this.style.transform = 'translateX(-50%) scale(1.05)';
                     this.style.boxShadow = '0 12px 40px rgba(102,126,234,0.7)';
@@ -216,42 +374,32 @@
                     this.style.boxShadow = '0 8px 30px rgba(102,126,234,0.5)';
                 });
                 
-                // Add click handler
                 installButton.addEventListener('click', async function() {
                     if (!deferredPrompt) {
                         console.log('No deferred prompt available');
                         return;
                     }
-                    
                     console.log('Install button clicked, showing prompt');
                     this.style.display = 'none';
-                    
-                    // Show the install prompt
                     deferredPrompt.prompt();
-                    
-                    // Wait for the user to respond to the prompt
                     const result = await deferredPrompt.userChoice;
-                    
                     if (result.outcome === 'accepted') {
                         console.log('✅ User accepted the install prompt');
                         isInstalled = true;
                         installButton.style.display = 'none';
                     } else {
                         console.log('❌ User dismissed the install prompt');
-                        // Show button again after dismissal
                         setTimeout(function() {
                             if (!isInstalled) {
                                 installButton.style.display = 'block';
                             }
                         }, 3000);
                     }
-                    
                     deferredPrompt = null;
                 });
                 
                 document.body.appendChild(installButton);
                 
-                // Add pulse animation
                 const style = document.createElement('style');
                 style.textContent = `
                     @keyframes pulseBtn {
@@ -263,43 +411,27 @@
                 document.head.appendChild(style);
             }
             
-            // Show the button
             if (!isInstalled) {
                 installButton.style.display = 'block';
             }
         });
 
-        // ============================================================
-        // 3. APP INSTALLED EVENT
-        // ============================================================
         window.addEventListener('appinstalled', function(e) {
             console.log('✅ App installed successfully!');
             isInstalled = true;
             if (installButton) {
                 installButton.style.display = 'none';
             }
-            
-            // Show success toast
             showToast('📲 অ্যাপ সফলভাবে ইন্সটল হয়েছে!', 'success');
         });
 
-        // ============================================================
-        // 4. HANDLE INSTALL BUTTON SHOW/HIDE ON RESIZE
-        // ============================================================
         window.addEventListener('resize', function() {
             if (installButton && !isInstalled) {
-                // Hide on desktop if not needed
-                if (window.innerWidth > 768) {
-                    // Keep visible on desktop too
-                }
+                if (window.innerWidth > 768) {}
             }
         });
 
-        // ============================================================
-        // 5. CHECK INSTALL STATUS ON LOAD
-        // ============================================================
         window.addEventListener('load', function() {
-            // Check if app is installed
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 isInstalled = true;
                 if (installButton) {
@@ -308,7 +440,6 @@
                 console.log('✅ App is in standalone mode');
             }
             
-            // Check if the app can be installed
             if (window.navigator && window.navigator.getInstalledRelatedApps) {
                 window.navigator.getInstalledRelatedApps().then(function(relatedApps) {
                     if (relatedApps.length > 0) {
@@ -322,14 +453,9 @@
             }
         });
 
-        // ============================================================
-        // 6. FALLBACK: Show install button if beforeinstallprompt doesn't fire
-        // ============================================================
         setTimeout(function() {
-            // If after 5 seconds the install button is not shown and app is not installed
             if (!isInstalled && !installButton && !window.matchMedia('(display-mode: standalone)').matches) {
                 console.log('⚠️ beforeinstallprompt not fired, showing fallback button');
-                
                 const fallbackBtn = document.createElement('button');
                 fallbackBtn.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
                 fallbackBtn.style.cssText = `
@@ -378,5 +504,55 @@
             document.getElementById("appPage").style.display = "none";
         })();
     </script>
+
+    <!-- ============================================================
+    ✅ অটো-ট্রান্সলেট ব্লক করা
+    ============================================================ -->
+    <script>
+    (function() {
+        // 1. ফোর্স lang
+        document.documentElement.lang = 'bn';
+        document.documentElement.setAttribute('translate', 'no');
+        
+        // 2. Google Translate এর উইজেট সরান
+        function removeGoogleTranslate() {
+            // Google Translate এর উইজেট সরান
+            document.querySelectorAll('.goog-te-banner-frame, .goog-te-menu-frame, .goog-te-gadget-simple, .skiptranslate').forEach(function(el) {
+                if (el && el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+            });
+            
+            // body থেকে goog-te-class সরান
+            document.body.classList.remove('goog-te-banner-frame');
+            document.body.classList.remove('goog-te-menu-frame');
+            
+            // Google Translate এর স্টাইল সরান
+            document.querySelectorAll('style').forEach(function(style) {
+                if (style.textContent && style.textContent.indexOf('goog-te') !== -1) {
+                    style.parentNode.removeChild(style);
+                }
+            });
+        }
+        
+        // 3. MutationObserver দিয়ে চেক করুন
+        var observer = new MutationObserver(function() {
+            removeGoogleTranslate();
+        });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // 4. প্রতি 2 সেকেন্ডে চেক করুন
+        setInterval(removeGoogleTranslate, 2000);
+        
+        // 5. পেজ লোড হলে চেক করুন
+        window.addEventListener('load', removeGoogleTranslate);
+        
+        console.log('✅ অটো-ট্রান্সলেট ব্লক করা হয়েছে!');
+    })();
+    </script>
+
 </body>
 </html>
