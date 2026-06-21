@@ -712,11 +712,16 @@ function updateBalance() {
         var spentAmount = diffAmount;
         var balanceAfter = amount;
         
+        // ✅ description তৈরি করুন - ইউনিট সবসময় দেখান (যদি 0 হয় তাও)
         var description = '📊 ' + (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + 
             ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
             ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
-            ' - ' + formattedDate + 
-            (estimatedUnits > 0 ? ' (Units: ' + estimatedUnits + ' kWh)' : '');
+            ' - ' + formattedDate;
+        
+        // ✅ ইউনিট যোগ করুন (যদি 0 হয় তাও দেখান)
+        if (estimatedUnits !== undefined && estimatedUnits !== null) {
+            description += ' (Units: ' + estimatedUnits.toFixed(2) + ' kWh)';
+        }
         
         var transaction = {
             id: 'balance_update_' + Date.now().toString(),
