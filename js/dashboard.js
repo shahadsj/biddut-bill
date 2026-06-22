@@ -374,7 +374,7 @@ function createExpenseSummaryCards(L) {
 }
 
 // ============================================================
-// ✅ প্রধান ড্যাশবোর্ড ফাংশন (রি-অর্ডার করা)
+// ✅ প্রধান ড্যাশবোর্ড ফাংশন (রি-অর্ডার করা) - সম্পূর্ণ
 // ============================================================
 function showDashboard() {
     console.log('📊 showDashboard called');
@@ -510,18 +510,19 @@ function showDashboard() {
 
     function createStatCard(iconName, label, value, gradient, trend) {
         return `
-            <div class="stat-card" style="background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; overflow: hidden;">
-                <div style="position: absolute; top: -20px; right: -10px; width: 80px; height: 80px; background: ${gradient}; opacity: 0.2; border-radius: 50%; filter: blur(20px);"></div>
-                <div style="position: absolute; top: -10px; right: 20px; width: 50px; height: 50px; background: ${gradient}; opacity: 0.15; border-radius: 50%; filter: blur(15px);"></div>
+            <div class="stat-card" style="background: #fff; border-radius: 14px; padding: 14px 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -20px; right: -10px; width: 60px; height: 60px; background: ${gradient}; opacity: 0.15; border-radius: 50%; filter: blur(15px);"></div>
                 <div style="position: relative; z-index: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <div style="width: 48px; height: 48px; background: ${gradient}; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: #fff;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="width: 36px; height: 36px; background: ${gradient}; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(0,0,0,0.1); color: #fff;">
                             ${getIconSVG(iconName)}
                         </div>
-                        ${getTrendBadge(trend)}
+                        <span class="trend-badge ${trend.direction}" style="font-size: 10px; padding: 2px 8px; border-radius: 12px;">
+                            ${trend.direction === 'up' ? '↗' : '↘'} ${trend.direction === 'up' ? '+' : '-'}${trend.value}%
+                        </span>
                     </div>
-                    <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">${label}</div>
-                    <div style="font-size: 20px; font-weight: 700; color: #1e293b;">${value}</div>
+                    <div style="font-size: 10px; color: #64748b; margin-bottom: 4px;">${label}</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #1e293b;">${value}</div>
                 </div>
             </div>
         `;
@@ -543,6 +544,150 @@ function showDashboard() {
         `;
     }
 
+    function createBalanceCard(balance, L) {
+        return `
+            <div class="balance-card">
+                <div style="position: absolute; top: -60px; right: -40px; width: 180px; height: 180px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -40px; left: -20px; width: 140px; height: 140px; background: rgba(255,255,255,0.06); border-radius: 50%;"></div>
+                <div style="position: relative; z-index: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.85); margin-bottom: 4px;">${__('balance')}</div>
+                            <div style="font-size: 36px; font-weight: 700;">${__('taka')} ${balance.toFixed(2)}</div>
+                        </div>
+                        <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+                            ${getIconSVG('wallet')}
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">
+                            <span>0%</span>
+                            <span>${L === 'en' ? 'Balance' : 'ব্যালেন্স'}: ${Math.min((balance / (balance + 1000 || 1)) * 100, 100).toFixed(1)}%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min((balance / (balance + 1000 || 1)) * 100, 100)}%; background: linear-gradient(90deg, #fbbf24, #f97316);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function createRentSummaryCards(L) {
+        if (!APP.rentData || !APP.rentData.records || APP.rentData.records.length === 0) {
+            return `
+                <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">🏠</span>
+                            ${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}
+                        </h4>
+                        <button onclick="navigateTo('rent')" style="background: none; border: none; color: #f59e0b; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
+                            ${L === 'en' ? 'Add Rent →' : 'ভাড়া যোগ করুন →'}
+                        </button>
+                    </div>
+                    <div style="text-align: center; padding: 16px 0; color: #94a3b8; font-size: 13px;">
+                        ${L === 'en' ? 'No rent records found. Click "Add Rent" to get started.' : 'কোন ভাড়া রেকর্ড পাওয়া যায়নি। "ভাড়া যোগ করুন" ক্লিক করে শুরু করুন।'}
+                    </div>
+                </div>
+            `;
+        }
+
+        updateRentTotals();
+        var totalRent = APP.rentData.totalRent || 0;
+        var totalService = APP.rentData.totalService || 0;
+        var totalParking = APP.rentData.totalParking || 0;
+        var totalOverall = APP.rentData.totalOverall || 0;
+
+        return `
+            <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">🏠</span>
+                        ${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}
+                    </h4>
+                    <button onclick="navigateTo('rent')" style="background: none; border: none; color: #f59e0b; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
+                        ${L === 'en' ? 'View All →' : 'সব দেখুন →'}
+                    </button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px;">
+                    <div style="background: #fffbeb; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #92400e; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Rent' : 'ভাড়া'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #d97706;">৳ ${totalRent.toFixed(0)}</div>
+                    </div>
+                    <div style="background: #ecfdf5; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #065f46; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Service' : 'সার্ভিস'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #059669;">৳ ${totalService.toFixed(0)}</div>
+                    </div>
+                    <div style="background: #f5f3ff; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #5b21b6; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Parking' : 'পার্কিং'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #7c3aed;">৳ ${totalParking.toFixed(0)}</div>
+                    </div>
+                    <div style="background: #eff6ff; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #1e40af; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Total' : 'মোট'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #2563eb;">৳ ${totalOverall.toFixed(0)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function createExpenseSummaryCards(L) {
+        var todayExpense = 0;
+        var weekExpense = 0;
+        var monthExpense = 0;
+        var now = new Date();
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var weekStart = new Date(today);
+        weekStart.setDate(weekStart.getDate() - 7);
+        var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        var allTransactions = [];
+        for (var mid in APP.metersData) {
+            if (APP.metersData.hasOwnProperty(mid)) {
+                var tx = APP.metersData[mid].transactions || [];
+                allTransactions = allTransactions.concat(tx);
+            }
+        }
+        
+        allTransactions.forEach(function(t) {
+            if (t.type === 'electricity_bill' || t.type === 'bill') {
+                var d = new Date(t.date || t.timestamp);
+                if (isNaN(d.getTime())) return;
+                var amount = t.amount || 0;
+                if (d >= today) todayExpense += amount;
+                if (d >= weekStart) weekExpense += amount;
+                if (d >= monthStart) monthExpense += amount;
+            }
+        });
+
+        return `
+            <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span style="background: linear-gradient(135deg, #f5576c, #ff6b6b); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">💰</span>
+                        ${L === 'en' ? 'Expense Summary' : 'খরচ সারাংশ'}
+                    </h4>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;">
+                    <div style="background: #fef2f2; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #991b1b; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Today' : 'আজ'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #dc2626;">৳ ${todayExpense.toFixed(0)}</div>
+                    </div>
+                    <div style="background: #fffbeb; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #92400e; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'This Week' : 'এই সপ্তাহ'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #d97706;">৳ ${weekExpense.toFixed(0)}</div>
+                    </div>
+                    <div style="background: #eff6ff; border-radius: 10px; padding: 10px; text-align: center;">
+                        <div style="font-size: 10px; color: #1e40af; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'This Month' : 'এই মাস'}</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #2563eb;">৳ ${monthExpense.toFixed(0)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     var meterOptions = APP.meters.map(function(m) {
         var displayName = getMeterDisplayName(m);
         var selected = APP.activeMeterId === m.id ? 'selected' : '';
@@ -554,15 +699,7 @@ function showDashboard() {
     var expenseSummaryHTML = createExpenseSummaryCards(L);
 
     // ============================================================
-    // ✅ HTML কন্টেন্ট - রি-অর্ডার করা
-    // অর্ডার: 
-    // 1. মিটার সিলেক্টর
-    // 2. স্ট্যাটাস কার্ড
-    // 3. ডিমান্ড, ভ্যাট ও রিবেট সারাংশ
-    // 4. ব্যালেন্স ও খরচ কার্ড
-    // 5. রেন্ট সারাংশ
-    // 6. এক্সপেন্স সারাংশ
-    // 7. সর্বশেষ ট্রানজেকশন
+    // ✅ HTML কন্টেন্ট - আপডেটেড মিটার সিলেক্টর সহ
     // ============================================================
     var htmlContent = `
         <style>
@@ -800,17 +937,15 @@ function showDashboard() {
         </style>
 
         <!-- ============================================================
-        1. মিটার সিলেক্টর
+        1. মিটার সিলেক্টর (আপডেটেড)
         ============================================================ -->
-        <div class="meter-selector">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-weight: 600; color: #475569;">${__('currentMeter')}:</label>
-                <select onchange="switchMeter(this.value)">
-                    ${meterOptions}
-                </select>
-            </div>
-            <div class="lang-toggle-btn" onclick="toggleLanguage()">
-                <span class="lang-icon">🌐</span>
+        <div class="meter-selector" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px 20px; border-radius: 14px; margin-bottom: 20px; color: #fff; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);">
+            <label style="font-weight: 600; font-size: 14px; white-space: nowrap; color: #fff;">${__('currentMeter')}</label>
+            <select onchange="switchMeter(this.value)" style="flex: 1; padding: 10px 16px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); font-size: 15px; cursor: pointer; background: #fff; color: #2c3e50; font-weight: 500; min-width: 180px; min-height: 44px; appearance: auto; -webkit-appearance: auto;">
+                ${meterOptions}
+            </select>
+            <div class="lang-toggle-btn" onclick="toggleLanguage()" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 25px; cursor: pointer; border: 1px solid rgba(255,255,255,0.25); font-size: 13px; color: #fff; font-weight: 600; white-space: nowrap; transition: all 0.3s ease;">
+                <span style="font-size: 18px;">🌐</span>
                 <span>${APP.language === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা'}</span>
             </div>
         </div>
@@ -879,15 +1014,15 @@ function showDashboard() {
                     <div style="margin-top: 16px;">
                         <div class="expense-row">
                             <span style="font-size: 13px; color: rgba(0,0,0,0.7);">${L === 'en' ? "Today's Expense" : 'আজকের খরচ'}</span>
-                            <span style="font-weight: 600;">৳ 44.62</span>
+                            <span style="font-weight: 600;">৳ ${recentTx.length > 0 ? (recentTx[0].amount || 0).toFixed(2) : '0.00'}</span>
                         </div>
                         <div class="expense-row">
                             <span style="font-size: 13px; color: rgba(0,0,0,0.7);">${L === 'en' ? "This Week" : 'এই সপ্তাহে'}</span>
-                            <span style="font-weight: 600;">৳ 325.00</span>
+                            <span style="font-weight: 600;">৳ ${recentTx.length > 0 ? (recentTx.reduce(function(sum, t) { return sum + (t.amount || 0); }, 0)).toFixed(2) : '0.00'}</span>
                         </div>
                         <div class="expense-row">
                             <span style="font-size: 13px; color: rgba(0,0,0,0.7);">${L === 'en' ? "This Month" : 'এই মাসে'}</span>
-                            <span style="font-weight: 600;">৳ 1200.98</span>
+                            <span style="font-weight: 600;">৳ ${recentTx.length > 0 ? (recentTx.reduce(function(sum, t) { return sum + (t.amount || 0); }, 0)).toFixed(2) : '0.00'}</span>
                         </div>
                     </div>
                 </div>

@@ -2012,3 +2012,702 @@ body.dark-mode .rent-table-wrap table tr:hover td {
         display: none;
     }
 }
+
+/* ============================================================
+   ✅ মোবাইল রেস্পন্সিভ ফিক্স - সম্পূর্ণ
+   ============================================================ */
+
+/* ===== সব ডিভাইসের জন্য বেসিক ফিক্স ===== */
+* {
+    box-sizing: border-box;
+}
+
+/* ===== মোবাইল (max 768px) ===== */
+@media (max-width: 768px) {
+    
+    /* ✅ মেইন কন্টেন্ট - প্যাডিং কম */
+    .main-content {
+        padding: 10px 8px !important;
+        padding-bottom: 75px !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* ===== স্ট্যাটাস কার্ড - ২ কলাম ===== */
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .stat-card {
+        padding: 12px 10px !important;
+        border-radius: 12px !important;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 10px !important;
+    }
+    
+    .stat-card .stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 14px !important;
+    }
+    
+    .stat-card .trend-badge {
+        font-size: 9px !important;
+        padding: 1px 6px !important;
+    }
+    
+    .stat-card svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    
+    /* ===== ডেডিকেশন কার্ড (ডিমান্ড, ভ্যাট, রিবেট) - ১ কলাম ===== */
+    .deduction-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+    
+    .deduction-grid > div {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+    
+    .deduction-grid > div .value {
+        font-size: 18px !important;
+    }
+    
+    .deduction-grid > div .label {
+        font-size: 10px !important;
+    }
+    
+    .deduction-grid > div svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    /* ✅ ডিমান্ড, ভ্যাট, রিবেট হেডার */
+    .deduction-header {
+        font-size: 14px !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .deduction-header .recharge-count {
+        font-size: 10px !important;
+        padding: 2px 10px !important;
+    }
+    
+    /* ✅ নেট ক্রেডিট */
+    .net-credit-box {
+        padding: 10px 14px !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
+    
+    .net-credit-box .label {
+        font-size: 12px !important;
+    }
+    
+    .net-credit-box .value {
+        font-size: 20px !important;
+    }
+    
+    /* ===== ব্যালেন্স ও খরচ কার্ড ===== */
+    .stats-grid[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    .balance-card {
+        padding: 18px 16px !important;
+        border-radius: 16px !important;
+    }
+    
+    .balance-card .amount {
+        font-size: 28px !important;
+    }
+    
+    .balance-card .label {
+        font-size: 12px !important;
+    }
+    
+    .balance-card .wallet-icon {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 20px !important;
+    }
+    
+    .balance-card .progress-bar {
+        height: 6px !important;
+    }
+    
+    .balance-card .progress-labels {
+        font-size: 9px !important;
+    }
+    
+    .expense-card {
+        padding: 18px 16px !important;
+        border-radius: 16px !important;
+    }
+    
+    .expense-card .amount {
+        font-size: 24px !important;
+    }
+    
+    .expense-card .label {
+        font-size: 12px !important;
+    }
+    
+    .expense-card .expense-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 16px !important;
+    }
+    
+    .expense-row {
+        padding: 8px 0 !important;
+        font-size: 12px !important;
+    }
+    
+    /* ===== টেবিল - স্ক্রল + ছোট ফন্ট ===== */
+    .table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 0 -8px !important;
+        padding: 0 8px !important;
+        border-radius: 0 !important;
+    }
+    
+    table {
+        font-size: 11px !important;
+        min-width: 420px !important;
+        width: 100% !important;
+    }
+    
+    th, td {
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+    }
+    
+    th {
+        font-size: 9px !important;
+        padding: 6px 8px !important;
+    }
+    
+    td .badge {
+        font-size: 9px !important;
+        padding: 2px 8px !important;
+    }
+    
+    /* ===== রেন্ট উইজেট ===== */
+    .rent-widget {
+        padding: 14px 12px !important;
+        border-radius: 14px !important;
+    }
+    
+    .rent-widget .rent-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+    
+    .rent-widget .rent-stats {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+    
+    .rent-widget .rent-stat {
+        padding: 6px 10px !important;
+        border-radius: 8px !important;
+    }
+    
+    .rent-widget .rent-stat .value {
+        font-size: 14px !important;
+    }
+    
+    .rent-widget .rent-stat .label {
+        font-size: 8px !important;
+    }
+    
+    .rent-widget .rent-actions {
+        width: 100% !important;
+        justify-content: center !important;
+        margin-top: 8px !important;
+    }
+    
+    .rent-widget .rent-actions button {
+        padding: 6px 14px !important;
+        font-size: 11px !important;
+    }
+    
+    /* ===== মিটার সিলেক্টর ===== */
+    .meter-selector {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        padding: 10px 12px !important;
+        border-radius: 12px !important;
+    }
+    
+    .meter-selector .meter-select-wrapper {
+        width: 100% !important;
+    }
+    
+    .meter-selector select {
+        width: 100% !important;
+        min-width: unset !important;
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+    
+    .meter-selector .lang-toggle-btn {
+        margin-left: 0 !important;
+        justify-content: center !important;
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+    }
+    
+    /* ===== মডেল ===== */
+    .modal-content {
+        width: 95% !important;
+        padding: 14px !important;
+        max-height: 90vh !important;
+        margin: 0 auto !important;
+        border-radius: 14px !important;
+    }
+    
+    .modal-content h2 {
+        font-size: 16px !important;
+    }
+    
+    .modal-content .form-group label {
+        font-size: 12px !important;
+    }
+    
+    .modal-content .form-control {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+        min-height: 38px !important;
+    }
+    
+    /* ===== ক্যালেন্ডার পপআপ ===== */
+    #calendarPopup {
+        width: 280px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        padding: 12px !important;
+    }
+    
+    #calendarPopup .calendar-header {
+        font-size: 14px !important;
+    }
+    
+    #calendarPopup .calendar-days {
+        font-size: 12px !important;
+    }
+    
+    #calendarPopup .calendar-day {
+        padding: 4px 0 !important;
+        font-size: 12px !important;
+    }
+    
+    /* ===== রেন্ট ফর্ম গ্রিড ===== */
+    .rent-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+    
+    /* ===== কার্ড ===== */
+    .card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .card h3 {
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* ===== বাটন ===== */
+    .btn {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        min-height: 36px !important;
+        border-radius: 8px !important;
+    }
+    
+    .btn-sm {
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+        min-height: 28px !important;
+    }
+    
+    /* ===== টেক্সট ওভারফ্লো ফিক্স ===== */
+    .text-ellipsis {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .break-word {
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    /* ===== হোভার ইফেক্ট অফ (টাচ ডিভাইস) ===== */
+    .stat-card:hover {
+        transform: none !important;
+    }
+    
+    .card:hover {
+        transform: none !important;
+    }
+    
+    .btn:hover {
+        transform: none !important;
+    }
+}
+
+/* ===== অতিরিক্ত ছোট (max 480px) ===== */
+@media (max-width: 480px) {
+    
+    /* ✅ স্ট্যাটাস কার্ড - ১ কলাম */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 15px !important;
+    }
+    
+    .balance-card .amount {
+        font-size: 22px !important;
+    }
+    
+    .expense-card .amount {
+        font-size: 18px !important;
+    }
+    
+    /* ✅ রেন্ট উইজেট স্ট্যাটস - ২ কলাম */
+    .rent-widget .rent-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* ✅ টেবিল আরও ছোট */
+    table {
+        font-size: 10px !important;
+        min-width: 360px !important;
+    }
+    
+    th, td {
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+    }
+    
+    th {
+        font-size: 8px !important;
+    }
+    
+    /* ✅ মডেল */
+    .modal-content {
+        padding: 12px !important;
+        width: 98% !important;
+    }
+    
+    /* ✅ ক্যালেন্ডার */
+    #calendarPopup {
+        width: 260px !important;
+        padding: 10px !important;
+    }
+    
+    #calendarPopup .calendar-day {
+        padding: 2px 0 !important;
+        font-size: 11px !important;
+    }
+}
+
+/* ===== ট্যাবলেট (769px - 1024px) ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 12px !important;
+    }
+    
+    .deduction-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 18px !important;
+    }
+}
+
+/* ===== খুব বড় স্ক্রিন (1400px+) ===== */
+@media (min-width: 1400px) {
+    .stats-grid {
+        grid-template-columns: repeat(6, 1fr) !important;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 22px !important;
+    }
+}
+
+/* ============================================================
+   ✅ মিটারের নাম বড় করা (মোবাইল ফিক্স)
+   ============================================================ */
+
+/* ===== মিটার সিলেক্টরের নাম বড় করুন ===== */
+.meter-selector .meter-name-display {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+}
+
+/* ===== মোবাইলের জন্য ===== */
+@media (max-width: 768px) {
+    
+    /* ✅ মিটার সিলেক্টরের নাম বড় */
+    .meter-selector .meter-name-display {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        padding: 4px 0 !important;
+        word-break: break-word !important;
+        white-space: normal !important;
+    }
+    
+    /* ✅ মিটার সিলেক্টরের ড্রপডাউন বড় */
+    .meter-selector select {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+        min-height: 40px !important;
+        width: 100% !important;
+    }
+    
+    /* ✅ মিটার সিলেক্টরের লেবেল বড় */
+    .meter-selector label {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+    }
+    
+    /* ✅ মিটার সিলেক্টর পুরো এলাকা */
+    .meter-selector {
+        padding: 14px 16px !important;
+        gap: 10px !important;
+    }
+}
+
+/* ===== অতিরিক্ত ছোট মোবাইলের জন্য ===== */
+@media (max-width: 480px) {
+    .meter-selector .meter-name-display {
+        font-size: 13px !important;
+    }
+    
+    .meter-selector select {
+        font-size: 13px !important;
+        padding: 6px 10px !important;
+        min-height: 36px !important;
+    }
+    
+    .meter-selector label {
+        font-size: 12px !important;
+    }
+}
+
+/* ============================================================
+   ✅ ডেস্কটপ ডিজাইন ফিক্স
+   ============================================================ */
+
+/* ডেস্কটপ (1024px এর বেশি) */
+@media (min-width: 1024px) {
+    /* স্ট্যাটাস গ্রিড - ৬ কলাম */
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 16px !important;
+    }
+    
+    /* স্ট্যাটাস কার্ড */
+    .stat-card {
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 20px !important;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 13px !important;
+    }
+    
+    .stat-card .stat-icon {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 22px !important;
+    }
+    
+    .stat-card svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    .stat-card .trend-badge {
+        font-size: 12px !important;
+        padding: 3px 10px !important;
+    }
+    
+    /* ডেডিকেশন গ্রিড - ৩ কলাম */
+    .deduction-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 12px !important;
+    }
+    
+    .deduction-grid > div {
+        padding: 18px 16px !important;
+    }
+    
+    .deduction-grid > div .value {
+        font-size: 22px !important;
+    }
+    
+    /* ব্যালেন্স ও খরচ - পাশাপাশি */
+    .stats-grid[style*="grid-template-columns: 2fr 1fr"] {
+        display: grid !important;
+        grid-template-columns: 2fr 1fr !important;
+        gap: 16px !important;
+    }
+    
+    /* ব্যালেন্স কার্ড */
+    .balance-card {
+        padding: 28px !important;
+    }
+    
+    .balance-card .amount {
+        font-size: 36px !important;
+    }
+    
+    .balance-card .wallet-icon {
+        width: 64px !important;
+        height: 64px !important;
+        font-size: 32px !important;
+    }
+    
+    /* খরচ কার্ড */
+    .expense-card {
+        padding: 28px !important;
+    }
+    
+    .expense-card .expense-amount {
+        font-size: 28px !important;
+    }
+    
+    .expense-card .expense-icon {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 22px !important;
+    }
+    
+    /* টেবিল */
+    .transaction-table-wrap {
+        border-radius: 12px !important;
+        margin: 0 !important;
+    }
+    
+    .transaction-table-wrap table {
+        font-size: 13px !important;
+        min-width: 100% !important;
+    }
+    
+    .transaction-table-wrap th,
+    .transaction-table-wrap td {
+        padding: 12px 16px !important;
+        font-size: 13px !important;
+    }
+    
+    .transaction-table-wrap th {
+        font-size: 12px !important;
+    }
+    
+    .transaction-table-wrap .badge {
+        font-size: 11px !important;
+        padding: 4px 12px !important;
+        min-width: 60px !important;
+    }
+    
+    /* রেন্ট উইজেট */
+    .rent-widget {
+        padding: 20px 24px !important;
+    }
+    
+    .rent-widget .rent-stats {
+        display: flex !important;
+        gap: 16px !important;
+    }
+    
+    .rent-widget .rent-stat {
+        min-width: 80px !important;
+        padding: 8px 16px !important;
+    }
+    
+    .rent-widget .rent-stat .value {
+        font-size: 18px !important;
+    }
+    
+    /* মিটার সিলেক্টর */
+    .meter-selector {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 16px 20px !important;
+    }
+    
+    .meter-selector select {
+        width: auto !important;
+        min-width: 250px !important;
+        font-size: 15px !important;
+        padding: 10px 16px !important;
+        min-height: 44px !important;
+    }
+    
+    .meter-selector label {
+        font-size: 14px !important;
+    }
+    
+    .meter-selector .lang-toggle-btn {
+        margin-left: auto !important;
+    }
+}
+
+/* ট্যাবলেট (769px - 1023px) */
+@media (min-width: 769px) and (max-width: 1023px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .deduction-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .stats-grid[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
