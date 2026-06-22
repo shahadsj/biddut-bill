@@ -19,7 +19,7 @@ if (typeof APP !== 'undefined' && APP) {
 // ✅ কমা সেপারেটর ফাংশন
 // ============================================================
 function formatNumberWithComma(num) {
-    if (num === undefined || num === null) return '0';
+    if (num === undefined || num === null || isNaN(num)) return '0';
     return Number(num).toLocaleString('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -400,6 +400,27 @@ function showRentReport() {
         return b.month.localeCompare(a.month) || b.createdAt.localeCompare(a.createdAt);
     });
 
+    // ✅ মিটার ভিত্তিক গ্রুপিং
+    var meterGroups = {};
+    records.forEach(function(record) {
+        var meterId = record.meterId || 'unknown';
+        if (!meterGroups[meterId]) {
+            meterGroups[meterId] = {
+                meterName: record.meterName || 'Unknown',
+                records: [],
+                totalRent: 0,
+                totalService: 0,
+                totalParking: 0,
+                totalOverall: 0
+            };
+        }
+        meterGroups[meterId].records.push(record);
+        meterGroups[meterId].totalRent += record.rentAmount || 0;
+        meterGroups[meterId].totalService += record.serviceCharge || 0;
+        meterGroups[meterId].totalParking += record.parkingCharge || 0;
+        meterGroups[meterId].totalOverall += record.totalAmount || 0;
+    });
+
     var html = '<div class="card">';
     html += '<h2>🏠 ' + (L === 'en' ? 'Rent & Service Charge Report' : 'ভাড়া ও সার্ভিস চার্জ রিপোর্ট') + '</h2>';
     html += '<div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">';
@@ -407,73 +428,113 @@ function showRentReport() {
     html += '<button class="btn btn-outline" onclick="navigateTo(\'dashboard\')">⬅ ' + (L === 'en' ? 'Back' : 'ফিরে যান') + '</button>';
     html += '</div>';
 
-    // Stats
-    html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">';
-    html += '<div style="background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; padding: 16px; color: #fff; text-align: center;">';
-    html += '<div style="font-size: 12px; opacity: 0.8;">' + (L === 'en' ? 'Total Rent' : 'মোট ভাড়া') + '</div>';
-    html += '<div style="font-size: 20px; font-weight: 700;">৳ ' + formatNumberWithComma(APP.rentData.totalRent || 0) + '</div>';
-    html += '</div>';
-    html += '<div style="background: linear-gradient(135deg, #34d399, #059669); border-radius: 12px; padding: 16px; color: #fff; text-align: center;">';
-    html += '<div style="font-size: 12px; opacity: 0.8;">' + (L === 'en' ? 'Total Service' : 'মোট সার্ভিস') + '</div>';
-    html += '<div style="font-size: 20px; font-weight: 700;">৳ ' + formatNumberWithComma(APP.rentData.totalService || 0) + '</div>';
-    html += '</div>';
-    html += '<div style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; padding: 16px; color: #fff; text-align: center;">';
-    html += '<div style="font-size: 12px; opacity: 0.8;">' + (L === 'en' ? 'Total Parking' : 'মোট পার্কিং') + '</div>';
-    html += '<div style="font-size: 20px; font-weight: 700;">৳ ' + formatNumberWithComma(APP.rentData.totalParking || 0) + '</div>';
-    html += '</div>';
-    html += '<div style="background: linear-gradient(135deg, #60a5fa, #2563eb); border-radius: 12px; padding: 16px; color: #fff; text-align: center;">';
-    html += '<div style="font-size: 12px; opacity: 0.8;">' + (L === 'en' ? 'Total Overall' : 'সর্বমোট') + '</div>';
-    html += '<div style="font-size: 20px; font-weight: 700;">৳ ' + formatNumberWithComma(APP.rentData.totalOverall || 0) + '</div>';
-    html += '</div>';
+    // ============================================================
+    // ✅ মিটার ভিত্তিক সারাংশ কার্ড
+    // ============================================================
+    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0;">';
+    
+    var meterKeys = Object.keys(meterGroups);
+    if (meterKeys.length > 0) {
+        meterKeys.forEach(function(meterId) {
+            var group = meterGroups[meterId];
+            var colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
+            var colorIdx = meterKeys.indexOf(meterId) % colors.length;
+            var grad = 'linear-gradient(135deg, ' + colors[colorIdx] + ', ' + colors[(colorIdx + 1) % colors.length] + ')';
+            
+            html += '<div style="background: ' + grad + '; border-radius: 14px; padding: 16px 18px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">';
+            html += '<div style="font-size: 13px; font-weight: 600; opacity: 0.9; margin-bottom: 8px;">' + (group.meterName || 'Unknown') + '</div>';
+            html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px;">';
+            html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Rent' : 'ভাড়া') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalRent) + '</div>';
+            html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Service' : 'সার্ভিস') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalService) + '</div>';
+            html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Parking' : 'পার্কিং') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalParking) + '</div>';
+            html += '<div style="opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;">' + (L === 'en' ? 'Total' : 'মোট') + ':</div><div style="font-weight: 800; text-align: right; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;">৳ ' + formatNumberWithComma(group.totalOverall) + '</div>';
+            html += '</div>';
+            html += '<div style="margin-top: 8px; font-size: 11px; opacity: 0.6;">' + (L === 'en' ? 'Records' : 'রেকর্ড') + ': ' + group.records.length + '</div>';
+            html += '</div>';
+        });
+    } else {
+        html += '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--text-light);">' + 
+            (L === 'en' ? 'No rent records found.' : 'কোন ভাড়া রেকর্ড পাওয়া যায়নি।') + '</div>';
+    }
+    
     html += '</div>';
 
-    // Table
+    // ============================================================
+    // ✅ মিটার ভিত্তিক বিস্তারিত টেবিল (কমা + এডিট সহ)
+    // ============================================================
     if (records.length > 0) {
-        html += '<div class="rent-table-wrap"><table><thead><tr>';
-        html += '<th>' + (L === 'en' ? 'Month' : 'মাস') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Meter' : 'মিটার') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Rent' : 'ভাড়া') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Service' : 'সার্ভিস') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Parking' : 'পার্কিং') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Total' : 'মোট') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Status' : 'স্ট্যাটাস') + '</th>';
-        html += '<th>' + (L === 'en' ? 'Actions' : 'অ্যাকশন') + '</th>';
+        html += '<div style="overflow-x: auto; border-radius: 12px; border: 1px solid var(--border);">';
+        html += '<table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px;">';
+        html += '<thead style="background: linear-gradient(135deg, #667eea, #764ba2);">';
+        html += '<tr>';
+        html += '<th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Meter' : 'মিটার') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Month' : 'মাস') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: right; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Rent' : 'ভাড়া') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: right; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Service' : 'সার্ভিস') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: right; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Parking' : 'পার্কিং') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: right; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Total' : 'মোট') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: center; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Status' : 'স্ট্যাটাস') + '</th>';
+        html += '<th style="padding: 12px 16px; text-align: center; color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase;">' + (L === 'en' ? 'Actions' : 'অ্যাকশন') + '</th>';
         html += '</tr></thead><tbody>';
 
-        records.forEach(function(record) {
+        records.forEach(function(record, index) {
             var parts = record.month.split('-');
             var monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
                               'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
             var monthName = monthNames[parseInt(parts[1]) - 1] + ' ' + parts[0];
             
             var statusClass = record.status || 'pending';
-            var statusText = statusClass === 'paid' ? (L === 'en' ? 'Paid ✅' : 'পরিশোধিত ✅') :
-                             statusClass === 'pending' ? (L === 'en' ? 'Pending ⏳' : 'বাকি ⏳') :
-                             (L === 'en' ? 'Overdue ⚠️' : 'অতিদিন ⚠️');
+            var statusText = statusClass === 'paid' ? (L === 'en' ? '✅ Paid' : '✅ পরিশোধিত') :
+                             statusClass === 'pending' ? (L === 'en' ? '⏳ Pending' : '⏳ বাকি') :
+                             (L === 'en' ? '⚠️ Overdue' : '⚠️ অতিদিন');
 
-            var parkingDisplay = record.parkingCharge > 0 ? 
-                '৳ ' + formatNumberWithComma(record.parkingCharge) + ' (' + (record.parkingTypeName || 'পার্কিং') + ')' : '—';
+            var parkingDisplay = record.parkingCharge > 0 ? (record.parkingTypeName || 'পার্কিং') : '—';
+            var parkingValue = record.parkingCharge > 0 ? '৳ ' + formatNumberWithComma(record.parkingCharge) : '—';
 
-            html += '<tr>';
-            html += '<td><strong>' + monthName + '</strong></td>';
-            html += '<td>' + (record.meterName || 'N/A') + '</td>';
-            html += '<td>৳ ' + formatNumberWithComma(record.rentAmount || 0) + '</td>';
-            html += '<td>৳ ' + formatNumberWithComma(record.serviceCharge || 0) + '</td>';
-            html += '<td>' + parkingDisplay + '</td>';
-            html += '<td><strong>৳ ' + formatNumberWithComma(record.totalAmount || 0) + '</strong></td>';
-            html += '<td><span class="rent-badge ' + statusClass + '">' + statusText + '</span></td>';
-            html += '<td>';
-            html += '<button class="btn btn-sm btn-warning" onclick="showRentForm(\'' + record.id + '\')" style="background: #f59e0b; color: #fff; margin-right: 4px;">✏️</button>';
-            html += '<button class="btn btn-sm btn-danger" onclick="deleteRent(\'' + record.id + '\')">🗑️</button>';
+            html += '<tr style="' + (index % 2 === 0 ? 'background: var(--bg-primary);' : '') + '">';
+            html += '<td style="padding: 10px 16px; font-weight: 600;">' + (record.meterName || 'N/A') + '</td>';
+            html += '<td style="padding: 10px 16px;">' + monthName + '</td>';
+            html += '<td style="padding: 10px 16px; text-align: right; font-weight: 600; color: #f59e0b;">৳ ' + formatNumberWithComma(record.rentAmount) + '</td>';
+            html += '<td style="padding: 10px 16px; text-align: right; color: #059669;">৳ ' + formatNumberWithComma(record.serviceCharge) + '</td>';
+            html += '<td style="padding: 10px 16px; text-align: right; color: #7c3aed;">' + parkingValue + ' <span style="font-size: 10px; opacity: 0.6;">' + parkingDisplay + '</span></td>';
+            html += '<td style="padding: 10px 16px; text-align: right; font-weight: 700; color: #2563eb;">৳ ' + formatNumberWithComma(record.totalAmount) + '</td>';
+            html += '<td style="padding: 10px 16px; text-align: center;"><span class="rent-badge ' + statusClass + '">' + statusText + '</span></td>';
+            html += '<td style="padding: 10px 16px; text-align: center;">';
+            html += '<button class="btn btn-sm" onclick="showRentForm(\'' + record.id + '\')" style="padding: 4px 10px; font-size: 11px; background: #3b82f6; color: #fff;">✏️</button> ';
+            html += '<button class="btn btn-sm btn-danger" onclick="deleteRent(\'' + record.id + '\')" style="padding: 4px 10px; font-size: 11px;">🗑️</button>';
             html += '</td>';
             html += '</tr>';
         });
 
         html += '</tbody></table></div>';
-    } else {
-        html += '<p style="text-align: center; padding: 30px; color: var(--text-light);">' + 
-            (L === 'en' ? 'No rent records found. Click "Add Rent" to get started.' : 'কোন ভাড়া রেকর্ড পাওয়া যায়নি। "ভাড়া যোগ করুন" ক্লিক করে শুরু করুন।') + 
-            '</p>';
+
+        // ============================================================
+        // ✅ মিটার ভিত্তিক গ্র্যান্ড টোটাল (কমা সহ)
+        // ============================================================
+        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0;">';
+        
+        meterKeys.forEach(function(meterId) {
+            var group = meterGroups[meterId];
+            html += '<div style="text-align: center;">';
+            html += '<div style="font-size: 11px; color: #64748b; font-weight: 500;">' + (group.meterName || 'Unknown') + '</div>';
+            html += '<div style="font-size: 18px; font-weight: 700; color: #0f172a;">৳ ' + formatNumberWithComma(group.totalOverall) + '</div>';
+            html += '<div style="font-size: 10px; color: #94a3b8;">' + group.records.length + ' ' + (L === 'en' ? 'records' : 'রেকর্ড') + '</div>';
+            html += '</div>';
+        });
+
+        if (meterKeys.length > 0) {
+            var grandTotal = 0;
+            meterKeys.forEach(function(meterId) {
+                grandTotal += meterGroups[meterId].totalOverall;
+            });
+            html += '<div style="text-align: center; border-left: 2px solid #e2e8f0; padding-left: 16px;">';
+            html += '<div style="font-size: 11px; color: #64748b; font-weight: 500;">' + (L === 'en' ? 'Grand Total' : 'সর্বমোট') + '</div>';
+            html += '<div style="font-size: 20px; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">৳ ' + formatNumberWithComma(grandTotal) + '</div>';
+            html += '<div style="font-size: 10px; color: #94a3b8;">' + records.length + ' ' + (L === 'en' ? 'total records' : 'মোট রেকর্ড') + '</div>';
+            html += '</div>';
+        }
+
+        html += '</div>';
     }
 
     html += '</div>';

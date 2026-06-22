@@ -264,109 +264,273 @@ function getExpenseSummary() {
 }
 
 // ✅ রেন্ট সারাংশ কার্ড তৈরি
+// ============================================================
 function createRentSummaryCards(L) {
-    var rent = getRentSummary();
-    
-    var formatNum = function(num) {
-        return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    };
-    
-    if (rent.count === 0) {
+    // রেন্ট ডাটা চেক করুন
+    if (!APP.rentData || !APP.rentData.records || APP.rentData.records.length === 0) {
         return `
-        <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 12px; padding: 14px 20px; margin-bottom: 16px; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <h4 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #1e293b;">
-                    <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;">🏠</span>
+                <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">🏠</span>
                     ${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}
                 </h4>
-                <button onclick="navigateTo('rent')" style="background: #667eea; border: none; color: #fff; padding: 3px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s;">
-                    ${L === 'en' ? 'Add →' : 'যোগ করুন →'}
+                <button onclick="navigateTo('rent')" style="background: none; border: none; color: #f59e0b; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
+                    ${L === 'en' ? 'Add Rent →' : 'ভাড়া যোগ করুন →'}
                 </button>
             </div>
-            <div style="text-align: center; padding: 8px; opacity: 0.6; font-size: 13px; color: #64748b;">
-                ${L === 'en' ? 'No rent records yet' : 'এখনও কোনো ভাড়া রেকর্ড নেই'}
+            <div style="text-align: center; padding: 16px 0; color: #94a3b8; font-size: 13px;">
+                ${L === 'en' ? 'No rent records found. Click "Add Rent" to get started.' : 'কোন ভাড়া রেকর্ড পাওয়া যায়নি। "ভাড়া যোগ করুন" ক্লিক করে শুরু করুন।'}
             </div>
         </div>
         `;
     }
-    
-    return `
-    <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #bbf7d0;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #1e293b;">
-                <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;">🏠</span>
+
+    // টোটাল আপডেট
+    updateRentTotals();
+
+    // ============================================================
+    // ✅ মিটার ভিত্তিক গ্রুপিং
+    // ============================================================
+    var meterGroups = {};
+    APP.rentData.records.forEach(function(record) {
+        var meterId = record.meterId || 'unknown';
+        if (!meterGroups[meterId]) {
+            meterGroups[meterId] = {
+                meterName: record.meterName || 'Unknown',
+                totalRent: 0,
+                totalService: 0,
+                totalParking: 0,
+                totalOverall: 0,
+                count: 0,
+                records: []
+            };
+        }
+        meterGroups[meterId].totalRent += record.rentAmount || 0;
+        meterGroups[meterId].totalService += record.serviceCharge || 0;
+        meterGroups[meterId].totalParking += record.parkingCharge || 0;
+        meterGroups[meterId].totalOverall += record.totalAmount || 0;
+        meterGroups[meterId].count++;
+        meterGroups[meterId].records.push(record);
+    });
+
+    var meterKeys = Object.keys(meterGroups);
+    var totalRent = APP.rentData.totalRent || 0;
+    var totalService = APP.rentData.totalService || 0;
+    var totalParking = APP.rentData.totalParking || 0;
+    var totalOverall = APP.rentData.totalOverall || 0;
+    var recordCount = APP.rentData.records.length || 0;
+
+    // ✅ রং (সাদা বাদ - গাঢ় রং)
+    var colorPalette = [
+        { bg: 'linear-gradient(135deg, #f093fb, #f5576c)', text: '#000000' },
+        { bg: 'linear-gradient(135deg, #4facfe, #00f2fe)', text: '#070707' },
+        { bg: 'linear-gradient(135deg, #43e97b, #38f9d7)', text: '#0f172a' },
+        { bg: 'linear-gradient(135deg, #fa709a, #fee140)', text: '#0f172a' },
+        { bg: 'linear-gradient(135deg, #a18cd1, #c2dbfb)', text: '#0f172a' },
+        { bg: 'linear-gradient(135deg, #f6d365, #fda085)', text: '#0f172a' },
+        { bg: 'linear-gradient(135deg, #89f7fe, #66a6ff)', text: '#0f172a' },
+        { bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', text: '#0f172a' }
+    ];
+
+    // ============================================================
+    // ✅ HTML তৈরি
+    // ============================================================
+    var html = `
+    <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(10, 10, 10, 0.06); margin-bottom: 20px; border: 1px solid #323435;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">🏠</span>
                 ${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}
-                <span style="font-size: 11px; color: #94a3b8; font-weight: 400;">(${rent.count} ${L === 'en' ? 'records' : 'টি'})</span>
+                <span style="font-size: 11px; color: #41454b; font-weight: 400;">(${recordCount} ${L === 'en' ? 'records' : 'টি'})</span>
             </h4>
-            <button onclick="navigateTo('rent')" style="background: #667eea; border: none; color: #fff; padding: 3px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+            <button onclick="navigateTo('rent')" style="background: none; border: none; color: #f59e0b; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
                 ${L === 'en' ? 'View All →' : 'সব দেখুন →'}
             </button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-            <div style="background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; text-align: center; border: 1px solid #f0fdf4;">
-                <div style="font-size: 9px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b;">${L === 'en' ? 'Rent' : 'ভাড়া'}</div>
-                <div style="font-size: 18px; font-weight: 700; color: #d97706;">৳ ${formatNum(rent.totalRent)}</div>
+    `;
+
+    // ============================================================
+    // ✅ মিটার ভিত্তিক বিস্তারিত কার্ড
+    // ============================================================
+    if (meterKeys.length > 0) {
+        html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px;">`;
+        
+        meterKeys.forEach(function(meterId, index) {
+            var group = meterGroups[meterId];
+            var colorIdx = index % colorPalette.length;
+            var colors = colorPalette[colorIdx];
+            
+            // মাসের নাম বের করুন
+            var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var latestRecord = group.records[group.records.length - 1];
+            var monthDisplay = '';
+            if (latestRecord && latestRecord.month) {
+                var parts = latestRecord.month.split('-');
+                monthDisplay = monthNames[parseInt(parts[1]) - 1] + ' ' + parts[0];
+            }
+            
+            html += `
+            <div style="background: ${colors.bg}; border-radius: 12px; padding: 14px 16px; color: ${colors.text}; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="font-size: 13px; font-weight: 700; color: ${colors.text};">${group.meterName || 'Unknown'}</div>
+                    <div style="font-size: 10px; font-weight: 600; background: rgba(0,0,0,0.08); padding: 2px 10px; border-radius: 12px; color: ${colors.text};">
+                        ${group.count} ${L === 'en' ? 'rec' : 'টি'} ${monthDisplay ? '· ' + monthDisplay : ''}
+                    </div>
+                </div>
+                
+                <!-- মোট পরিমাণ -->
+                <div style="font-size: 22px; font-weight: 700; margin: 4px 0; color: ${colors.text};">
+                    ৳ ${formatNumberWithComma(group.totalOverall)}
+                </div>
+                
+                <!-- বিস্তারিত (ভাড়া, সার্ভিস, পার্কিং) - গাঢ় রং -->
+                <div style="display: grid; grid-template-columns: ${group.totalParking > 0 ? '1fr 1fr 1fr' : '1fr 1fr'}; gap: 6px; margin-top: 8px;">
+                    <div style="background: rgba(0,0,0,0.08); border-radius: 6px; padding: 4px 8px; text-align: center;">
+                        <div style="font-size: 8px; text-transform: uppercase; opacity: 0.6; color: ${colors.text};">${L === 'en' ? 'Rent' : 'ভাড়া'}</div>
+                        <div style="font-weight: 700; font-size: 12px; color: ${colors.text};">৳ ${formatNumberWithComma(group.totalRent)}</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.08); border-radius: 6px; padding: 4px 8px; text-align: center;">
+                        <div style="font-size: 8px; text-transform: uppercase; opacity: 0.6; color: ${colors.text};">${L === 'en' ? 'Service' : 'সার্ভিস'}</div>
+                        <div style="font-weight: 700; font-size: 12px; color: ${colors.text};">৳ ${formatNumberWithComma(group.totalService)}</div>
+                    </div>
+                    ${group.totalParking > 0 ? `
+                    <div style="background: rgba(0,0,0,0.08); border-radius: 6px; padding: 4px 8px; text-align: center;">
+                        <div style="font-size: 8px; text-transform: uppercase; opacity: 0.6; color: ${colors.text};">${L === 'en' ? 'Parking' : 'পার্কিং'}</div>
+                        <div style="font-weight: 700; font-size: 12px; color: ${colors.text};">৳ ${formatNumberWithComma(group.totalParking)}</div>
+                    </div>
+                    ` : ''}
+                </div>
             </div>
-            <div style="background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; text-align: center; border: 1px solid #f0fdf4;">
-                <div style="font-size: 9px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b;">${L === 'en' ? 'Service' : 'সার্ভিস'}</div>
-                <div style="font-size: 18px; font-weight: 700; color: #059669;">৳ ${formatNum(rent.totalService)}</div>
+            `;
+        });
+
+        html += `</div>`;
+    }
+
+    // ============================================================
+    // ✅ গ্র্যান্ড টোটাল (৪টি কলাম)
+    // ============================================================
+    html += `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+            <div style="background: #fffbeb; border-radius: 8px; padding: 8px 10px; text-align: center; border: 1px solid #fde68a;">
+                <div style="font-size: 9px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'Total Rent' : 'মোট ভাড়া'}</div>
+                <div style="font-size: 16px; font-weight: 700; color: #d97706;">৳ ${formatNumberWithComma(totalRent)}</div>
             </div>
-            <div style="background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; text-align: center; border: 1px solid #f0fdf4;">
-                <div style="font-size: 9px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b;">${L === 'en' ? 'Parking' : 'পার্কিং'}</div>
-                <div style="font-size: 18px; font-weight: 700; color: #7c3aed;">৳ ${formatNum(rent.totalParking)}</div>
+            <div style="background: #ecfdf5; border-radius: 8px; padding: 8px 10px; text-align: center; border: 1px solid #a7f3d0;">
+                <div style="font-size: 9px; color: #065f46; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'Total Service' : 'মোট সার্ভিস'}</div>
+                <div style="font-size: 16px; font-weight: 700; color: #059669;">৳ ${formatNumberWithComma(totalService)}</div>
             </div>
-            <div style="background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; text-align: center; border: 1px solid #f0fdf4;">
-                <div style="font-size: 9px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b;">${L === 'en' ? 'Total' : 'সর্বমোট'}</div>
-                <div style="font-size: 18px; font-weight: 700; color: #2563eb;">৳ ${formatNum(rent.totalOverall)}</div>
+            <div style="background: #f5f3ff; border-radius: 8px; padding: 8px 10px; text-align: center; border: 1px solid #c4b5fd;">
+                <div style="font-size: 9px; color: #5b21b6; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'Total Parking' : 'মোট পার্কিং'}</div>
+                <div style="font-size: 16px; font-weight: 700; color: #7c3aed;">৳ ${formatNumberWithComma(totalParking)}</div>
+            </div>
+            <div style="background: #eff6ff; border-radius: 8px; padding: 8px 10px; text-align: center; border: 1px solid #93c5fd;">
+                <div style="font-size: 9px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'Grand Total' : 'সর্বমোট'}</div>
+                <div style="font-size: 16px; font-weight: 700; color: #2563eb;">৳ ${formatNumberWithComma(totalOverall)}</div>
             </div>
         </div>
     </div>
     `;
+
+    return html;
+}
+
+// ============================================================
+// ✅ কমা সেপারেটর ফাংশন
+// ============================================================
+function formatNumberWithComma(num) {
+    if (num === undefined || num === null || isNaN(num)) return '0';
+    return Number(num).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 // ✅ এক্সপেন্স সারাংশ কার্ড তৈরি
 function createExpenseSummaryCards(L) {
-    var expense = getExpenseSummary();
+    var todayExpense = 0;
+    var weekExpense = 0;
+    var monthExpense = 0;
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var weekStart = new Date(today);
+    weekStart.setDate(weekStart.getDate() - 7);
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     
+    // সব মিটারের ট্রানজেকশন সংগ্রহ করুন
+    var allTransactions = [];
+    for (var mid in APP.metersData) {
+        if (APP.metersData.hasOwnProperty(mid)) {
+            var tx = APP.metersData[mid].transactions || [];
+            allTransactions = allTransactions.concat(tx);
+        }
+    }
+    
+    // খরচ ক্যালকুলেট করুন
+    allTransactions.forEach(function(t) {
+        if (t.type === 'electricity_bill' || t.type === 'bill') {
+            var d = new Date(t.date || t.timestamp);
+            if (isNaN(d.getTime())) return;
+            var amount = t.amount || 0;
+            if (d >= today) todayExpense += amount;
+            if (d >= weekStart) weekExpense += amount;
+            if (d >= monthStart) monthExpense += amount;
+        }
+    });
+
+    // ফরম্যাট ফাংশন
     var formatNum = function(num) {
-        return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return Number(num).toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
     };
-    
-    if (expense.count === 0) {
+
+    // কোনো খরচ নেই
+    if (todayExpense === 0 && weekExpense === 0 && monthExpense === 0) {
         return `
-        <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 12px; padding: 14px 20px; margin-bottom: 16px; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <h4 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #1e293b;">
-                    <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;">🛒</span>
-                    ${L === 'en' ? 'My Expenses' : 'আমার খরচ'}
+                <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <span style="background: linear-gradient(135deg, #f5576c, #ff6b6b); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">💰</span>
+                    ${L === 'en' ? 'Expense Summary' : 'খরচ সারাংশ'}
                 </h4>
-                <button onclick="navigateTo('expenses')" style="background: #667eea; border: none; color: #fff; padding: 3px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+                <button onclick="navigateTo('expenses')" style="background: none; border: none; color: #f5576c; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
                     ${L === 'en' ? 'Add →' : 'যোগ করুন →'}
                 </button>
             </div>
-            <div style="text-align: center; padding: 8px; opacity: 0.6; font-size: 13px; color: #64748b;">
+            <div style="text-align: center; padding: 16px 0; color: #94a3b8; font-size: 13px;">
                 ${L === 'en' ? 'No expense records yet' : 'এখনও কোনো খরচ রেকর্ড নেই'}
             </div>
         </div>
         `;
     }
-    
+
+    // খরচ সারাংশ দেখান
     return `
-    <div style="background: linear-gradient(135deg, #fefce8, #fef9c3); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #fde68a;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #1e293b;">
-                <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;">🛒</span>
-                ${L === 'en' ? 'My Expenses' : 'আমার খরচ'}
-                <span style="font-size: 11px; color: #94a3b8; font-weight: 400;">(${expense.count} ${L === 'en' ? 'records' : 'টি'})</span>
+    <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span style="background: linear-gradient(135deg, #f5576c, #ff6b6b); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">💰</span>
+                ${L === 'en' ? 'Expense Summary' : 'খরচ সারাংশ'}
             </h4>
-            <button onclick="navigateTo('expenses')" style="background: #667eea; border: none; color: #fff; padding: 3px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s;">
+            <button onclick="navigateTo('expenses')" style="background: none; border: none; color: #f5576c; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
                 ${L === 'en' ? 'View All →' : 'সব দেখুন →'}
             </button>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div style="background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; text-align: center; grid-column: 1 / -1; border: 1px solid #fef9c3;">
-                <div style="font-size: 9px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b;">${L === 'en' ? 'Total Expense' : 'সর্বমোট খরচ'}</div>
-                <div style="font-size: 20px; font-weight: 700; color: #d97706;">৳ ${formatNum(expense.totalOverall)}</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <div style="background: #fef2f2; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #fecaca;">
+                <div style="font-size: 9px; color: #991b1b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'Today' : 'আজ'}</div>
+                <div style="font-size: 18px; font-weight: 700; color: #dc2626;">৳ ${formatNum(todayExpense)}</div>
+            </div>
+            <div style="background: #fffbeb; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #fde68a;">
+                <div style="font-size: 9px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'This Week' : 'এই সপ্তাহ'}</div>
+                <div style="font-size: 18px; font-weight: 700; color: #d97706;">৳ ${formatNum(weekExpense)}</div>
+            </div>
+            <div style="background: #eff6ff; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #93c5fd;">
+                <div style="font-size: 9px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">${L === 'en' ? 'This Month' : 'এই মাস'}</div>
+                <div style="font-size: 18px; font-weight: 700; color: #2563eb;">৳ ${formatNum(monthExpense)}</div>
             </div>
         </div>
     </div>
@@ -568,120 +732,6 @@ function showDashboard() {
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: ${Math.min((balance / (balance + 1000 || 1)) * 100, 100)}%; background: linear-gradient(90deg, #fbbf24, #f97316);"></div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function createRentSummaryCards(L) {
-        if (!APP.rentData || !APP.rentData.records || APP.rentData.records.length === 0) {
-            return `
-                <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
-                            <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">🏠</span>
-                            ${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}
-                        </h4>
-                        <button onclick="navigateTo('rent')" style="background: none; border: none; color: #f59e0b; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
-                            ${L === 'en' ? 'Add Rent →' : 'ভাড়া যোগ করুন →'}
-                        </button>
-                    </div>
-                    <div style="text-align: center; padding: 16px 0; color: #94a3b8; font-size: 13px;">
-                        ${L === 'en' ? 'No rent records found. Click "Add Rent" to get started.' : 'কোন ভাড়া রেকর্ড পাওয়া যায়নি। "ভাড়া যোগ করুন" ক্লিক করে শুরু করুন।'}
-                    </div>
-                </div>
-            `;
-        }
-
-        updateRentTotals();
-        var totalRent = APP.rentData.totalRent || 0;
-        var totalService = APP.rentData.totalService || 0;
-        var totalParking = APP.rentData.totalParking || 0;
-        var totalOverall = APP.rentData.totalOverall || 0;
-
-        return `
-            <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">🏠</span>
-                        ${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}
-                    </h4>
-                    <button onclick="navigateTo('rent')" style="background: none; border: none; color: #f59e0b; font-weight: 600; font-size: 12px; cursor: pointer; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
-                        ${L === 'en' ? 'View All →' : 'সব দেখুন →'}
-                    </button>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px;">
-                    <div style="background: #fffbeb; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #92400e; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Rent' : 'ভাড়া'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #d97706;">৳ ${totalRent.toFixed(0)}</div>
-                    </div>
-                    <div style="background: #ecfdf5; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #065f46; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Service' : 'সার্ভিস'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #059669;">৳ ${totalService.toFixed(0)}</div>
-                    </div>
-                    <div style="background: #f5f3ff; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #5b21b6; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Parking' : 'পার্কিং'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #7c3aed;">৳ ${totalParking.toFixed(0)}</div>
-                    </div>
-                    <div style="background: #eff6ff; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #1e40af; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Total' : 'মোট'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #2563eb;">৳ ${totalOverall.toFixed(0)}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function createExpenseSummaryCards(L) {
-        var todayExpense = 0;
-        var weekExpense = 0;
-        var monthExpense = 0;
-        var now = new Date();
-        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        var weekStart = new Date(today);
-        weekStart.setDate(weekStart.getDate() - 7);
-        var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        
-        var allTransactions = [];
-        for (var mid in APP.metersData) {
-            if (APP.metersData.hasOwnProperty(mid)) {
-                var tx = APP.metersData[mid].transactions || [];
-                allTransactions = allTransactions.concat(tx);
-            }
-        }
-        
-        allTransactions.forEach(function(t) {
-            if (t.type === 'electricity_bill' || t.type === 'bill') {
-                var d = new Date(t.date || t.timestamp);
-                if (isNaN(d.getTime())) return;
-                var amount = t.amount || 0;
-                if (d >= today) todayExpense += amount;
-                if (d >= weekStart) weekExpense += amount;
-                if (d >= monthStart) monthExpense += amount;
-            }
-        });
-
-        return `
-            <div style="background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #f1f5f9;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span style="background: linear-gradient(135deg, #f5576c, #ff6b6b); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">💰</span>
-                        ${L === 'en' ? 'Expense Summary' : 'খরচ সারাংশ'}
-                    </h4>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;">
-                    <div style="background: #fef2f2; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #991b1b; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'Today' : 'আজ'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #dc2626;">৳ ${todayExpense.toFixed(0)}</div>
-                    </div>
-                    <div style="background: #fffbeb; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #92400e; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'This Week' : 'এই সপ্তাহ'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #d97706;">৳ ${weekExpense.toFixed(0)}</div>
-                    </div>
-                    <div style="background: #eff6ff; border-radius: 10px; padding: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #1e40af; font-weight: 600; text-transform: uppercase;">${L === 'en' ? 'This Month' : 'এই মাস'}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #2563eb;">৳ ${monthExpense.toFixed(0)}</div>
                     </div>
                 </div>
             </div>
@@ -1113,4 +1163,114 @@ function showDashboard() {
     `;
 
     document.getElementById('pageContent').innerHTML = htmlContent;
+}
+
+// ============================================================
+// ✅ রেন্ট টোটাল আপডেট
+// ============================================================
+function updateRentTotals() {
+    if (!APP.rentData || !APP.rentData.records) return;
+
+    var totalRent = 0;
+    var totalService = 0;
+    var totalParking = 0;
+    var totalOverall = 0;
+
+    APP.rentData.records.forEach(function(record) {
+        totalRent += record.rentAmount || 0;
+        totalService += record.serviceCharge || 0;
+        totalParking += record.parkingCharge || 0;
+        totalOverall += record.totalAmount || 0;
+    });
+
+    APP.rentData.totalRent = totalRent;
+    APP.rentData.totalService = totalService;
+    APP.rentData.totalParking = totalParking;
+    APP.rentData.totalOverall = totalOverall;
+}
+
+// ============================================================
+// ✅ রেন্ট উইজেট ফাংশন (ড্যাশবোর্ডের জন্য)
+// ============================================================
+function renderRentWidget() {
+    var L = APP.language || 'bn';
+    
+    if (!APP.rentData) {
+        APP.rentData = { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 };
+    }
+    
+    if (!APP.rentData.records || APP.rentData.records.length === 0) {
+        return '<div class="rent-widget" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">' +
+            '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">' +
+            '<div style="display: flex; align-items: center; gap: 12px;">' +
+            '<div style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">🏠</div>' +
+            '<div><div style="font-size: 12px; opacity: 0.7; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">' + (L === 'en' ? 'House Rent & Service Charge' : 'ভাড়া ও সার্ভিস চার্জ') + '</div>' +
+            '<div style="font-size: 14px; opacity: 0.6;">' + (L === 'en' ? 'No records yet' : 'এখনও কোনো রেকর্ড নেই') + '</div></div></div>' +
+            '<button onclick="showRentForm()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #fff; padding: 10px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">' +
+            '<i class="fas fa-plus"></i> ' + (L === 'en' ? 'Add Rent' : 'ভাড়া যোগ করুন') +
+            '</button></div></div>';
+    }
+
+    if (typeof updateRentTotals === 'function') {
+        updateRentTotals();
+    }
+    
+    var totalOverall = APP.rentData.totalOverall || 0;
+    var recordCount = APP.rentData.records ? APP.rentData.records.length : 0;
+
+    var meterGroups = {};
+    if (APP.rentData.records) {
+        APP.rentData.records.forEach(function(record) {
+            var meterId = record.meterId || 'unknown';
+            if (!meterGroups[meterId]) {
+                meterGroups[meterId] = {
+                    meterName: record.meterName || 'Unknown',
+                    totalOverall: 0,
+                    count: 0
+                };
+            }
+            meterGroups[meterId].totalOverall += record.totalAmount || 0;
+            meterGroups[meterId].count++;
+        });
+    }
+
+    var meterKeys = Object.keys(meterGroups);
+    var colors = ['#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6', '#fb923c'];
+
+    var html = '<div class="rent-widget" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);">';
+    
+    html += '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">';
+    html += '<div style="display: flex; align-items: center; gap: 12px;">';
+    html += '<div style="width: 44px; height: 44px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">🏠</div>';
+    html += '<div><div style="font-size: 11px; opacity: 0.6; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">' + (L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ') + '</div>';
+    html += '<div style="font-size: 16px; font-weight: 700;">' + (L === 'en' ? 'Total' : 'মোট') + ': <span style="color: #fbbf24;">৳ ' + totalOverall.toFixed(0) + '</span> (' + recordCount + ' ' + (L === 'en' ? 'records' : 'টি') + ')</div></div></div>';
+    html += '<div style="display: flex; gap: 8px;">';
+    html += '<button onclick="showRentForm()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #fff; padding: 8px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 12px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">';
+    html += '<i class="fas fa-plus"></i> ' + (L === 'en' ? 'Add' : 'যোগ') + '</button>';
+    html += '<button onclick="showRentReport()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 12px; backdrop-filter: blur(4px);">';
+    html += '<i class="fas fa-list"></i> ' + (L === 'en' ? 'History' : 'ইতিহাস') + '</button>';
+    html += '</div></div>';
+
+    if (meterKeys.length > 0) {
+        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px;">';
+        
+        meterKeys.forEach(function(meterId, index) {
+            var group = meterGroups[meterId];
+            var colorIdx = index % colors.length;
+            var bgColor = colors[colorIdx];
+            
+            html += '<div style="background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.06);">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+            html += '<div style="font-size: 11px; font-weight: 600; color: ' + bgColor + ';">' + (group.meterName || 'Unknown') + '</div>';
+            html += '<span style="font-size: 9px; opacity: 0.4;">' + group.count + 'x</span>';
+            html += '</div>';
+            html += '<div style="font-size: 18px; font-weight: 700; color: #fff;">৳ ' + group.totalOverall.toFixed(0) + '</div>';
+            html += '</div>';
+        });
+
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
 }

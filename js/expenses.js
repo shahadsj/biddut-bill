@@ -401,7 +401,7 @@ function updateExpenseTotals() {
 }
 
 // ============================================================
-// ✅ রিপোর্ট দেখানো (কমা + এডিট সহ)
+// ✅ রিপোর্ট দেখানো
 // ============================================================
 function showExpenseReport() {
     var L = APP.language || 'bn';
@@ -516,35 +516,65 @@ function showExpenseReport() {
 function deleteExpense(expenseId) {
     var L = APP.language || 'bn';
     
-    if (!confirm(L === 'en' ? 'Are you sure you want to delete this expense record?' : 'আপনি কি এই খরচ রেকর্ড ডিলিট করতে চান?')) {
+    if (!confirm(L === 'en' ? 'Are you sure you want to delete this expense?' : 'আপনি কি এই খরচ ডিলিট করতে চান?')) {
         return;
     }
     
-    var expenseData = getExpenseData();
-    if (!expenseData || !expenseData.records) return;
+    if (!APP.expenseData || !APP.expenseData.records) {
+        showToast(L === 'en' ? 'No expense records found' : 'কোন খরচ রেকর্ড পাওয়া যায়নি', 'error');
+        return;
+    }
     
     var index = -1;
-    for (var i = 0; i < expenseData.records.length; i++) {
-        if (expenseData.records[i].id === expenseId) {
+    for (var i = 0; i < APP.expenseData.records.length; i++) {
+        if (APP.expenseData.records[i].id === expenseId) {
             index = i;
             break;
         }
     }
     
     if (index === -1) {
-        showToast(L === 'en' ? 'Record not found' : 'রেকর্ড পাওয়া যায়নি', 'error');
+        showToast(L === 'en' ? 'Expense record not found' : 'খরচ রেকর্ড পাওয়া যায়নি', 'error');
         return;
     }
     
-    expenseData.records.splice(index, 1);
+    // ডিলিট করুন
+    APP.expenseData.records.splice(index, 1);
+    
+    // টোটাল রি-ক্যালকুলেট
     updateExpenseTotals();
     
+    // Firebase-এ সেভ
     if (typeof saveAllToCloud === 'function') {
         saveAllToCloud();
     }
     
-    showToast(L === 'en' ? '✅ Expense record deleted!' : '✅ খরচ রেকর্ড ডিলিট করা হয়েছে!', 'success');
-    showExpenseReport();
+    showToast(L === 'en' ? '✅ Expense deleted!' : '✅ খরচ ডিলিট করা হয়েছে!', 'success');
+    
+    // ড্যাশবোর্ড রিফ্রেশ
+    if (APP.currentPage === 'dashboard') {
+        showDashboard();
+    } else if (APP.currentPage === 'expenses') {
+        showExpenseReport();
+    }
+}
+
+// ============================================================
+// ✅ অতিরিক্ত খরচ টোটাল আপডেট
+// ============================================================
+function updateExpenseTotals() {
+    if (!APP.expenseData || !APP.expenseData.records) {
+        APP.expenseData = { records: [], totalOverall: 0, count: 0 };
+        return;
+    }
+    
+    var totalOverall = 0;
+    APP.expenseData.records.forEach(function(record) {
+        totalOverall += record.amount || 0;
+    });
+    
+    APP.expenseData.totalOverall = totalOverall;
+    APP.expenseData.count = APP.expenseData.records.length;
 }
 
 // ============================================================
