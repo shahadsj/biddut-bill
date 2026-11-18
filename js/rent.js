@@ -360,18 +360,33 @@ function updateRentTotals() {
     var totalService = 0;
     var totalParking = 0;
     var totalOverall = 0;
+    var totalPaid = 0;
+    var totalDue = 0;
 
     APP.rentData.records.forEach(function(record) {
-        totalRent += record.rentAmount || 0;
-        totalService += record.serviceCharge || 0;
-        totalParking += record.parkingCharge || 0;
-        totalOverall += record.totalAmount || 0;
+        var rRent = parseFloat(record.rentAmount) || 0;
+        var rService = parseFloat(record.serviceCharge) || 0;
+        var rParking = parseFloat(record.parkingCharge) || 0;
+        var rTotal = parseFloat(record.totalAmount) || (rRent + rService + rParking);
+
+        totalRent += rRent;
+        totalService += rService;
+        totalParking += rParking;
+        totalOverall += rTotal;
+
+        if (record.status === 'paid' || record.status === 'পরিশোধিত') {
+            totalPaid += rTotal;
+        } else {
+            totalDue += rTotal;
+        }
     });
 
     APP.rentData.totalRent = totalRent;
     APP.rentData.totalService = totalService;
     APP.rentData.totalParking = totalParking;
     APP.rentData.totalOverall = totalOverall;
+    APP.rentData.totalPaid = totalPaid;
+    APP.rentData.totalDue = totalDue;
 }
 
 // ============================================================
@@ -418,14 +433,27 @@ function showRentReport() {
                 totalRent: 0,
                 totalService: 0,
                 totalParking: 0,
-                totalOverall: 0
+                totalOverall: 0,
+                totalPaid: 0,
+                totalDue: 0
             };
         }
+        var rAmount = record.rentAmount || 0;
+        var sCharge = record.serviceCharge || 0;
+        var pCharge = record.parkingCharge || 0;
+        var tAmount = record.totalAmount || (rAmount + sCharge + pCharge);
+        var isPaid = (record.status === 'paid' || record.status === 'পরিশোধিত');
+
         meterGroups[meterId].records.push(record);
-        meterGroups[meterId].totalRent += record.rentAmount || 0;
-        meterGroups[meterId].totalService += record.serviceCharge || 0;
-        meterGroups[meterId].totalParking += record.parkingCharge || 0;
-        meterGroups[meterId].totalOverall += record.totalAmount || 0;
+        meterGroups[meterId].totalRent += rAmount;
+        meterGroups[meterId].totalService += sCharge;
+        meterGroups[meterId].totalParking += pCharge;
+        meterGroups[meterId].totalOverall += tAmount;
+        if (isPaid) {
+            meterGroups[meterId].totalPaid += tAmount;
+        } else {
+            meterGroups[meterId].totalDue += tAmount;
+        }
     });
 
     var html = '<div class="card">';
@@ -453,8 +481,12 @@ function showRentReport() {
             html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px;">';
             html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Rent' : 'ভাড়া') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalRent) + '</div>';
             html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Service' : 'সার্ভিস') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalService) + '</div>';
-            html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Parking' : 'পার্কিং') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalParking) + '</div>';
+            if (group.totalParking > 0) {
+                html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Parking' : 'পার্কিং') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalParking) + '</div>';
+            }
             html += '<div style="opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;">' + (L === 'en' ? 'Total' : 'মোট') + ':</div><div style="font-weight: 800; text-align: right; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;">৳ ' + formatNumberWithComma(group.totalOverall) + '</div>';
+            html += '<div style="color: #bbf7d0; font-weight: 600; padding-top: 2px;">' + (L === 'en' ? 'Paid' : 'পরিশোধিত') + ':</div><div style="font-weight: 700; text-align: right; color: #bbf7d0; padding-top: 2px;">৳ ' + formatNumberWithComma(group.totalPaid) + '</div>';
+            html += '<div style="color: ' + (group.totalDue > 0 ? '#fecaca' : '#ffffff') + '; font-weight: 600;">' + (L === 'en' ? 'Due' : 'বকেয়া') + ':</div><div style="font-weight: 800; text-align: right; color: ' + (group.totalDue > 0 ? '#fecaca' : '#ffffff') + ';">৳ ' + formatNumberWithComma(group.totalDue) + '</div>';
             html += '</div>';
             html += '<div style="margin-top: 8px; font-size: 11px; opacity: 0.6;">' + (L === 'en' ? 'Records' : 'রেকর্ড') + ': ' + group.records.length + '</div>';
             html += '</div>';

@@ -804,20 +804,72 @@ function showDashboard() {
         usagePct = Math.min(Math.max(((totalExpense % totalRecharge) / totalRecharge) * 100, 1.0), 99.0);
     }
 
-    // Rent records
-    var rentRecords = (APP.rentData && APP.rentData.records && APP.rentData.records.length > 0) ? APP.rentData.records : [];
-    var totalRentVal = (APP.rentData && APP.rentData.totalRent) ? APP.rentData.totalRent : 176000;
-    var totalServiceVal = (APP.rentData && APP.rentData.totalService) ? APP.rentData.totalService : 41200;
-    var totalDueVal = 1000;
-    var totalOverallVal = (APP.rentData && APP.rentData.totalOverall) ? APP.rentData.totalOverall : 218200;
+    // Rent records dynamic aggregation
+    var rentRecords = (APP.rentData && APP.rentData.records) ? APP.rentData.records : [];
+    var totalRentVal = 0;
+    var totalServiceVal = 0;
+    var totalParkingVal = 0;
+    var totalDueVal = 0;
+    var totalPaidVal = 0;
+    var totalOverallVal = 0;
 
-    var tenant1Name = rentRecords[0] ? (rentRecords[0].meterName || rentRecords[0].tenantName || 'MD. ABDUL MALEQUE') : 'MD. ABDUL MALEQUE';
-    var tenant1Amount = rentRecords[0] ? (rentRecords[0].totalAmount || 157200) : 157200;
-    var tenant1Date = rentRecords[0] ? (rentRecords[0].month || '৬ জুন ২০২৬') : '৬ জুন ২০২৬';
+    var tenantGroups = {};
 
-    var tenant2Name = rentRecords[1] ? (rentRecords[1].meterName || rentRecords[1].tenantName || 'নকসুমা বেগম') : 'নকসুমা বেগম';
-    var tenant2Amount = rentRecords[1] ? (rentRecords[1].totalAmount || 61000) : 61000;
-    var tenant2Date = rentRecords[1] ? (rentRecords[1].month || '৮ ডিসে ২০২৫') : '৮ ডিসে ২০২৫';
+    rentRecords.forEach(function(rec) {
+        var rRent = parseFloat(rec.rentAmount) || 0;
+        var sCharge = parseFloat(rec.serviceCharge) || 0;
+        var pCharge = parseFloat(rec.parkingCharge) || 0;
+        var tAmount = parseFloat(rec.totalAmount) || (rRent + sCharge + pCharge);
+        var isPaid = (rec.status === 'paid' || rec.status === 'পরিশোধিত');
+
+        totalRentVal += rRent;
+        totalServiceVal += sCharge;
+        totalParkingVal += pCharge;
+        totalOverallVal += tAmount;
+
+        if (isPaid) {
+            totalPaidVal += tAmount;
+        } else {
+            totalDueVal += tAmount;
+        }
+
+        var tKey = rec.meterId || rec.meterName || rec.tenantName || 'default';
+        if (!tenantGroups[tKey]) {
+            tenantGroups[tKey] = {
+                name: rec.meterName || rec.tenantName || (L === 'en' ? 'Tenant' : 'ভাড়াটিয়া'),
+                totalRent: 0,
+                totalService: 0,
+                totalParking: 0,
+                totalOverall: 0,
+                totalPaid: 0,
+                totalDue: 0,
+                count: 0,
+                latestMonth: rec.month || ''
+            };
+        }
+        tenantGroups[tKey].totalRent += rRent;
+        tenantGroups[tKey].totalService += sCharge;
+        tenantGroups[tKey].totalParking += pCharge;
+        tenantGroups[tKey].totalOverall += tAmount;
+        tenantGroups[tKey].count += 1;
+        if (isPaid) {
+            tenantGroups[tKey].totalPaid += tAmount;
+        } else {
+            tenantGroups[tKey].totalDue += tAmount;
+        }
+        if (rec.month && (!tenantGroups[tKey].latestMonth || rec.month > tenantGroups[tKey].latestMonth)) {
+            tenantGroups[tKey].latestMonth = rec.month;
+        }
+    });
+
+    if (APP.rentData) {
+        APP.rentData.totalRent = totalRentVal;
+        APP.rentData.totalService = totalServiceVal;
+        APP.rentData.totalParking = totalParkingVal;
+        APP.rentData.totalOverall = totalOverallVal;
+        APP.rentData.totalDue = totalDueVal;
+        APP.rentData.totalPaid = totalPaidVal;
+    }
 
     var htmlContent = `
         <!-- ============================================================
@@ -1124,7 +1176,7 @@ function showDashboard() {
                 <div class="rent-title">
                     <span class="rent-house-icon">🏠</span>
                     <span>${L === 'en' ? 'Rent & Service Summary' : 'ভাড়া ও সার্ভিস সারাংশ'}</span>
-                    <span class="rent-count">(${rentRecords.length || 8} টি)</span>
+                    <span class="rent-count">(${rentRecords.length} ${L === 'en' ? 'records' : 'টি'})</span>
                 </div>
                 <button class="view-all-link" onclick="navigateTo('rent')">
                     ${L === 'en' ? 'View All →' : 'সব দেখুন →'}
@@ -1132,47 +1184,110 @@ function showDashboard() {
             </div>
             
             <div class="tenant-cards-grid">
-                <!-- Tenant 1: Pastel Pink -->
-                <div class="tenant-card pink-tenant">
-                    <div class="tenant-top-row">
-                        <div class="tenant-name">${tenant1Name}</div>
-                        <div class="tenant-date-pill">📅 ${tenant1Date}</div>
-                    </div>
-                    <div class="tenant-amount">৳ ${formatNumberWithComma(tenant1Amount)}</div>
-                    <div class="tenant-pills-row">
-                        <div class="tenant-subpill">
-                            <span class="subpill-lbl">${L === 'en' ? 'Due' : 'বকেয়া'}</span>
-                            <span class="subpill-val">৳ 1,26,000.00</span>
-                        </div>
-                        <div class="tenant-subpill">
-                            <span class="subpill-lbl">${L === 'en' ? 'Current' : 'বর্তমান'}</span>
-                            <span class="subpill-val">৳ 31,200.00</span>
-                        </div>
-                    </div>
-                </div>
+                ${(function() {
+                    if (!rentRecords || rentRecords.length === 0) {
+                        return `
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 13.5px; background: #f8fafc; border-radius: 14px; border: 1px dashed #cbd5e1;">
+                                ${L === 'en' ? 'No rent records found. Click "View All" to add records.' : 'কোনো ভাড়া রেকর্ড পাওয়া যায়নি। "সব দেখুন →" এ ক্লিক করে রেকর্ড যোগ করুন।'}
+                            </div>
+                        `;
+                    }
 
-                <!-- Tenant 2: Pastel Cyan -->
-                <div class="tenant-card teal-tenant">
-                    <div class="tenant-top-row">
-                        <div class="tenant-name">${tenant2Name}</div>
-                        <div class="tenant-date-pill">📅 ${tenant2Date}</div>
-                    </div>
-                    <div class="tenant-amount">৳ ${formatNumberWithComma(tenant2Amount)}</div>
-                    <div class="tenant-pills-row">
-                        <div class="tenant-subpill">
-                            <span class="subpill-lbl">${L === 'en' ? 'Due' : 'বকেয়া'}</span>
-                            <span class="subpill-val">৳ 50,000.00</span>
-                        </div>
-                        <div class="tenant-subpill">
-                            <span class="subpill-lbl">${L === 'en' ? 'Current' : 'বর্তমান'}</span>
-                            <span class="subpill-val">৳ 10,000.00</span>
-                        </div>
-                        <div class="tenant-subpill">
-                            <span class="subpill-lbl">${L === 'en' ? 'Current' : 'বর্তমান'}</span>
-                            <span class="subpill-val">৳ 1,000.00</span>
-                        </div>
-                    </div>
-                </div>
+                    // Sort records latest first by month descending
+                    var sorted = rentRecords.slice().sort(function(a, b) {
+                        var ma = (a && a.month) ? String(a.month) : '';
+                        var mb = (b && b.month) ? String(b.month) : '';
+                        var ca = (a && a.createdAt) ? String(a.createdAt) : '';
+                        var cb = (b && b.createdAt) ? String(b.createdAt) : '';
+                        return mb.localeCompare(ma) || cb.localeCompare(ca);
+                    });
+
+                    function formatMonthLabel(mStr) {
+                        if (!mStr) return '';
+                        var parts = mStr.split('-');
+                        if (parts.length < 2) return mStr;
+                        var mIdx = parseInt(parts[1]) - 1;
+                        if (mIdx < 0 || mIdx > 11) return mStr;
+                        var bnMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+                        var enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        return (L === 'en' ? enMonths[mIdx] : bnMonths[mIdx]) + ' ' + parts[0];
+                    }
+
+                    // Distinct tenants vs single tenant records
+                    var cardsToShow = [];
+                    var distinctTenantKeys = Object.keys(tenantGroups);
+
+                    if (distinctTenantKeys.length > 1) {
+                        var seenTenants = {};
+                        sorted.forEach(function(rec) {
+                            var tKey = rec.meterId || rec.meterName || rec.tenantName || 'default';
+                            if (!seenTenants[tKey] && cardsToShow.length < 2) {
+                                seenTenants[tKey] = true;
+                                cardsToShow.push(rec);
+                            }
+                        });
+                    } else {
+                        // Single tenant: show the 2 most recent records (e.g. Nov and Oct)
+                        cardsToShow = sorted.slice(0, 2);
+                    }
+
+                    var cardClasses = ['pink-tenant', 'teal-tenant'];
+                    var outHtml = cardsToShow.map(function(rec, idx) {
+                        var cClass = cardClasses[idx % cardClasses.length];
+                        var rRent = parseFloat(rec.rentAmount) || 0;
+                        var sCharge = parseFloat(rec.serviceCharge) || 0;
+                        var pCharge = parseFloat(rec.parkingCharge) || 0;
+                        var tAmount = parseFloat(rec.totalAmount) || (rRent + sCharge + pCharge);
+                        var isPaid = (rec.status === 'paid' || rec.status === 'পরিশোধিত');
+                        var monthLbl = formatMonthLabel(rec.month);
+                        var tName = rec.meterName || rec.tenantName || (L === 'en' ? 'Tenant' : 'ভাড়াটিয়া');
+
+                        return `
+                            <div class="tenant-card ${cClass}">
+                                <div class="tenant-top-row">
+                                    <div class="tenant-name">${tName}</div>
+                                    <div class="tenant-date-pill">📅 ${monthLbl || rec.month}</div>
+                                </div>
+                                <div class="tenant-amount">৳ ${formatNumberWithComma(tAmount)}</div>
+                                <div class="tenant-pills-row">
+                                    <div class="tenant-subpill" style="background: ${isPaid ? '#dcfce7' : '#fee2e2'}; color: ${isPaid ? '#15803d' : '#b91c1c'}; font-weight: 700;">
+                                        <span class="subpill-lbl">${L === 'en' ? (isPaid ? 'Paid' : 'Due') : (isPaid ? 'পরিশোধিত' : 'বকেয়া')}</span>
+                                        <span class="subpill-val">${isPaid ? '✓' : ('৳ ' + formatNumberWithComma(tAmount))}</span>
+                                    </div>
+                                    <div class="tenant-subpill" style="background: rgba(255,255,255,0.85); color: #334155; font-weight: 600;">
+                                        <span class="subpill-lbl">${L === 'en' ? 'Rent' : 'ভাড়া'}</span>
+                                        <span class="subpill-val">৳ ${formatNumberWithComma(rRent)}</span>
+                                    </div>
+                                    <div class="tenant-subpill" style="background: rgba(255,255,255,0.85); color: #4338ca; font-weight: 600;">
+                                        <span class="subpill-lbl">${L === 'en' ? 'Service' : 'সার্ভিস'}</span>
+                                        <span class="subpill-val">৳ ${formatNumberWithComma(sCharge)}</span>
+                                    </div>
+                                    ${pCharge > 0 ? `
+                                    <div class="tenant-subpill" style="background: rgba(255,255,255,0.85); color: #0284c7; font-weight: 600;">
+                                        <span class="subpill-lbl">${L === 'en' ? 'Parking' : 'পার্কিং'}</span>
+                                        <span class="subpill-val">৳ ${formatNumberWithComma(pCharge)}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    if (cardsToShow.length === 1) {
+                        outHtml += `
+                            <div class="tenant-card teal-tenant" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 1.5px dashed #06b6d4; min-height: 105px;">
+                                <div style="font-size: 13.5px; font-weight: 700; color: #0891b2; margin-bottom: 6px;">
+                                    ➕ ${L === 'en' ? 'Add Rent Record' : 'নতুন মাসের ভাড়া যোগ করুন'}
+                                </div>
+                                <button class="btn btn-sm" onclick="showRentForm()" style="background: #0891b2; color: #fff; padding: 5px 12px; font-size: 11.5px; border-radius: 8px; border: none; cursor: pointer;">
+                                    ${L === 'en' ? 'Add Rent' : 'ভাড়া যোগ করুন'}
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    return outHtml;
+                })()}
             </div>
 
             <!-- 4 Rent Summary Pills -->
@@ -1499,18 +1614,33 @@ function updateRentTotals() {
     var totalService = 0;
     var totalParking = 0;
     var totalOverall = 0;
+    var totalPaid = 0;
+    var totalDue = 0;
 
     APP.rentData.records.forEach(function(record) {
-        totalRent += record.rentAmount || 0;
-        totalService += record.serviceCharge || 0;
-        totalParking += record.parkingCharge || 0;
-        totalOverall += record.totalAmount || 0;
+        var rRent = parseFloat(record.rentAmount) || 0;
+        var rService = parseFloat(record.serviceCharge) || 0;
+        var rParking = parseFloat(record.parkingCharge) || 0;
+        var rTotal = parseFloat(record.totalAmount) || (rRent + rService + rParking);
+
+        totalRent += rRent;
+        totalService += rService;
+        totalParking += rParking;
+        totalOverall += rTotal;
+
+        if (record.status === 'paid' || record.status === 'পরিশোধিত') {
+            totalPaid += rTotal;
+        } else {
+            totalDue += rTotal;
+        }
     });
 
     APP.rentData.totalRent = totalRent;
     APP.rentData.totalService = totalService;
     APP.rentData.totalParking = totalParking;
     APP.rentData.totalOverall = totalOverall;
+    APP.rentData.totalPaid = totalPaid;
+    APP.rentData.totalDue = totalDue;
 }
 
 // ============================================================
