@@ -12,7 +12,9 @@ const APP = {
     metersData: {},
     settings: {
         vatRate: 5,
-        rebateRate: 0.85,
+        rebateRate: 0.6,
+        sanctionedLoad: 7,
+        sanctionedTaka: 42,
         demandCharge: 294,
         darkMode: false,
         highContrast: false,
@@ -402,7 +404,7 @@ function updateSidebarUserInfo() {
         re.textContent = APP.currentUser.role === "admin" ? 
             (L === 'en' ? 'Admin' : 'অ্যাডমিন') : 
             (L === 'en' ? 'User' : 'ইউজার');
-        re.className = "badge " + (APP.currentUser.role === "admin" ? "badge-warning" : "badge-success");
+        re.className = "sidebar-user-role";
     }
 }
 
@@ -413,11 +415,15 @@ function showNotificationToast() {
 
 function logout() {
     localStorage.removeItem("biddut_session");
+    localStorage.removeItem("currentUserId");
     APP.currentUser = null;
+    if (typeof closeMobileSidebar === "function") closeMobileSidebar();
     var adminNav = document.getElementById("adminNav");
     if (adminNav) adminNav.style.display = "none";
     document.getElementById("appPage").style.display = "none";
     document.getElementById("authPage").style.display = "block";
+    var L = APP.language || 'bn';
+    showToast(L === 'en' ? 'Successfully logged out' : 'সফলভাবে লগআউট হয়েছে', 'success');
     if (typeof showLoginPage === "function") showLoginPage();
 }
 
@@ -695,6 +701,11 @@ function applySettings() {
     // ✅ ভাষা সেট করুন
     if (APP.settings && APP.settings.language) {
         APP.language = APP.settings.language;
+    }
+
+    // ✅ সরকারি রিবেট রেট ০.৬% আপডেট (পুরনো ০.৮৫% থাকলে)
+    if (APP.settings && (APP.settings.rebateRate === 0.85 || !APP.settings.rebateRate)) {
+        APP.settings.rebateRate = 0.6;
     }
 }
 

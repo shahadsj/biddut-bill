@@ -423,8 +423,9 @@ function recalculateBalance() {
     
     var transactions = meterData.transactions || [];
     var vatRate = APP.settings.vatRate || 5;
-    var rebateRate = APP.settings.rebateRate || 0.85;
-    var demandCharge = APP.settings.demandCharge || 294;
+    var rebateRate = (APP.settings.rebateRate && APP.settings.rebateRate !== 0.85) ? APP.settings.rebateRate : 0.6;
+    APP.settings.rebateRate = rebateRate;
+    var demandCharge = APP.settings.demandCharge || 210;
     
     // Sort transactions by date (oldest first)
     var sorted = transactions.slice().sort(function(a, b) {
@@ -471,16 +472,19 @@ function recalculateBalance() {
                 t.isFirstOfMonth = false;
             }
             
-            var vatDeduction = t.amount * (vatRate / 100);
-            var rebateDeduction = t.amount * (rebateRate / 100);
+            // NBR / Utility standard: VAT is included in gross vending amount
+            var vatDeduction = Math.round((t.amount * vatRate / (100 + vatRate)) * 100) / 100;
+            // Rebate is calculated on the amount eligible for energy consumption (amount after demand charge)
+            var eligibleAmount = Math.max(0, t.amount - dcAmount);
+            var rebateDeduction = Math.round((eligibleAmount * (rebateRate / 100)) * 100) / 100;
             
-            var netAmount = t.amount - dcAmount - vatDeduction + rebateDeduction;
+            var netAmount = Math.round((t.amount - dcAmount - vatDeduction + rebateDeduction) * 100) / 100;
             t.netCredit = netAmount;
             t.deductions = { demandCharge: dcAmount, vat: vatDeduction, rebate: rebateDeduction, netAmount: netAmount };
             
             balance += netAmount;
             totalRechargeAmount += t.amount;
-            t.balanceAfter = balance;
+            t.balanceAfter = Math.round(balance * 100) / 100;
             
         } else if (t.type === 'electricity_bill' || t.type === 'bill') {
             balance -= t.amount;
@@ -533,8 +537,9 @@ function addMonthlyRecharge() {
     var transactions = meterData.transactions ? JSON.parse(JSON.stringify(meterData.transactions)) : [];
 
     var vatRate = APP.settings.vatRate || 5;
-    var rebateRate = APP.settings.rebateRate || 0.85;
-    var demandCharge = APP.settings.demandCharge || 294;
+    var rebateRate = (APP.settings.rebateRate && APP.settings.rebateRate !== 0.85) ? APP.settings.rebateRate : 0.6;
+    APP.settings.rebateRate = rebateRate;
+    var demandCharge = APP.settings.demandCharge || 210;
 
     var d = new Date(date);
     var monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
@@ -556,10 +561,13 @@ function addMonthlyRecharge() {
         dcAmount = demandCharge;
     }
     
-    var vatDeduction = amount * (vatRate / 100);
-    var rebateDeduction = amount * (rebateRate / 100);
-    var netAmount = amount - dcAmount - vatDeduction + rebateDeduction;
-    var balanceAfter = currentBalance + netAmount;
+    // NBR / Utility standard: VAT is included in gross vending amount
+    var vatDeduction = Math.round((amount * vatRate / (100 + vatRate)) * 100) / 100;
+    // Rebate is calculated on the amount eligible for energy consumption (amount after demand charge)
+    var eligibleAmount = Math.max(0, amount - dcAmount);
+    var rebateDeduction = Math.round((eligibleAmount * (rebateRate / 100)) * 100) / 100;
+    var netAmount = Math.round((amount - dcAmount - vatDeduction + rebateDeduction) * 100) / 100;
+    var balanceAfter = Math.round((currentBalance + netAmount) * 100) / 100;
     totalRecharge += amount;
 
     var dateObj = new Date(date);

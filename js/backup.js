@@ -503,7 +503,9 @@ function clearAllData() {
         
         APP.settings = {
             vatRate: 5,
-            rebateRate: 0.85,
+            rebateRate: 0.6,
+            sanctionedLoad: 7,
+            sanctionedTaka: 42,
             demandCharge: 294,
             darkMode: false,
             highContrast: false,

@@ -829,45 +829,120 @@ function showDashboard() {
                 <p class="hero-subtitle">${L === 'en' ? 'Overall status of electricity bill management' : 'বিদ্যুৎ বিল ব্যবস্থাপনার সার্বিক অবস্থা'}</p>
             </div>
             <div class="hero-illustration">
-                <svg viewBox="0 0 360 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 320px; display: block;">
-                    <!-- Rising Sun -->
-                    <circle cx="280" cy="42" r="22" fill="#fb923c" opacity="0.4"/>
-                    <circle cx="280" cy="42" r="14" fill="#fbbf24" opacity="0.6"/>
-                    
-                    <!-- City Skyline Silhouette -->
-                    <path d="M110 85 L110 62 L124 62 L124 52 L138 52 L138 66 L156 66 L156 55 L170 55 L170 85 Z" fill="#c7d2fe" opacity="0.55"/>
-                    <path d="M175 85 L175 58 L190 58 L190 46 L205 46 L205 64 L225 64 L225 50 L240 50 L240 85 Z" fill="#a5b4fc" opacity="0.5"/>
-                    <path d="M245 85 L245 62 L260 62 L260 44 L275 44 L275 66 L295 66 L295 54 L310 54 L310 85 Z" fill="#818cf8" opacity="0.4"/>
-                    
-                    <!-- Power Transmission Cables -->
-                    <path d="M0 45 Q50 60 95 30 Q155 50 225 38 Q285 54 360 44" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
-                    <path d="M0 55 Q50 68 95 44 Q155 62 225 50 Q285 66 360 54" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
-                    
-                    <!-- Primary Transmission Pylon (Left) -->
-                    <path d="M95 10 L78 85 L112 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
-                    <line x1="64" y1="32" x2="126" y2="32" stroke="#334155" stroke-width="2.2"/>
-                    <line x1="56" y1="52" x2="134" y2="52" stroke="#334155" stroke-width="2.2"/>
-                    <line x1="84" y1="32" x2="106" y2="52" stroke="#334155" stroke-width="1.6"/>
-                    <line x1="106" y1="32" x2="84" y2="52" stroke="#334155" stroke-width="1.6"/>
-                    <line x1="78" y1="52" x2="112" y2="85" stroke="#334155" stroke-width="1.6"/>
-                    <line x1="112" y1="52" x2="78" y2="85" stroke="#334155" stroke-width="1.6"/>
-                    
-                    <!-- Secondary Transmission Pylon (Perspective) -->
-                    <path d="M225 22 L212 85 L238 85 Z" stroke="#64748b" stroke-width="1.8" fill="none"/>
-                    <line x1="202" y1="40" x2="248" y2="40" stroke="#64748b" stroke-width="1.8"/>
-                    <line x1="198" y1="56" x2="252" y2="56" stroke="#64748b" stroke-width="1.8"/>
-                    <line x1="216" y1="40" x2="234" y2="56" stroke="#64748b" stroke-width="1.4"/>
-                    <line x1="234" y1="40" x2="216" y2="56" stroke="#64748b" stroke-width="1.4"/>
-                    
-                    <!-- Green Foliage & Landscape Base -->
-                    <ellipse cx="50" cy="85" rx="60" ry="10" fill="#86efac"/>
-                    <ellipse cx="170" cy="85" rx="75" ry="11" fill="#4ade80"/>
-                    <ellipse cx="290" cy="85" rx="85" ry="12" fill="#22c55e" opacity="0.85"/>
-                    <circle cx="42" cy="76" r="7" fill="#15803d"/>
-                    <circle cx="54" cy="74" r="9" fill="#16a34a"/>
-                    <circle cx="65" cy="76" r="6" fill="#22c55e"/>
-                    <circle cx="145" cy="76" r="7" fill="#15803d"/>
-                    <circle cx="158" cy="73" r="9" fill="#16a34a"/>
+                <svg viewBox="0 0 880 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-panoramic-svg" preserveAspectRatio="xMaxYMid meet" style="width: 100%; height: 75px; display: block;">
+                    <defs>
+                        <linearGradient id="heroSunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fb923c" stop-opacity="0.65"/>
+                            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.25"/>
+                        </linearGradient>
+                        <linearGradient id="heroCity1" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.6"/>
+                            <stop offset="100%" stop-color="#e0e7ff" stop-opacity="0.3"/>
+                        </linearGradient>
+                        <linearGradient id="heroCity2" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#a5b4fc" stop-opacity="0.65"/>
+                            <stop offset="100%" stop-color="#c7d2fe" stop-opacity="0.3"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Soft Clouds in Sky -->
+                    <g fill="#e2e8f0" opacity="0.45">
+                        <path d="M 40,30 Q 60,18 80,24 Q 100,16 120,26 Q 135,20 150,30 Z"/>
+                        <path d="M 310,24 Q 330,12 350,18 Q 370,10 390,20 Q 405,15 420,24 Z"/>
+                        <path d="M 560,26 Q 580,14 600,20 Q 620,12 640,22 Q 655,16 670,26 Z"/>
+                    </g>
+
+                    <!-- Rising Golden Sun -->
+                    <circle cx="750" cy="40" r="26" fill="url(#heroSunGrad)"/>
+                    <circle cx="750" cy="40" r="16" fill="#f59e0b" opacity="0.65"/>
+
+                    <!-- Modern City Skyline Silhouette Layers -->
+                    <g fill="url(#heroCity1)">
+                        <rect x="150" y="52" width="22" height="33" rx="1"/>
+                        <rect x="176" y="44" width="28" height="41" rx="1"/>
+                        <rect x="208" y="55" width="24" height="30" rx="1"/>
+                        <rect x="340" y="46" width="30" height="39" rx="1"/>
+                        <rect x="374" y="38" width="26" height="47" rx="1"/>
+                        <rect x="404" y="48" width="28" height="37" rx="1"/>
+                        <rect x="560" y="48" width="25" height="37" rx="1"/>
+                        <rect x="589" y="40" width="32" height="45" rx="1"/>
+                        <rect x="625" y="46" width="26" height="39" rx="1"/>
+                        <rect x="655" y="52" width="24" height="33" rx="1"/>
+                        <rect x="780" y="54" width="26" height="31" rx="1"/>
+                        <rect x="810" y="48" width="30" height="37" rx="1"/>
+                    </g>
+                    <g fill="url(#heroCity2)">
+                        <rect x="238" y="56" width="28" height="29" rx="1"/>
+                        <rect x="270" y="48" width="25" height="37" rx="1"/>
+                        <rect x="299" y="52" width="26" height="33" rx="1"/>
+                        <rect x="446" y="52" width="30" height="33" rx="1"/>
+                        <rect x="480" y="44" width="26" height="41" rx="1"/>
+                        <rect x="510" y="50" width="28" height="35" rx="1"/>
+                        <rect x="695" y="50" width="28" height="35" rx="1"/>
+                        <rect x="727" y="42" width="26" height="43" rx="1"/>
+                    </g>
+
+                    <!-- Graceful Sagging High-Voltage Transmission Cables (Across 880px) -->
+                    <path d="M 0,44 Q 95,56 190,26 Q 305,54 420,22 Q 545,54 670,28 Q 775,50 880,42" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
+                    <path d="M 0,54 Q 95,68 190,40 Q 305,68 420,36 Q 545,68 670,42 Q 775,62 880,52" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
+                    <path d="M 0,64 Q 95,78 190,52 Q 305,78 420,48 Q 545,78 670,54 Q 775,72 880,62" stroke="#94a3b8" stroke-width="1.1" fill="none" opacity="0.65"/>
+
+                    <!-- Tower 1 (Mid-Left Pylon at x=190) -->
+                    <path d="M 190 10 L 174 85 L 206 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
+                    <line x1="160" y1="32" x2="220" y2="32" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
+                    <line x1="152" y1="52" x2="228" y2="52" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
+                    <line x1="178" y1="32" x2="202" y2="52" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="202" y1="32" x2="178" y2="52" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="174" y1="52" x2="206" y2="85" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="206" y1="52" x2="174" y2="85" stroke="#334155" stroke-width="1.5"/>
+
+                    <!-- Tower 2 (Center Main Pylon at x=420) -->
+                    <path d="M 420 8 L 402 85 L 438 85 Z" stroke="#1e293b" stroke-width="2.4" fill="none"/>
+                    <line x1="388" y1="30" x2="452" y2="30" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>
+                    <line x1="380" y1="50" x2="460" y2="50" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>
+                    <line x1="408" y1="30" x2="432" y2="50" stroke="#1e293b" stroke-width="1.6"/>
+                    <line x1="432" y1="30" x2="408" y2="50" stroke="#1e293b" stroke-width="1.6"/>
+                    <line x1="402" y1="50" x2="438" y2="85" stroke="#1e293b" stroke-width="1.6"/>
+                    <line x1="438" y1="50" x2="402" y2="85" stroke="#1e293b" stroke-width="1.6"/>
+
+                    <!-- Tower 3 (Right Perspective Pylon at x=670) -->
+                    <path d="M 670 12 L 656 85 L 684 85 Z" stroke="#475569" stroke-width="2" fill="none"/>
+                    <line x1="644" y1="34" x2="696" y2="34" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="638" y1="52" x2="702" y2="52" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="660" y1="34" x2="680" y2="52" stroke="#475569" stroke-width="1.4"/>
+                    <line x1="680" y1="34" x2="660" y2="52" stroke="#475569" stroke-width="1.4"/>
+                    <line x1="656" y1="52" x2="684" y2="85" stroke="#475569" stroke-width="1.4"/>
+                    <line x1="684" y1="52" x2="656" y2="85" stroke="#475569" stroke-width="1.4"/>
+
+                    <!-- Rolling Green Landscape Base (Continuous across 880px) -->
+                    <path d="M 0,85 C 80,75 160,82 240,78 C 320,74 400,80 480,76 C 560,72 640,80 720,75 C 800,70 850,78 880,76 L 880,85 L 0,85 Z" fill="#86efac" opacity="0.85"/>
+                    <path d="M 0,85 C 100,78 200,84 300,80 C 420,76 520,82 620,78 C 720,74 800,82 880,78 L 880,85 L 0,85 Z" fill="#4ade80" opacity="0.75"/>
+                    <path d="M 0,85 C 120,81 250,85 380,82 C 500,79 650,84 780,81 L 880,82 L 880,85 L 0,85 Z" fill="#22c55e" opacity="0.9"/>
+
+                    <!-- Lush Green Tree Clusters Across the Horizon -->
+                    <g fill="#15803d">
+                        <circle cx="35" cy="78" r="6"/>
+                        <circle cx="44" cy="75" r="8" fill="#16a34a"/>
+                        <circle cx="54" cy="77" r="7" fill="#22c55e"/>
+                        <circle cx="135" cy="77" r="7"/>
+                        <circle cx="146" cy="74" r="9" fill="#16a34a"/>
+                        <circle cx="158" cy="77" r="6" fill="#22c55e"/>
+                        <circle cx="265" cy="78" r="7"/>
+                        <circle cx="276" cy="74" r="9" fill="#16a34a"/>
+                        <circle cx="288" cy="77" r="6" fill="#22c55e"/>
+                        <circle cx="370" cy="78" r="6"/>
+                        <circle cx="380" cy="74" r="8" fill="#16a34a"/>
+                        <circle cx="495" cy="77" r="7"/>
+                        <circle cx="507" cy="73" r="9" fill="#16a34a"/>
+                        <circle cx="519" cy="76" r="6" fill="#22c55e"/>
+                        <circle cx="615" cy="78" r="7"/>
+                        <circle cx="626" cy="75" r="9" fill="#16a34a"/>
+                        <circle cx="735" cy="77" r="7"/>
+                        <circle cx="746" cy="73" r="9" fill="#16a34a"/>
+                        <circle cx="758" cy="76" r="6" fill="#22c55e"/>
+                        <circle cx="835" cy="78" r="6"/>
+                        <circle cx="845" cy="74" r="8" fill="#16a34a"/>
+                    </g>
                 </svg>
             </div>
         </div>
@@ -880,14 +955,14 @@ function showDashboard() {
                 <span class="bolt-icon">⚡</span>
                 <label>${__('currentMeter')}</label>
             </div>
-            <div class="lang-toggle-btn" onclick="toggleLanguage()" title="Change Language">
-                <span style="font-size: 15px;">🌐</span>
-                <span>${APP.language === 'bn' ? 'English' : 'বাংলা'}</span>
-            </div>
             <div class="meter-select-wrap">
                 <select class="meter-select-input" onchange="switchMeter(this.value)">
                     ${meterOptions}
                 </select>
+            </div>
+            <div class="lang-toggle-btn" onclick="toggleLanguage()" title="Change Language">
+                <span style="font-size: 15px;">🌐</span>
+                <span>${APP.language === 'bn' ? 'English' : 'বাংলা'}</span>
             </div>
         </div>
 

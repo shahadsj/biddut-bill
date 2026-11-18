@@ -323,10 +323,7 @@ function triggerDebouncedCloudSync() {
         loadFromCloud().then(function(hasChanges) {
             if (hasChanges && APP.currentUser) {
                 if (APP.currentPage) navigateTo(APP.currentPage);
-                showToast(
-                    APP.language === 'en' ? '☁️ Data synced from cloud' : '☁️ ক্লাউড থেকে ডাটা সিঙ্ক হয়েছে',
-                    'success'
-                );
+                console.log('☁️ Background data sync completed silently');
             }
         });
     }, 1000);

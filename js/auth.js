@@ -3,123 +3,130 @@
 // Admin: ONLY k.m.abubakkarsiddek@gmail.com
 
 function showLoginPage() {
-    document.body.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
-    document.body.style.minHeight = "100vh";
-    document.body.style.display = "flex";
-    document.body.style.justifyContent = "center";
-    document.body.style.alignItems = "center";
-    document.body.style.padding = "20px";
     document.body.style.margin = "0";
-    document.body.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    document.body.style.padding = "0";
+    document.body.style.background = "#1d4ed8";
 
     document.getElementById("appPage").style.display = "none";
-    document.getElementById("authPage").style.display = "block";
+    var authPage = document.getElementById("authPage");
+    authPage.style.display = "block";
 
-    document.getElementById("authPage").innerHTML = `
-        <div style="width:100%; max-width:560px; margin:0 auto;">
-            <div style="background:white; border-radius:24px; padding:45px 60px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                <!-- Logo -->
-                <div style="text-align:center; margin-bottom:30px;">
-                    <div style="font-size:52px; display:inline-block; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); width:85px; height:85px; line-height:85px; border-radius:50%; color:white; margin-bottom:12px; box-shadow:0 8px 30px rgba(102,126,234,0.4);">⚡</div>
-                    <h1 style="font-size:30px; font-weight:700; color:#2d3748; margin:0;">বিদ্যুৎ বিল</h1>
-                    <p style="font-size:14px; color:#718096; letter-spacing:1px; margin:4px 0 0 0;">Electricity Bill Manager</p>
-                </div>
+    authPage.innerHTML = `
+        <div class="auth-page-wrapper">
+            <div class="auth-card-modern">
+                <!-- Logo Badge -->
+                <div class="auth-bolt-badge">⚡</div>
+                <h1 class="auth-title">বিদ্যুৎ বিল</h1>
+                <p class="auth-subtitle">Electricity Bill Manager</p>
 
-                <div style="text-align:center; margin-bottom:30px;">
-                    <h2 style="font-size:24px; font-weight:700; color:#2d3748; margin:0 0 6px 0;">স্বাগতম</h2>
-                    <p style="font-size:15px; color:#718096; margin:0;">আপনার অ্যাকাউন্টে লগইন করুন</p>
-                </div>
+                <!-- Welcome Headings -->
+                <h2 class="auth-heading">স্বাগতম</h2>
+                <p class="auth-subheading">আপনার অ্যাকাউন্টে লগইন করুন</p>
 
+                <!-- Form -->
                 <form onsubmit="event.preventDefault(); login();">
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-size:14px; font-weight:600; color:#4a5568; margin-bottom:6px;">ইমেইল</label>
-                        <div style="display:flex; align-items:center; background:#f7fafc; border:2px solid #e2e8f0; border-radius:12px;">
-                            <span style="padding:0 12px 0 16px; font-size:18px; color:#a0aec0;">📧</span>
-                            <input type="email" id="loginEmail" placeholder="আপনার ইমেইল" style="width:100%; padding:14px 16px 14px 0; border:none; background:transparent; font-size:15px; color:#2d3748; outline:none;" required>
+                    <div class="auth-input-group">
+                        <label for="loginEmail">ইমেইল</label>
+                        <div class="auth-input-box">
+                            <span class="auth-input-icon">✉️</span>
+                            <input type="email" id="loginEmail" placeholder="আপনার ইমেইল" required autocomplete="email">
                         </div>
                     </div>
 
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-size:14px; font-weight:600; color:#4a5568; margin-bottom:6px;">পাসওয়ার্ড</label>
-                        <div style="display:flex; align-items:center; background:#f7fafc; border:2px solid #e2e8f0; border-radius:12px;">
-                            <span style="padding:0 12px 0 16px; font-size:18px; color:#a0aec0;">🔐</span>
-                            <input type="password" id="loginPassword" placeholder="পাসওয়ার্ড লিখুন" style="width:100%; padding:14px 16px 14px 0; border:none; background:transparent; font-size:15px; color:#2d3748; outline:none;" required>
+                    <div class="auth-input-group">
+                        <label for="loginPassword">পাসওয়ার্ড</label>
+                        <div class="auth-input-box">
+                            <span class="auth-input-icon">🔒</span>
+                            <input type="password" id="loginPassword" placeholder="পাসওয়ার্ড লিখুন" required autocomplete="current-password">
                         </div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:25px;">
-                        <input type="checkbox" id="rememberMe" style="width:18px; height:18px; accent-color:#667eea; cursor:pointer;">
-                        <label for="rememberMe" style="font-size:14px; color:#4a5568; cursor:pointer;">আমাকে মনে রাখুন</label>
+                    <div class="auth-checkbox-row">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe">আমাকে মনে রাখুন</label>
                     </div>
 
-                    <button type="submit" style="width:100%; padding:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:12px; font-size:17px; font-weight:600; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 15px rgba(102,126,234,0.4);">লগইন করুন</button>
+                    <button type="submit" class="auth-btn-primary">
+                        <span>লগইন করুন</span>
+                        <span style="font-size: 16px;">↪</span>
+                    </button>
                 </form>
 
-                <div style="display:flex; align-items:center; margin:25px 0; color:#a0aec0; font-size:14px;">
-                    <span style="margin:0 15px;">অ্যাকাউন্ট নেই?</span>
+                <div class="auth-divider">
+                    <span>অ্যাকাউন্ট নেই?</span>
                 </div>
 
-                <button onclick="showRegisterPage()" style="width:100%; padding:14px; background:transparent; color:#4a5568; border:2px solid #e2e8f0; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; transition:all 0.3s ease;">নতুন অ্যাকাউন্ট তৈরি করুন</button>
-
-                
+                <button type="button" class="auth-btn-secondary" onclick="showRegisterPage()">
+                    <span style="font-size: 15px;">👤</span>
+                    <span>নতুন অ্যাকাউন্ট তৈরি করুন</span>
+                </button>
             </div>
         </div>
     `;
 }
 
 function showRegisterPage() {
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+    document.body.style.background = "#1d4ed8";
+
     document.getElementById("appPage").style.display = "none";
-    document.getElementById("authPage").style.display = "block";
+    var authPage = document.getElementById("authPage");
+    authPage.style.display = "block";
 
-    document.getElementById("authPage").innerHTML = `
-        <div class="auth-container">
-            <div class="auth-card">
-                <!-- Logo -->
-                <div class="auth-logo">
-                    <div class="logo-icon">⚡</div>
-                    <h1>বিদ্যুৎ বিল</h1>
-                    <p>Electricity Bill Manager</p>
-                </div>
+    authPage.innerHTML = `
+        <div class="auth-page-wrapper">
+            <div class="auth-card-modern">
+                <!-- Logo Badge -->
+                <div class="auth-bolt-badge">⚡</div>
+                <h1 class="auth-title">বিদ্যুৎ বিল</h1>
+                <p class="auth-subtitle">Electricity Bill Manager</p>
 
-                <div class="auth-header">
-                    <h2>নতুন অ্যাকাউন্ট</h2>
-                    <p>আজই যোগ দিন</p>
-                </div>
+                <!-- Register Headings -->
+                <h2 class="auth-heading">নতুন অ্যাকাউন্ট</h2>
+                <p class="auth-subheading">আজই যোগ দিন</p>
 
+                <!-- Form -->
                 <form onsubmit="event.preventDefault(); register();">
-                    <div class="input-group">
-                        <label>পুরো নাম</label>
-                        <div class="input-field">
-                            <span class="icon">👤</span>
-                            <input type="text" id="regName" placeholder="আপনার নাম">
+                    <div class="auth-input-group">
+                        <label for="regName">পুরো নাম</label>
+                        <div class="auth-input-box">
+                            <span class="auth-input-icon">👤</span>
+                            <input type="text" id="regName" placeholder="আপনার নাম" required autocomplete="name">
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>ইমেইল</label>
-                        <div class="input-field">
-                            <span class="icon">📧</span>
-                            <input type="email" id="regEmail" placeholder="আপনার ইমেইল">
+                    <div class="auth-input-group">
+                        <label for="regEmail">ইমেইল</label>
+                        <div class="auth-input-box">
+                            <span class="auth-input-icon">✉️</span>
+                            <input type="email" id="regEmail" placeholder="আপনার ইমেইল" required autocomplete="email">
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>পাসওয়ার্ড</label>
-                        <div class="input-field">
-                            <span class="icon">🔐</span>
-                            <input type="password" id="regPassword" placeholder="কমপক্ষে ৬ অক্ষর">
+                    <div class="auth-input-group">
+                        <label for="regPassword">পাসওয়ার্ড</label>
+                        <div class="auth-input-box">
+                            <span class="auth-input-icon">🔒</span>
+                            <input type="password" id="regPassword" placeholder="কমপক্ষে ৬ অক্ষর" required minlength="6" autocomplete="new-password">
                         </div>
-                        <small class="hint">কমপক্ষে ৬ অক্ষর ব্যবহার করুন</small>
+                        <small style="display:block; font-size:12px; color:#94a3b8; margin-top:4px; text-align:left;">কমপক্ষে ৬ অক্ষর ব্যবহার করুন</small>
                     </div>
 
-                    <button type="submit" class="btn-primary">অ্যাকাউন্ট তৈরি করুন</button>
+                    <button type="submit" class="auth-btn-primary" style="margin-top: 20px;">
+                        <span>অ্যাকাউন্ট তৈরি করুন</span>
+                        <span style="font-size: 16px;">✓</span>
+                    </button>
                 </form>
 
-                <div class="divider">
+                <div class="auth-divider">
                     <span>অ্যাকাউন্ট আছে?</span>
                 </div>
 
-                <button class="btn-secondary" onclick="showLoginPage()">লগইন করুন</button>
+                <button type="button" class="auth-btn-secondary" onclick="showLoginPage()">
+                    <span>লগইন করুন</span>
+                    <span style="font-size: 16px;">↪</span>
+                </button>
 
                 <div class="auth-footer">
                     <p>সাইন আপ করে আপনি আমাদের শর্তে সম্মত হচ্ছেন</p>
@@ -198,6 +205,9 @@ function login() {
 
                 document.getElementById("authPage").style.display = "none";
                 document.getElementById("appPage").style.display = "block";
+                document.body.style.background = "";
+                document.body.style.margin = "";
+                document.body.style.padding = "";
 
                 // Admin check
                 if (email === "k.m.abubakkarsiddek@gmail.com") {
@@ -234,7 +244,10 @@ function login() {
 function logout() {
     APP.currentUser = null;
     localStorage.removeItem("currentUserId");
-    document.getElementById("adminNav").style.display = "none";
+    localStorage.removeItem("biddut_session");
+    if (document.getElementById("adminNav")) {
+        document.getElementById("adminNav").style.display = "none";
+    }
 
     document.getElementById("appPage").style.display = "none";
     document.getElementById("authPage").style.display = "block";

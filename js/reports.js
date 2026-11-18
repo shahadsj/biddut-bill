@@ -189,8 +189,8 @@ function switchReportTab(tab) {
     
     if (tab === 'monthly') {
         var vatRate = APP.settings.vatRate || 5;
-        var rebateRate = APP.settings.rebateRate || 0.85;
-        var demandCharge = APP.settings.demandCharge || 294;
+        var rebateRate = (APP.settings.rebateRate && APP.settings.rebateRate !== 0.85) ? APP.settings.rebateRate : 0.6;
+        var demandCharge = APP.settings.demandCharge || 210;
         var slabAnalysis = getMonthlySlabAnalysis(APP.activeMeterId);
         var monthlyData = {};
         
@@ -217,8 +217,8 @@ function switchReportTab(tab) {
                 var rechargeAmount = m.rechargeTotal;
                 var hasRecharge = rechargeAmount > 0;
                 var usableAmount = hasRecharge ? Math.max(0, rechargeAmount - demandCharge) : 0;
-                var vat = hasRecharge ? usableAmount * (vatRate / 100) : 0;
-                var rebate = hasRecharge ? usableAmount * (rebateRate / 100) : 0;
+                var vat = hasRecharge ? Math.round((rechargeAmount * (vatRate / (100 + vatRate))) * 100) / 100 : 0;
+                var rebate = hasRecharge ? Math.round((usableAmount * (rebateRate / 100)) * 100) / 100 : 0;
                 var mc = getMonthColor(m.display);
                 return [
                     '<div class="monthly-card">',

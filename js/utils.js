@@ -331,8 +331,8 @@ function getRandomColor() {
 
 // ==================== BADGE SYSTEM ====================
 
-function getBadgeText(key) {
-    var L = APP.language || 'bn';
+function getBadgeText(key, lang) {
+    var L = lang || APP.language || 'bn';
     var badges = {
         '500_plus': { bn: '🏆 ৫০০+ বিল', en: '🏆 500+ Bills' },
         '200_plus': { bn: '🥇 ২০০+ বিল', en: '🥇 200+ Bills' },
@@ -356,8 +356,8 @@ function getBadgeText(key) {
 }
 
 // ==================== CHECK BADGES ====================
-function checkBadges() {
-    console.log('🏅 Checking badges...');
+function checkBadges(notify) {
+    if (!APP.badges) APP.badges = [];
     
     var allTransactions = [];
     var totalRechargeAmount = 0;
@@ -375,96 +375,58 @@ function checkBadges() {
     }
     
     var transactionCount = allTransactions.length;
-    var meterCount = APP.meters.length;
+    var meterCount = APP.meters ? APP.meters.length : 0;
     
-    console.log('📊 Total transactions:', transactionCount);
-    console.log('💰 Total recharge:', totalRechargeAmount);
-    console.log('💸 Total expense:', totalExpendedAmount);
-    console.log('⚡ Total meters:', meterCount);
+    function hasBadge(key) {
+        var bBn = getBadgeText(key, 'bn');
+        var bEn = getBadgeText(key, 'en');
+        return APP.badges.some(function(b) {
+            return b === key || b === bBn || b === bEn;
+        });
+    }
     
-    var L = APP.language || 'bn';
     var newBadgeEarned = false;
+    var badgesToAdd = [];
     
-    if (transactionCount >= 1 && !APP.badges.includes(getBadgeText('first'))) { 
-        APP.badges.push(getBadgeText('first')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 5 && !APP.badges.includes(getBadgeText('5_plus'))) { 
-        APP.badges.push(getBadgeText('5_plus')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 10 && !APP.badges.includes(getBadgeText('10_plus'))) { 
-        APP.badges.push(getBadgeText('10_plus')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 25 && !APP.badges.includes(getBadgeText('25_plus'))) { 
-        APP.badges.push(getBadgeText('25_plus')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 50 && !APP.badges.includes(getBadgeText('50_plus'))) { 
-        APP.badges.push(getBadgeText('50_plus')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 100 && !APP.badges.includes(getBadgeText('100_plus'))) { 
-        APP.badges.push(getBadgeText('100_plus')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 200 && !APP.badges.includes(getBadgeText('200_plus'))) { 
-        APP.badges.push(getBadgeText('200_plus')); 
-        newBadgeEarned = true; 
-    }
-    if (transactionCount >= 500 && !APP.badges.includes(getBadgeText('500_plus'))) { 
-        APP.badges.push(getBadgeText('500_plus')); 
-        newBadgeEarned = true; 
+    if (transactionCount >= 1 && !hasBadge('first')) { badgesToAdd.push('first'); }
+    if (transactionCount >= 5 && !hasBadge('5_plus')) { badgesToAdd.push('5_plus'); }
+    if (transactionCount >= 10 && !hasBadge('10_plus')) { badgesToAdd.push('10_plus'); }
+    if (transactionCount >= 25 && !hasBadge('25_plus')) { badgesToAdd.push('25_plus'); }
+    if (transactionCount >= 50 && !hasBadge('50_plus')) { badgesToAdd.push('50_plus'); }
+    if (transactionCount >= 100 && !hasBadge('100_plus')) { badgesToAdd.push('100_plus'); }
+    if (transactionCount >= 200 && !hasBadge('200_plus')) { badgesToAdd.push('200_plus'); }
+    if (transactionCount >= 500 && !hasBadge('500_plus')) { badgesToAdd.push('500_plus'); }
+    
+    if (totalRechargeAmount >= 1000 && !hasBadge('recharge_1k')) { badgesToAdd.push('recharge_1k'); }
+    if (totalRechargeAmount >= 5000 && !hasBadge('recharge_5k')) { badgesToAdd.push('recharge_5k'); }
+    if (totalRechargeAmount >= 10000 && !hasBadge('recharge_10k')) { badgesToAdd.push('recharge_10k'); }
+    if (totalRechargeAmount >= 50000 && !hasBadge('recharge_50k')) { badgesToAdd.push('recharge_50k'); }
+    
+    if (totalExpendedAmount >= 10000 && !hasBadge('expense_10k')) { badgesToAdd.push('expense_10k'); }
+    if (totalExpendedAmount >= 50000 && !hasBadge('expense_50k')) { badgesToAdd.push('expense_50k'); }
+    
+    if (meterCount >= 2 && !hasBadge('meters_2')) { badgesToAdd.push('meters_2'); }
+    if (meterCount >= 5 && !hasBadge('meters_5')) { badgesToAdd.push('meters_5'); }
+    
+    if (badgesToAdd.length > 0) {
+        newBadgeEarned = true;
+        badgesToAdd.forEach(function(k) {
+            APP.badges.push(getBadgeText(k));
+        });
     }
     
-    if (totalRechargeAmount >= 1000 && !APP.badges.includes(getBadgeText('recharge_1k'))) { 
-        APP.badges.push(getBadgeText('recharge_1k')); 
-        newBadgeEarned = true; 
-    }
-    if (totalRechargeAmount >= 5000 && !APP.badges.includes(getBadgeText('recharge_5k'))) { 
-        APP.badges.push(getBadgeText('recharge_5k')); 
-        newBadgeEarned = true; 
-    }
-    if (totalRechargeAmount >= 10000 && !APP.badges.includes(getBadgeText('recharge_10k'))) { 
-        APP.badges.push(getBadgeText('recharge_10k')); 
-        newBadgeEarned = true; 
-    }
-    if (totalRechargeAmount >= 50000 && !APP.badges.includes(getBadgeText('recharge_50k'))) { 
-        APP.badges.push(getBadgeText('recharge_50k')); 
-        newBadgeEarned = true; 
-    }
-    
-    if (totalExpendedAmount >= 10000 && !APP.badges.includes(getBadgeText('expense_10k'))) { 
-        APP.badges.push(getBadgeText('expense_10k')); 
-        newBadgeEarned = true; 
-    }
-    if (totalExpendedAmount >= 50000 && !APP.badges.includes(getBadgeText('expense_50k'))) { 
-        APP.badges.push(getBadgeText('expense_50k')); 
-        newBadgeEarned = true; 
-    }
-    
-    if (meterCount >= 2 && !APP.badges.includes(getBadgeText('meters_2'))) { 
-        APP.badges.push(getBadgeText('meters_2')); 
-        newBadgeEarned = true; 
-    }
-    if (meterCount >= 5 && !APP.badges.includes(getBadgeText('meters_5'))) { 
-        APP.badges.push(getBadgeText('meters_5')); 
-        newBadgeEarned = true; 
-    }
-    
-    if (newBadgeEarned) {
+    // Only notify if explicitly requested (e.g. during manual action)
+    if (newBadgeEarned && notify === true) {
         showToast(APP.language === 'en' ? '🎉 New badge earned!' : '🎉 নতুন ব্যাজ অর্জিত!', 'success');
+        saveData();
     }
     
-    saveData();
     console.log('🏅 Total badges:', APP.badges.length);
     return APP.badges;
 }
 
 function checkBadgesOnLoad() {
-    console.log('🏅 Checking badges on load...');
-    return checkBadges();
+    return checkBadges(false);
 }
 
 function switchMeter(meterId) {

@@ -11,6 +11,7 @@ const urlsToCache = [
   '/index.html',
   '/manifest.json',
   '/favicon.svg',
+  '/assets/login-bg.svg',
   '/css/style.css',
   '/js/app.js',
   '/js/auth.js',
