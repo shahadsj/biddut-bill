@@ -643,10 +643,38 @@ function toggleLanguage() {
 }
 
 function updateAllSidebarTexts() {
-    var L = APP.language;
+    var L = APP.language || 'bn';
     var translations = APP.translations[L] || APP.translations.bn;
     
-    // ✅ সাইডবার টেক্সট আপডেট
+    // ✅ ১. হেডার ল্যাঙ্গুয়েজ বাটন লেবেল আপডেট
+    var headerLangLabel = document.getElementById('headerLangLabel');
+    if (headerLangLabel) {
+        headerLangLabel.textContent = (L === 'bn' ? 'English' : 'বাংলা');
+    }
+    var headerLangBtn = document.querySelector('.header-lang-btn');
+    if (headerLangBtn) {
+        headerLangBtn.setAttribute('title', L === 'bn' ? 'English এ পরিবর্তন করুন' : 'বাংলায় পরিবর্তন করুন');
+    }
+
+    // ✅ ২. ড্যাশবোর্ডের ল্যাঙ্গুয়েজ বাটন আপডেট (যদি থাকে)
+    document.querySelectorAll('.lang-toggle-btn').forEach(function(btn) {
+        var spanLast = btn.querySelector('span:last-child');
+        if (spanLast) {
+            spanLast.textContent = (L === 'bn' ? 'English' : 'বাংলা');
+        }
+    });
+
+    // ✅ ৩. ব্র্যান্ড টাইটেল আপডেট
+    var brandTitle = document.querySelector('.header-brand-title');
+    if (brandTitle) {
+        brandTitle.textContent = (L === 'en' ? 'Biddut Bill' : 'বিদ্যুৎ বিল');
+    }
+    var sidebarTitle = document.querySelector('.sidebar-brand span');
+    if (sidebarTitle) {
+        sidebarTitle.textContent = (L === 'en' ? 'Biddut Bill' : 'বিদ্যুৎ বিল');
+    }
+
+    // ✅ ৪. সাইডবার টেক্সট আপডেট
     document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
         var key = el.getAttribute('data-key');
         if (translations[key]) {
@@ -654,7 +682,7 @@ function updateAllSidebarTexts() {
         }
     });
     
-    // ✅ মোবাইল নেভিগেশন আপডেট
+    // ✅ ৫. মোবাইল নেভিগেশন আপডেট
     document.querySelectorAll('.mobile-nav-item .nav-label').forEach(function(el) {
         var parent = el.closest('.mobile-nav-item');
         if (parent) {
@@ -668,18 +696,12 @@ function updateAllSidebarTexts() {
         }
     });
     
-    // ✅ ইউজার রোল আপডেট
+    // ✅ ৬. ইউজার রোল আপডেট
     var roleEl = document.getElementById('sidebarUserRole');
     if (roleEl && APP.currentUser) {
         roleEl.textContent = APP.currentUser.role === 'admin' ? 
             (L === 'en' ? 'Admin' : 'অ্যাডমিন') : 
             (L === 'en' ? 'User' : 'ইউজার');
-    }
-    
-    // ✅ ল্যাঙ্গুয়েজ টগল বাটন আপডেট
-    var langToggle = document.querySelector('.lang-toggle-btn span');
-    if (langToggle) {
-        langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
     }
 }
 
@@ -705,6 +727,7 @@ function applySettings() {
     if (APP.settings && APP.settings.language) {
         APP.language = APP.settings.language;
     }
+    updateAllSidebarTexts();
 
     // ✅ সরকারি রিবেট রেট ০.৬% আপডেট (পুরনো ০.৮৫% থাকলে)
     if (APP.settings && (APP.settings.rebateRate === 0.85 || !APP.settings.rebateRate)) {

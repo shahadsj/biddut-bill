@@ -551,9 +551,34 @@ function toggleLanguage() {
 }
 
 function updateAllSidebarTexts() {
-    var L = APP.language;
+    var L = APP.language || 'bn';
     var translations = APP.translations[L] || APP.translations.bn;
     
+    var headerLangLabel = document.getElementById('headerLangLabel');
+    if (headerLangLabel) {
+        headerLangLabel.textContent = (L === 'bn' ? 'English' : 'বাংলা');
+    }
+    var headerLangBtn = document.querySelector('.header-lang-btn');
+    if (headerLangBtn) {
+        headerLangBtn.setAttribute('title', L === 'bn' ? 'English এ পরিবর্তন করুন' : 'বাংলায় পরিবর্তন করুন');
+    }
+
+    document.querySelectorAll('.lang-toggle-btn').forEach(function(btn) {
+        var spanLast = btn.querySelector('span:last-child');
+        if (spanLast) {
+            spanLast.textContent = (L === 'bn' ? 'English' : 'বাংলা');
+        }
+    });
+
+    var brandTitle = document.querySelector('.header-brand-title');
+    if (brandTitle) {
+        brandTitle.textContent = (L === 'en' ? 'Biddut Bill' : 'বিদ্যুৎ বিল');
+    }
+    var sidebarTitle = document.querySelector('.sidebar-brand span');
+    if (sidebarTitle) {
+        sidebarTitle.textContent = (L === 'en' ? 'Biddut Bill' : 'বিদ্যুৎ বিল');
+    }
+
     document.querySelectorAll('.nav-text[data-key]').forEach(function(el) {
         var key = el.getAttribute('data-key');
         if (translations[key]) {
@@ -566,11 +591,6 @@ function updateAllSidebarTexts() {
         roleEl.textContent = APP.currentUser.role === 'admin' ? 
             (L === 'en' ? 'Admin' : 'অ্যাডমিন') : 
             (L === 'en' ? 'User' : 'ইউজার');
-    }
-    
-    var langToggle = document.querySelector('.lang-toggle-btn span');
-    if (langToggle) {
-        langToggle.textContent = L === 'bn' ? '🇺🇸 English' : '🇧🇩 বাংলা';
     }
 }
 
