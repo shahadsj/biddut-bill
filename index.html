@@ -46,77 +46,117 @@
 
     <!-- Main App -->
     <div id="appPage" style="display: none;">
-        <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
         <div class="app-container">
             <!-- Sidebar -->
             <div class="sidebar" id="sidebar">
-                <div class="logo">⚡ বিদ্যুৎ বিল</div>
-                <nav>
+                <div class="sidebar-brand">
+                    <span class="sidebar-brand-bolt">⚡</span>
+                    <span class="sidebar-brand-text">বিদ্যুৎ বিল</span>
+                </div>
+                
+                <nav class="sidebar-nav">
                     <div class="nav-item active" onclick="navigateTo('dashboard')">
-                        <span>📊</span> <span class="nav-text" data-key="sidebarDashboard">ড্যাশবোর্ড</span>
+                        <span class="nav-icon">📊</span> <span class="nav-text" data-key="sidebarDashboard">ড্যাশবোর্ড</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('meters')">
-                        <span>⚡</span> <span class="nav-text" data-key="sidebarMeters">মিটার ম্যানেজমেন্ট</span>
+                        <span class="nav-icon">⚡</span> <span class="nav-text" data-key="sidebarMeters">মিটার ম্যানেজমেন্ট</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('transactions')">
-                        <span>💳</span> <span class="nav-text" data-key="sidebarTransactions">ট্রানজেকশন</span>
+                        <span class="nav-icon">💳</span> <span class="nav-text" data-key="sidebarTransactions">ট্রানজেকশন</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('calculator')">
-                        <span>🧮</span> <span class="nav-text" data-key="sidebarCalculator">ক্যালকুলেটর</span>
+                        <span class="nav-icon">🧮</span> <span class="nav-text" data-key="sidebarCalculator">ক্যালকুলেটর</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('reports')">
-                        <span>📈</span> <span class="nav-text" data-key="sidebarReports">রিপোর্ট</span>
+                        <span class="nav-icon">📈</span> <span class="nav-text" data-key="sidebarReports">রিপোর্ট</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('analytics')">
-                        <span>📉</span> <span class="nav-text" data-key="sidebarAnalytics">এনালিটিক্স</span>
+                        <span class="nav-icon">📉</span> <span class="nav-text" data-key="sidebarAnalytics">এনালিটিক্স</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('settings')">
-                        <span>⚙️</span> <span class="nav-text" data-key="sidebarSettings">সেটিংস</span>
+                        <span class="nav-icon">⚙️</span> <span class="nav-text" data-key="sidebarSettings">সেটিংস</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('profile')">
+                        <span class="nav-icon">👥</span> <span class="nav-text" data-key="sidebarProfile">ব্যবহারকারী</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('backup')">
-                        <span>💾</span> <span class="nav-text" data-key="sidebarBackup">ব্যাকআপ</span>
+                        <span class="nav-icon">💾</span> <span class="nav-text" data-key="sidebarBackup">তথ্য ব্যবস্থাপনা</span>
                     </div>
-                    
-                    <!-- ✅ Rent Management Sidebar Item -->
-                    <div class="nav-item" onclick="navigateTo('rent')">
-                        <span>🏠</span> <span class="nav-text" data-key="sidebarRent">ভাড়া ব্যবস্থাপনা</span>
-                    </div>
-
                     <div class="nav-item" onclick="navigateTo('expenses')">
-                        <span>🛒</span> <span class="nav-text" data-key="sidebarExpenses">অতিরিক্ত খরচ</span>
+                        <span class="nav-icon">🛒</span> <span class="nav-text" data-key="sidebarExpenses">অতিরিক্ত খরচ</span>
                     </div>
-                    
-                    <div style="border-top: 1px solid var(--border); margin: 10px 0;"></div>
-                    
-                    <div class="nav-item" onclick="navigateTo('profile')">
-                        <span>👤</span> <span class="nav-text" data-key="sidebarProfile">প্রোফাইল</span>
+                    <div class="nav-item" onclick="navigateTo('rent')">
+                        <span class="nav-icon">🏠</span> <span class="nav-text" data-key="sidebarRent">ভাড়া ব্যবস্থাপনা</span>
                     </div>
-                    
                     <div class="nav-item" id="adminNav" style="display:none;" onclick="navigateTo('admin')">
-                        <span>👑</span> <span class="nav-text" data-key="sidebarAdmin">অ্যাডমিন প্যানেল</span>
+                        <span class="nav-icon">👑</span> <span class="nav-text" data-key="sidebarAdmin">অ্যাডমিন প্যানেল</span>
                     </div>
                 </nav>
                 
-                <!-- User Info -->
-                <div id="sidebarUserInfo" style="margin-top: auto; padding: 15px; border-top: 1px solid var(--border); display: block;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-1); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
-                            👤
-                        </div>
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="sidebarUserName"></div>
-                            <div style="font-size: 11px;" id="sidebarUserRole"></div>
-                        </div>
-                        <div class="nav-logout" onclick="logout()" title="Logout" style="cursor: pointer; padding: 8px; border-radius: 50%; background: rgba(231, 76, 60, 0.1); transition: all 0.3s; border: none; font-size: 14px;">
-                            🚪
-                        </div>
+                <!-- Sidebar Footer with Pylon Illustration & Copyright -->
+                <div class="sidebar-footer-wrap">
+                    <div class="sidebar-pylon-svg">
+                        <svg viewBox="0 0 200 110" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; opacity: 0.35;">
+                            <!-- Transmission Tower / Pylon -->
+                            <path d="M100 8 L78 105 L122 105 Z" stroke="white" stroke-width="2"/>
+                            <line x1="60" y1="36" x2="140" y2="36" stroke="white" stroke-width="2"/>
+                            <line x1="50" y1="64" x2="150" y2="64" stroke="white" stroke-width="2"/>
+                            <line x1="84" y1="36" x2="116" y2="64" stroke="white" stroke-width="1.5"/>
+                            <line x1="116" y1="36" x2="84" y2="64" stroke="white" stroke-width="1.5"/>
+                            <line x1="78" y1="64" x2="122" y2="105" stroke="white" stroke-width="1.5"/>
+                            <line x1="122" y1="64" x2="78" y2="105" stroke="white" stroke-width="1.5"/>
+                            <!-- Power Lines -->
+                            <path d="M0 45 Q50 55 60 36" stroke="white" stroke-width="1" stroke-dasharray="2 2"/>
+                            <path d="M140 36 Q150 55 200 45" stroke="white" stroke-width="1" stroke-dasharray="2 2"/>
+                            <!-- City Silhouette at Bottom -->
+                            <path d="M0 110 L0 98 L18 98 L18 88 L34 88 L34 102 L58 102 L58 92 L72 92 L72 110 L128 110 L128 94 L142 94 L142 104 L168 104 L168 86 L184 86 L184 110 Z" fill="white" fill-opacity="0.18"/>
+                        </svg>
+                    </div>
+                    <div class="sidebar-copyright">
+                        © 2026 বিদ্যুৎ বিল সিস্টেম
                     </div>
                 </div>
             </div>
 
             <!-- Main Content -->
             <div class="main-content" id="mainContent">
+                <!-- Top Header Bar (Desktop & Mobile Adaptive) -->
+                <header class="app-header" id="appHeader">
+                    <div class="header-left">
+                        <button class="header-toggle-btn" onclick="toggleSidebar()" aria-label="মেনু খুলুন/বন্ধ করুন" title="মেনু">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </button>
+                        <button class="header-lang-btn" onclick="toggleLanguage()" title="ভাষা পরিবর্তন করুন">
+                            <span style="font-size: 15px;">🌐</span>
+                            <span id="headerLangLabel">English</span>
+                        </button>
+                    </div>
+                    
+                    <div class="header-brand-mobile">
+                        <span class="header-bolt">⚡</span>
+                        <span class="header-brand-title">বিদ্যুৎ বিল</span>
+                    </div>
+                    
+                    <div class="header-right">
+                        <button class="header-icon-btn" onclick="showNotificationToast()" title="নোটিফিকেশন" aria-label="Notifications">
+                            <span class="bell-icon">🔔</span>
+                            <span class="notification-dot"></span>
+                        </button>
+                        
+                        <div class="header-user-capsule" onclick="navigateTo('profile')" title="প্রোফাইল">
+                            <div class="header-user-avatar">
+                                <span>👤</span>
+                            </div>
+                            <div class="header-user-info">
+                                <div class="header-user-name" id="headerUserName">এমডি আব্দুল মালেক</div>
+                                <div class="header-user-meter" id="headerUserMeter">030519023423</div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
                 <div id="pageContent"></div>
             </div>
         </div>
@@ -320,15 +360,90 @@
         }
 
         // ============================================================
-        // 2. PWA INSTALL PROMPT - FULLY WORKING
+        // 2. PWA INSTALL PROMPT - CLEAN & NON-INTRUSIVE
         // ============================================================
         let deferredPrompt;
-        let installButton = null;
+        let installBanner = null;
         let isInstalled = false;
 
-        if (window.matchMedia('(display-mode: standalone)').matches) {
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
             isInstalled = true;
             console.log('✅ App is running in standalone mode (installed)');
+        }
+
+        function createInstallBanner(onInstallClick) {
+            if (isInstalled || sessionStorage.getItem('pwa_banner_dismissed')) return null;
+            if (document.getElementById('pwaInstallBanner')) return document.getElementById('pwaInstallBanner');
+
+            const banner = document.createElement('div');
+            banner.id = 'pwaInstallBanner';
+            banner.style.cssText = `
+                position: fixed;
+                bottom: 72px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 9998;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 30px;
+                box-shadow: 0 6px 25px rgba(102,126,234,0.45);
+                font-family: inherit;
+                max-width: 90vw;
+                animation: slideUpBanner 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            `;
+
+            const btn = document.createElement('button');
+            btn.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
+            btn.style.cssText = `
+                background: rgba(255,255,255,0.22);
+                border: 1px solid rgba(255,255,255,0.4);
+                color: white;
+                border-radius: 20px;
+                padding: 6px 14px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.2s ease;
+            `;
+            btn.onclick = onInstallClick;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '✕';
+            closeBtn.title = 'বন্ধ করুন';
+            closeBtn.style.cssText = `
+                background: transparent;
+                border: none;
+                color: rgba(255,255,255,0.85);
+                font-size: 16px;
+                cursor: pointer;
+                padding: 2px 6px;
+                line-height: 1;
+                border-radius: 50%;
+            `;
+            closeBtn.onclick = function() {
+                banner.remove();
+                sessionStorage.setItem('pwa_banner_dismissed', 'true');
+            };
+
+            banner.appendChild(btn);
+            banner.appendChild(closeBtn);
+
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideUpBanner {
+                    from { transform: translate(-50%, 40px); opacity: 0; }
+                    to { transform: translate(-50%, 0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            document.body.appendChild(banner);
+            return banner;
         }
 
         window.addEventListener('beforeinstallprompt', function(e) {
@@ -336,151 +451,42 @@
             deferredPrompt = e;
             console.log('✅ beforeinstallprompt event fired - App can be installed');
             
-            if (isInstalled) {
-                console.log('App already installed, hiding prompt');
+            if (isInstalled || sessionStorage.getItem('pwa_banner_dismissed')) {
                 return;
             }
             
-            if (!installButton) {
-                installButton = document.createElement('button');
-                installButton.id = 'pwaInstallBtn';
-                installButton.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
-                installButton.style.cssText = `
-                    position: fixed;
-                    bottom: 80px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    z-index: 9999;
-                    padding: 16px 32px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border: none;
-                    border-radius: 50px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    box-shadow: 0 8px 30px rgba(102,126,234,0.5);
-                    cursor: pointer;
-                    animation: pulseBtn 2s infinite;
-                    transition: all 0.3s ease;
-                    display: none;
-                `;
-                
-                installButton.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateX(-50%) scale(1.05)';
-                    this.style.boxShadow = '0 12px 40px rgba(102,126,234,0.7)';
-                });
-                installButton.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateX(-50%) scale(1)';
-                    this.style.boxShadow = '0 8px 30px rgba(102,126,234,0.5)';
-                });
-                
-                installButton.addEventListener('click', async function() {
-                    if (!deferredPrompt) {
-                        console.log('No deferred prompt available');
-                        return;
-                    }
-                    console.log('Install button clicked, showing prompt');
-                    this.style.display = 'none';
-                    deferredPrompt.prompt();
-                    const result = await deferredPrompt.userChoice;
-                    if (result.outcome === 'accepted') {
-                        console.log('✅ User accepted the install prompt');
-                        isInstalled = true;
-                        installButton.style.display = 'none';
-                    } else {
-                        console.log('❌ User dismissed the install prompt');
-                        setTimeout(function() {
-                            if (!isInstalled) {
-                                installButton.style.display = 'block';
-                            }
-                        }, 3000);
-                    }
-                    deferredPrompt = null;
-                });
-                
-                document.body.appendChild(installButton);
-                
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes pulseBtn {
-                        0% { transform: translateX(-50%) scale(1); }
-                        50% { transform: translateX(-50%) scale(1.05); }
-                        100% { transform: translateX(-50%) scale(1); }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
-            if (!isInstalled) {
-                installButton.style.display = 'block';
-            }
+            installBanner = createInstallBanner(async function() {
+                if (!deferredPrompt) return;
+                installBanner.style.display = 'none';
+                deferredPrompt.prompt();
+                const result = await deferredPrompt.userChoice;
+                if (result.outcome === 'accepted') {
+                    console.log('✅ User accepted the install prompt');
+                    isInstalled = true;
+                    if (installBanner) installBanner.remove();
+                } else {
+                    console.log('❌ User dismissed the install prompt');
+                    sessionStorage.setItem('pwa_banner_dismissed', 'true');
+                }
+                deferredPrompt = null;
+            });
         });
 
         window.addEventListener('appinstalled', function(e) {
             console.log('✅ App installed successfully!');
             isInstalled = true;
-            if (installButton) {
-                installButton.style.display = 'none';
+            if (installBanner) {
+                installBanner.remove();
             }
             showToast('📲 অ্যাপ সফলভাবে ইন্সটল হয়েছে!', 'success');
-        });
-
-        window.addEventListener('resize', function() {
-            if (installButton && !isInstalled) {
-                if (window.innerWidth > 768) {}
-            }
         });
 
         window.addEventListener('load', function() {
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 isInstalled = true;
-                if (installButton) {
-                    installButton.style.display = 'none';
-                }
-                console.log('✅ App is in standalone mode');
-            }
-            
-            if (window.navigator && window.navigator.getInstalledRelatedApps) {
-                window.navigator.getInstalledRelatedApps().then(function(relatedApps) {
-                    if (relatedApps.length > 0) {
-                        isInstalled = true;
-                        if (installButton) {
-                            installButton.style.display = 'none';
-                        }
-                        console.log('✅ App is installed (related apps)');
-                    }
-                });
+                if (installBanner) installBanner.remove();
             }
         });
-
-        setTimeout(function() {
-            if (!isInstalled && !installButton && !window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('⚠️ beforeinstallprompt not fired, showing fallback button');
-                const fallbackBtn = document.createElement('button');
-                fallbackBtn.innerHTML = '📲 অ্যাপ ইন্সটল করুন';
-                fallbackBtn.style.cssText = `
-                    position: fixed;
-                    bottom: 80px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    z-index: 9999;
-                    padding: 16px 32px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border: none;
-                    border-radius: 50px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    box-shadow: 0 8px 30px rgba(102,126,234,0.5);
-                    cursor: pointer;
-                `;
-                fallbackBtn.onclick = function() {
-                    this.style.display = 'none';
-                    showToast('💡 Chrome মেনু থেকে "Install Biddut Bill" সিলেক্ট করুন', 'info');
-                };
-                document.body.appendChild(fallbackBtn);
-            }
-        }, 5000);
 
         console.log('✅ PWA Scripts loaded successfully');
     </script>
@@ -516,8 +522,8 @@
         
         // 2. Google Translate এর উইজেট সরান
         function removeGoogleTranslate() {
-            // Google Translate এর উইজেট সরান
-            document.querySelectorAll('.goog-te-banner-frame, .goog-te-menu-frame, .goog-te-gadget-simple, .skiptranslate').forEach(function(el) {
+            // Google Translate এর ইফেক্ট ও উইজেট সরান (কখনোই ইউজার কন্টেন্ট মুছবেন না)
+            document.querySelectorAll('.goog-te-banner-frame, .goog-te-menu-frame, .goog-te-gadget-simple').forEach(function(el) {
                 if (el && el.parentNode) {
                     el.parentNode.removeChild(el);
                 }

@@ -81,145 +81,179 @@ function calculateUnitsFromTaka(taka) {
 
 function getMonthlySummary(meterId) {
     var summary = {};
-    var meterData = APP.metersData[meterId];
-    if (!meterData || !meterData.transactions) return summary;
-    
-    var transactions = meterData.transactions || [];
-    var tariffRates = APP.tariffRates || [];
-    
-    // মাস অনুযায়ী গ্রুপিং
-    var monthlyData = {};
-    
-    for (var i = 0; i < transactions.length; i++) {
-        var t = transactions[i];
-        var date, dateStr = t.date || t.timestamp || '';
+    try {
+        var meterData = APP.metersData ? APP.metersData[meterId] : null;
+        if (!meterData || !meterData.transactions) return summary;
         
-        try {
-            if (dateStr.indexOf('T') !== -1 || dateStr.indexOf('-') !== -1) {
-                date = new Date(dateStr);
-            } else if (dateStr.indexOf('/') !== -1) {
-                var parts = dateStr.split('/');
-                if (parts.length === 3) {
-                    var day = parseInt(convertBanglaToEnglish(parts[0].trim()));
-                    var month = parseInt(convertBanglaToEnglish(parts[1].trim()));
-                    var year = parseInt(convertBanglaToEnglish(parts[2].trim()));
-                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) date = new Date(year, month - 1, day);
-                }
-            } else if (dateStr.indexOf(',') !== -1) {
-                var datePart = dateStr.split(',')[0].trim();
-                if (datePart.indexOf('/') !== -1) {
-                    var parts = datePart.split('/');
+        var transactions = meterData.transactions || [];
+        var tariffRates = APP.tariffRates || [];
+        
+        // মাস অনুযায়ী গ্রুপিং
+        var monthlyData = {};
+        
+        for (var i = 0; i < transactions.length; i++) {
+            var t = transactions[i];
+            if (!t) continue;
+            var date, dateStr = t.date || t.timestamp || '';
+            
+            try {
+                if (dateStr.indexOf('T') !== -1 || dateStr.indexOf('-') !== -1) {
+                    date = new Date(dateStr);
+                } else if (dateStr.indexOf('/') !== -1) {
+                    var parts = dateStr.split('/');
                     if (parts.length === 3) {
                         var day = parseInt(convertBanglaToEnglish(parts[0].trim()));
                         var month = parseInt(convertBanglaToEnglish(parts[1].trim()));
                         var year = parseInt(convertBanglaToEnglish(parts[2].trim()));
                         if (!isNaN(year) && !isNaN(month) && !isNaN(day)) date = new Date(year, month - 1, day);
                     }
+                } else if (dateStr.indexOf(',') !== -1) {
+                    var datePart = dateStr.split(',')[0].trim();
+                    if (datePart.indexOf('/') !== -1) {
+                        var parts = datePart.split('/');
+                        if (parts.length === 3) {
+                            var day = parseInt(convertBanglaToEnglish(parts[0].trim()));
+                            var month = parseInt(convertBanglaToEnglish(parts[1].trim()));
+                            var year = parseInt(convertBanglaToEnglish(parts[2].trim()));
+                            if (!isNaN(year) && !isNaN(month) && !isNaN(day)) date = new Date(year, month - 1, day);
+                        }
+                    }
                 }
+                if (!date || isNaN(date.getTime())) { date = new Date(); }
+            } catch(e) { date = new Date(); }
+            
+            var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            var banglaMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+            var monthIndex = date.getMonth();
+            var year = date.getFullYear();
+            var monthKey = year + '-' + String(monthIndex + 1).padStart(2, '0');
+            var displayMonth = banglaMonths[monthIndex] + ' ' + year;
+            
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {
+                    displayMonth: displayMonth,
+                    transactions: [],
+                    rechargeTotal: 0,
+                    rechargeCount: 0,
+                    billTotal: 0,
+                    billCount: 0,
+                    totalUnits: 0
+                };
             }
-            if (!date || isNaN(date.getTime())) { date = new Date(); }
-        } catch(e) { date = new Date(); }
+            
+            monthlyData[monthKey].transactions.push(t);
+            
+            if (t.type === 'recharge') {
+                monthlyData[monthKey].rechargeTotal += (Number(t.amount) || 0);
+                monthlyData[monthKey].rechargeCount++;
+            } else if (t.type === 'electricity_bill' || t.type === 'bill') {
+                monthlyData[monthKey].billTotal += (Number(t.amount) || 0);
+                monthlyData[monthKey].billCount++;
+                monthlyData[monthKey].totalUnits += (Number(t.units) || 0);
+            }
+        }
         
-        var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        var banglaMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-        var monthIndex = date.getMonth();
-        var year = date.getFullYear();
-        var monthKey = year + '-' + String(monthIndex + 1).padStart(2, '0');
-        var displayMonth = banglaMonths[monthIndex] + ' ' + year;
+        // প্রতিটি মাসের জন্য স্ল্যাব ডিস্ট্রিবিউশন করুন
+        var sortedKeys = Object.keys(monthlyData).sort();
         
-        if (!monthlyData[monthKey]) {
-            monthlyData[monthKey] = {
-                displayMonth: displayMonth,
-                transactions: [],
-                rechargeTotal: 0,
-                rechargeCount: 0,
-                billTotal: 0,
-                billCount: 0,
-                totalUnits: 0
+        for (var m = 0; m < sortedKeys.length; m++) {
+            var key = sortedKeys[m];
+            var data = monthlyData[key];
+            var totalUnits = data.totalUnits || 0;
+            var remainingUnits = totalUnits;
+            
+            var slabData = {};
+            var slabCost = {};
+            var slabRates = {};
+            
+            // ✅ সঠিক স্ল্যাব ডিস্ট্রিবিউশন (Lifeline ৫০ ইউনিট)
+            for (var s = 0; s < tariffRates.length; s++) {
+                if (remainingUnits <= 0) break;
+                
+                var slab = tariffRates[s] || {};
+                var min = 0;
+                var max = Infinity;
+                if (slab.range) {
+                    min = Number(slab.range[0] !== undefined ? slab.range[0] : (slab.range['0'] !== undefined ? slab.range['0'] : 0)) || 0;
+                    var rawMax = slab.range[1] !== undefined ? slab.range[1] : slab.range['1'];
+                    max = (rawMax === null || rawMax === undefined) ? Infinity : Number(rawMax);
+                } else {
+                    min = Number(slab.min) || 0;
+                    max = (slab.max === null || slab.max === undefined) ? Infinity : Number(slab.max);
+                }
+                var rate = Number(slab.rate) || 0;
+                
+                var maxUnitsInSlab = (max === null || max === undefined || !isFinite(max)) ? Infinity : max - min + 1;
+                var unitsInThisSlab = Math.min(remainingUnits, maxUnitsInSlab);
+                
+                // ✅ বিশেষ চেক: Lifeline স্ল্যাব ৫০ ইউনিটের বেশি হবে না
+                var slabName = slab.name || '';
+                if (slabName === 'Lifeline' || 
+                    slabName === 'Lifeline (0-50)' || 
+                    slabName === 'Lifeline (০-৫০)' ||
+                    slabName.indexOf('Lifeline') !== -1) {
+                    unitsInThisSlab = Math.min(unitsInThisSlab, 50);
+                }
+                
+                slabData[slab.name || ('Slab ' + (s + 1))] = unitsInThisSlab;
+                slabRates[slab.name || ('Slab ' + (s + 1))] = rate;
+                slabCost[slab.name || ('Slab ' + (s + 1))] = unitsInThisSlab * rate;
+                
+                remainingUnits -= unitsInThisSlab;
+            }
+            
+            // summary-তে যোগ করুন
+            summary[key] = {
+                displayMonth: data.displayMonth,
+                recharge: data.rechargeTotal,
+                bill: data.billTotal,
+                balance: data.rechargeTotal - data.billTotal,
+                units: data.totalUnits,
+                billCount: data.billCount,
+                rechargeCount: data.rechargeCount,
+                slabData: slabData,
+                slabRates: slabRates,
+                slabCost: slabCost,
+                sortKey: key
             };
         }
-        
-        monthlyData[monthKey].transactions.push(t);
-        
-        if (t.type === 'recharge') {
-            monthlyData[monthKey].rechargeTotal += (t.amount || 0);
-            monthlyData[monthKey].rechargeCount++;
-        } else if (t.type === 'electricity_bill' || t.type === 'bill') {
-            monthlyData[monthKey].billTotal += (t.amount || 0);
-            monthlyData[monthKey].billCount++;
-            monthlyData[monthKey].totalUnits += (t.units || 0);
-        }
-    }
-    
-    // প্রতিটি মাসের জন্য স্ল্যাব ডিস্ট্রিবিউশন করুন
-    var sortedKeys = Object.keys(monthlyData).sort();
-    
-    for (var m = 0; m < sortedKeys.length; m++) {
-        var key = sortedKeys[m];
-        var data = monthlyData[key];
-        var totalUnits = data.totalUnits || 0;
-        var remainingUnits = totalUnits;
-        
-        var slabData = {};
-        var slabCost = {};
-        var slabRates = {};
-        
-        // ✅ সঠিক স্ল্যাব ডিস্ট্রিবিউশন (Lifeline ৫০ ইউনিট)
-        for (var s = 0; s < tariffRates.length; s++) {
-            if (remainingUnits <= 0) break;
-            
-            var slab = tariffRates[s];
-            var min = slab.range[0];
-            var max = slab.range[1];
-            var rate = slab.rate;
-            
-            var maxUnitsInSlab = (max === null || max === undefined) ? Infinity : max - min + 1;
-            var unitsInThisSlab = Math.min(remainingUnits, maxUnitsInSlab);
-            
-            // ✅ বিশেষ চেক: Lifeline স্ল্যাব ৫০ ইউনিটের বেশি হবে না
-            // স্ল্যাবের নাম চেক করুন (বাংলা বা ইংরেজি)
-            var slabName = slab.name || '';
-            if (slabName === 'Lifeline' || 
-                slabName === 'Lifeline (0-50)' || 
-                slabName === 'Lifeline (০-৫০)' ||
-                slabName.indexOf('Lifeline') !== -1) {
-                unitsInThisSlab = Math.min(unitsInThisSlab, 50);
-            }
-            
-            slabData[slab.name] = unitsInThisSlab;
-            slabRates[slab.name] = rate;
-            slabCost[slab.name] = unitsInThisSlab * rate;
-            
-            remainingUnits -= unitsInThisSlab;
-        }
-        
-        // summary-তে যোগ করুন
-        summary[key] = {
-            displayMonth: data.displayMonth,
-            recharge: data.rechargeTotal,
-            bill: data.billTotal,
-            balance: data.rechargeTotal - data.billTotal,
-            units: data.totalUnits,
-            billCount: data.billCount,
-            rechargeCount: data.rechargeCount,
-            slabData: slabData,
-            slabRates: slabRates,
-            slabCost: slabCost,
-            sortKey: key
-        };
+    } catch(err) {
+        console.error('getMonthlySummary error:', err);
     }
     
     return summary;
 }
 
-// ==================== TOAST NOTIFICATION (STACK VERSION) ====================
+// ==================== TOAST NOTIFICATION (STACK VERSION + DEDUPLICATED) ====================
+var _lastToastMsg = '';
+var _lastToastTime = 0;
+
 function showToast(message, type) {
+    if (!message) return;
+    
+    // ✅ ডুপ্লিকেট নোটিফিকেশন বন্ধ (৩ সেকেন্ডের মধ্যে একই মেসেজ আবার আসবে না)
+    var now = Date.now();
+    if (message === _lastToastMsg && (now - _lastToastTime) < 2500) {
+        return;
+    }
+    
     var container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toastContainer';
         document.body.appendChild(container);
     }
+    
+    // DOM-এ ইতিমধ্যে একই মেসেজ সক্রিয় থাকলে নতুন করে যোগ করবেন না
+    var existingToasts = container.querySelectorAll('.toast');
+    for (var i = 0; i < existingToasts.length; i++) {
+        if (existingToasts[i].textContent.replace('✕', '').trim() === message.trim()) {
+            return;
+        }
+    }
+    
+    _lastToastMsg = message;
+    _lastToastTime = now;
     
     var toast = document.createElement('div');
     toast.className = 'toast';

@@ -42,7 +42,11 @@ function initFirebase() {
                 console.log('✅ Connected to Firebase Realtime Database');
                 startFirebaseSync();
                 if (APP.currentUser) {
-                    loadFromCloud();
+                    loadFromCloud().then(function() {
+                        if (APP.currentPage) {
+                            navigateTo(APP.currentPage);
+                        }
+                    });
                 }
             } else {
                 console.log('📴 Offline - using local cache');
@@ -269,7 +273,8 @@ function loadFromCloud() {
             if (metersData) {
                 Object.keys(metersData).forEach(function(key) {
                     var cloudMeterData = metersData[key];
-                    var cloudMeterId = cloudMeterData.meterInfo ? cloudMeterData.meterInfo.id : null;
+                    if (!cloudMeterData) return;
+                    var cloudMeterId = (cloudMeterData.meterInfo && cloudMeterData.meterInfo.id) ? cloudMeterData.meterInfo.id : key;
                     if (!cloudMeterId) return;
                     
                     APP.metersData[cloudMeterId] = {
@@ -280,18 +285,26 @@ function loadFromCloud() {
                         totalExpended: cloudMeterData.totalExpended || 0,
                         lastDemandChargeMonth: cloudMeterData.lastDemandChargeMonth || "",
                         initialBalance: cloudMeterData.initialBalance || 0,
-                        meterInfo: cloudMeterData.meterInfo || APP.meters.find(function(m) { return m.id === cloudMeterId; }),
+                        meterInfo: cloudMeterData.meterInfo || (APP.meters ? APP.meters.find(function(m) { return m.id === cloudMeterId; }) : null),
                         lastUpdated: new Date().toISOString()
                     };
                 });
             }
             
-            if (!APP.activeMeterId && APP.meters.length > 0) {
+            if ((!APP.meters || APP.meters.length === 0) && metersData) {
+                APP.meters = [];
+                Object.keys(metersData).forEach(function(key) {
+                    var mInfo = metersData[key].meterInfo || { id: key, name: 'Meter ' + key, meterNumber: key };
+                    APP.meters.push(mInfo);
+                });
+            }
+            
+            if (!APP.activeMeterId && APP.meters && APP.meters.length > 0) {
                 APP.activeMeterId = APP.meters[0].id;
                 localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
             }
             
-            console.log('☁️ Firebase data loaded. Meters:', APP.meters.length, 'ActiveMeterId:', APP.activeMeterId);
+            console.log('☁️ Firebase data loaded. Meters:', APP.meters ? APP.meters.length : 0, 'ActiveMeterId:', APP.activeMeterId);
             console.log('☁️ Rent records:', APP.rentData?.records?.length || 0);
             console.log('☁️ Expense records:', APP[expenseKey]?.records?.length || 0);
             resolve(true);
@@ -303,6 +316,22 @@ function loadFromCloud() {
 }
 
 // ==================== REAL-TIME LISTENER ====================
+var _remoteSyncTimer = null;
+function triggerDebouncedCloudSync() {
+    if (_remoteSyncTimer) clearTimeout(_remoteSyncTimer);
+    _remoteSyncTimer = setTimeout(function() {
+        loadFromCloud().then(function(hasChanges) {
+            if (hasChanges && APP.currentUser) {
+                if (APP.currentPage) navigateTo(APP.currentPage);
+                showToast(
+                    APP.language === 'en' ? '☁️ Data synced from cloud' : '☁️ ক্লাউড থেকে ডাটা সিঙ্ক হয়েছে',
+                    'success'
+                );
+            }
+        });
+    }, 1000);
+}
+
 function startFirebaseSync() {
     if (!isFirebaseReady || !APP.currentUser) return;
     
@@ -317,18 +346,7 @@ function startFirebaseSync() {
         if (data.lastModifiedDevice === deviceId) return;
         
         console.log('☁️ Remote change detected in app data');
-        
-        setTimeout(function() {
-            loadFromCloud().then(function(hasChanges) {
-                if (hasChanges && APP.currentUser) {
-                    if (APP.currentPage) navigateTo(APP.currentPage);
-                    showToast(
-                        APP.language === 'en' ? '☁️ Data synced from cloud' : '☁️ ক্লাউড থেকে ডাটা সিঙ্ক হয়েছে',
-                        'success'
-                    );
-                }
-            });
-        }, 1000);
+        triggerDebouncedCloudSync();
     });
     
     syncListeners.push({ type: 'app', ref: appListener });
@@ -348,18 +366,7 @@ function startFirebaseSync() {
         if (!hasRemoteChange) return;
         
         console.log('☁️ Remote meter data change detected');
-        
-        setTimeout(function() {
-            loadFromCloud().then(function(hasChanges) {
-                if (hasChanges && APP.currentUser) {
-                    if (APP.currentPage) navigateTo(APP.currentPage);
-                    showToast(
-                        APP.language === 'en' ? '☁️ Data synced from cloud' : '☁️ ক্লাউড থেকে ডাটা সিঙ্ক হয়েছে',
-                        'success'
-                    );
-                }
-            });
-        }, 1000);
+        triggerDebouncedCloudSync();
     });
     
     syncListeners.push({ type: 'meters', ref: metersListener });
@@ -396,20 +403,22 @@ function getSyncStatus() {
 function tryFirebaseInit() {
     var result = initFirebase();
     if (result) {
-        setTimeout(function() {
+        if (APP.currentUser) {
             loadFromCloud().then(function() {
                 if (APP.currentUser && APP.currentPage) {
                     navigateTo(APP.currentPage);
                 }
             });
-        }, 2000);
+        }
     }
 }
 
-if (document.readyState === 'complete') {
-    setTimeout(tryFirebaseInit, 1500);
+if (typeof firebase !== 'undefined') {
+    tryFirebaseInit();
+} else if (document.readyState === 'complete') {
+    setTimeout(tryFirebaseInit, 300);
 } else {
     window.addEventListener('load', function() {
-        setTimeout(tryFirebaseInit, 1500);
+        setTimeout(tryFirebaseInit, 300);
     });
 }

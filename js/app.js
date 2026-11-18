@@ -305,8 +305,14 @@ function __(key) {
 function navigateTo(page) {
     APP.currentPage = page;
     
+    // Close mobile drawer if open
+    closeMobileSidebar();
+    
     // Update mobile nav active
     updateMobileNavActive(page);
+    
+    // Update header user info if elements present
+    updateSidebarUserInfo();
     
     // ✅ ডাটা লোড না হলে অপেক্ষা করুন
     if (page === "dashboard" && APP.meters.length === 0) {
@@ -352,15 +358,45 @@ function updateNavItems(page) {
 
 function toggleSidebar() {
     var sb = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
     if (sb) {
-        sb.classList.toggle("active");
+        if (window.innerWidth <= 768) {
+            sb.classList.toggle("mobile-open");
+            if (overlay) {
+                overlay.style.display = sb.classList.contains("mobile-open") ? "block" : "none";
+            }
+        } else {
+            sb.classList.toggle("hidden");
+            var mc = document.getElementById("mainContent");
+            if (mc) mc.classList.toggle("expanded");
+        }
     }
+}
+
+function closeMobileSidebar() {
+    var sb = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
+    if (sb) sb.classList.remove("mobile-open");
+    if (overlay) overlay.style.display = "none";
 }
 
 function updateSidebarUserInfo() {
     var ne = document.getElementById("sidebarUserName");
     var re = document.getElementById("sidebarUserRole");
-    if (ne && APP.currentUser) ne.textContent = APP.currentUser.name || "User";
+    var hName = document.getElementById("headerUserName");
+    var hMeter = document.getElementById("headerUserMeter");
+    
+    var activeMeter = APP.meters && APP.activeMeterId ? 
+        APP.meters.find(function(m) { return m.id === APP.activeMeterId; }) : 
+        (APP.meters && APP.meters.length > 0 ? APP.meters[0] : null);
+        
+    var meterNo = activeMeter ? (activeMeter.meterNumber || activeMeter.meterNo || '') : '';
+    var userName = (APP.currentUser && APP.currentUser.name) ? APP.currentUser.name : (activeMeter ? (activeMeter.name || 'এমডি আব্দুল মালেক') : 'ইউজার');
+
+    if (ne) ne.textContent = userName;
+    if (hName) hName.textContent = userName;
+    if (hMeter) hMeter.textContent = meterNo || '030519023423';
+
     if (re && APP.currentUser) {
         var L = APP.language || 'bn';
         re.textContent = APP.currentUser.role === "admin" ? 
@@ -368,6 +404,11 @@ function updateSidebarUserInfo() {
             (L === 'en' ? 'User' : 'ইউজার');
         re.className = "badge " + (APP.currentUser.role === "admin" ? "badge-warning" : "badge-success");
     }
+}
+
+function showNotificationToast() {
+    var L = APP.language || 'bn';
+    showToast(L === 'en' ? '🔔 No new unread notifications' : '🔔 কোনো নতুন নোটিফিকেশন নেই', 'info');
 }
 
 function logout() {
@@ -511,31 +552,20 @@ function initApp() {
 function createMobileNav() {
     if (document.getElementById('mobileBottomNav')) return;
     
-    var isAdmin = APP.currentUser && APP.currentUser.role === 'admin';
-    
     var navItems = [
-        { id: 'dashboard', icon: '📊', label: __('sidebarDashboard') },
-        { id: 'meters', icon: '⚡', label: __('sidebarMeters') },
-        { id: 'transactions', icon: '💳', label: __('sidebarTransactions') },
-        { id: 'calculator', icon: '🧮', label: __('sidebarCalculator') },
-        { id: 'reports', icon: '📈', label: __('sidebarReports') },
-        { id: 'analytics', icon: '📉', label: __('sidebarAnalytics') },
-        { id: 'settings', icon: '⚙️', label: __('sidebarSettings') },
-        { id: 'profile', icon: '👤', label: __('sidebarProfile') },
-        { id: 'rent', icon: '🏠', label: __('sidebarRent') }
+        { id: 'dashboard', icon: '🏠', label: APP.language === 'en' ? 'Dashboard' : 'ড্যাশবোর্ড' },
+        { id: 'meters', icon: '⚡', label: APP.language === 'en' ? 'Meters' : 'মিটার' },
+        { id: 'calculator', icon: '🧮', label: APP.language === 'en' ? 'Calculator' : 'ক্যালকুলেটর' },
+        { id: 'reports', icon: '📈', label: APP.language === 'en' ? 'Reports' : 'রিপোর্ট' },
+        { id: 'settings', icon: '⚙️', label: APP.language === 'en' ? 'Settings' : 'সেটিংস' }
     ];
-    
-    if (isAdmin) {
-        navItems.push({ id: 'admin', icon: '👑', label: __('sidebarAdmin'), isAdmin: true });
-    }
     
     var html = '<div class="mobile-bottom-nav" id="mobileBottomNav">';
     html += '<div class="mobile-nav-items">';
     
     navItems.forEach(function(item) {
         var activeClass = APP.currentPage === item.id ? 'active' : '';
-        var adminClass = item.isAdmin ? 'admin-nav' : '';
-        html += '<button class="mobile-nav-item ' + activeClass + ' ' + adminClass + '" onclick="navigateTo(\'' + item.id + '\')" data-page="' + item.id + '">';
+        html += '<button class="mobile-nav-item ' + activeClass + '" onclick="navigateTo(\'' + item.id + '\')" data-page="' + item.id + '">';
         html += '<span class="nav-icon">' + item.icon + '</span>';
         html += '<span class="nav-label">' + item.label + '</span>';
         html += '</button>';
@@ -668,36 +698,7 @@ function applySettings() {
     }
 }
 
-// ==================== TOAST NOTIFICATION ====================
-function showToast(message, type) {
-    var container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    var toast = document.createElement('div');
-    toast.className = 'toast';
-    var bgColor = type === 'success' ? '#27ae60' : 
-                  type === 'error' ? '#e74c3c' : 
-                  type === 'warning' ? '#f39c12' : '#3498db';
-    toast.style.background = bgColor;
-    toast.style.color = 'white';
-    toast.style.padding = '12px 20px';
-    toast.style.borderRadius = '10px';
-    toast.style.marginBottom = '10px';
-    toast.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-    toast.style.animation = 'slideIn 0.3s ease';
-    toast.textContent = message;
-    container.appendChild(toast);
-    
-    setTimeout(function() {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
-        setTimeout(function() {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        }, 300);
-    }, 3000);
-}
+// Toast notifications handled by deduplicated showToast in js/utils.js
 
 // ==================== DROPDOWN FUNCTIONS ====================
 
