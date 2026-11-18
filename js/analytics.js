@@ -280,8 +280,8 @@ function showAnalytics() {
 
 // ==================== DRAW ANALYTICS CHARTS ====================
 function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal, rebateTotal) {
-    var L = APP.language || 'bn';
-    console.log('Drawing charts...');
+    var L = (typeof APP !== 'undefined' && APP && APP.language) ? APP.language : 'bn';
+    console.log('Drawing charts with L =', L);
 
     // ===== CHECK IF CHART.JS IS LOADED =====
     if (typeof Chart === 'undefined') {

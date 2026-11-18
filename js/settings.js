@@ -96,6 +96,25 @@ function showSettings() {
                 '</div>',
             '</div>',
             
+            // App Information & Version Section
+            '<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">',
+                '<h3>&#x2139;&#xFE0F; '+(L==='en'?'App Information & Version':'অ্যাপ তথ্য ও সংস্করণ')+'</h3>',
+                '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-top: 12px;">',
+                    '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #edf2f7;">',
+                        '<div>',
+                            '<div style="font-weight: 700; font-size: 16px; color: #1e293b;">'+(L==='en'?'Electricity Bill System':'বিদ্যুৎ বিল সিস্টেম')+'</div>',
+                            '<div style="font-size: 13px; color: #64748b;">'+(L==='en'?'Smart Prepaid Meter & Expense Tracker':'স্মার্ট প্রিপেইড মিটার ও খরচ ট্র্যাকার')+'</div>',
+                        '</div>',
+                        '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; box-shadow: 0 2px 8px rgba(102,126,234,0.3);">v2.2.5</span>',
+                    '</div>',
+                    '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 13px;">',
+                        '<div><span style="color: #64748b;">'+(L==='en'?'Release Status: ':'রিলিজ স্ট্যাটাস: ')+'</span><strong style="color: #10b981;">'+(L==='en'?'Up to date (Latest)':'আপ-টু-ডেট (সর্বশেষ সংস্করণ)')+'</strong></div>',
+                        '<div><span style="color: #64748b;">'+(L==='en'?'Build: ':'বিল্ড: ')+'</span><strong>'+(L==='en'?'November 2026':'নভেম্বর ২০২৬')+'</strong></div>',
+                        '<div><span style="color: #64748b;">'+(L==='en'?'Developer: ':'ডেভেলপার: ')+'</span><strong>K. M. Abu Bakkar Siddek Shahed</strong></div>',
+                    '</div>',
+                '</div>',
+            '</div>',
+
             // Danger Zone
             '<div style="margin-top: 40px; padding-top: 20px; border-top: 3px solid var(--danger);">',
                 '<h2 style="color: var(--danger);">&#x26A0;&#xFE0F; '+(L==='en'?'Danger Zone':'ডেঞ্জার জোন')+'</h2>',
