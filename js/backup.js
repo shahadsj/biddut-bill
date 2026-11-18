@@ -541,13 +541,13 @@ function clearAllData() {
             retentionDays: 30
         };
         APP.tariffRates = [
-            { range: [0, 50], rate: 3.5, name: "Lifeline" },
-            { range: [51, 75], rate: 4, name: "1st Slab" },
-            { range: [76, 200], rate: 5.45, name: "2nd Slab" },
-            { range: [201, 300], rate: 5.7, name: "3rd Slab" },
-            { range: [301, 400], rate: 6.02, name: "4th Slab" },
-            { range: [401, 600], rate: 9.3, name: "5th Slab" },
-            { range: [601, null], rate: 10.7, name: "6th Slab" }
+            { range: [0, 50], rate: 4.63, name: "Lifeline" },
+            { range: [51, 75], rate: 5.26, name: "1st Slab" },
+            { range: [76, 200], rate: 8.50, name: "2nd Slab" },
+            { range: [201, 300], rate: 9.10, name: "3rd Slab" },
+            { range: [301, 400], rate: 9.62, name: "4th Slab" },
+            { range: [401, 600], rate: 15.01, name: "5th Slab" },
+            { range: [601, null], rate: 17.35, name: "6th Slab" }
         ];
         APP.savingsGoal = 0;
         APP.badges = [];

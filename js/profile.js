@@ -66,15 +66,42 @@ function updateProfile() {
     var L = APP.language;
     var users = JSON.parse(localStorage.getItem('users') || '[]');
     var index = users.findIndex(function(u) { return u.id === APP.currentUser.id; });
+    var newName = document.getElementById('profileName').value.trim();
+    if (!newName) {
+        showToast(L === 'en' ? 'Name cannot be empty' : 'নাম খালি হতে পারে না', 'error');
+        return;
+    }
+    
     if (index !== -1) {
-        users[index].name = document.getElementById('profileName').value;
+        users[index].name = newName;
         var password = document.getElementById('profilePassword').value;
-        if (password && password.length >= 6) { users[index].password = password; }
-        else if (password && password.length < 6) { showToast(L==='en'?'Password must be at least 6 characters':'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে', 'error'); return; }
+        if (password && password.length >= 6) { 
+            users[index].password = password; 
+        } else if (password && password.length < 6) { 
+            showToast(L==='en'?'Password must be at least 6 characters':'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে', 'error'); 
+            return; 
+        }
         localStorage.setItem('users', JSON.stringify(users));
         APP.currentUser = users[index];
+        localStorage.setItem('biddut_session', JSON.stringify(APP.currentUser));
         updateSidebarUserInfo();
-        showToast(L==='en'?'Profile updated':'প্রোফাইল আপডেট হয়েছে', 'success');
+
+        // Sync with Firebase if available
+        if (typeof database !== 'undefined' && database && APP.currentUser.email) {
+            var userKey = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+            database.ref('users/' + userKey + '/profile').update({
+                name: newName,
+                lastUpdated: new Date().toISOString()
+            }).catch(function(err) {
+                console.warn('Firebase profile sync error:', err);
+            });
+        }
+
+        if (typeof logActivity === 'function') {
+            logActivity('profile_update', 'Profile updated: ' + newName);
+        }
+
+        showToast(L==='en'?'Profile updated successfully!':'প্রোফাইল সফলভাবে আপডেট হয়েছে!', 'success');
     }
 }
 

@@ -22,15 +22,15 @@ const APP = {
         autoBackupTime: '02:00',
         retentionDays: 30
     },
-    // ✅ ট্যারিফ রেট - increasePercent যোগ করা হয়েছে
+    // ✅ ট্যারিফ রেট - সেটিংসের বর্তমান সরকারি BERC অনুমোদিত রেট
     tariffRates: [
-        { range: [0, 50], rate: 3.5, name: "Lifeline", increasePercent: 0 },
-        { range: [51, 75], rate: 4, name: "1st Slab", increasePercent: 0 },
-        { range: [76, 200], rate: 5.45, name: "2nd Slab", increasePercent: 0 },
-        { range: [201, 300], rate: 5.7, name: "3rd Slab", increasePercent: 0 },
-        { range: [301, 400], rate: 6.02, name: "4th Slab", increasePercent: 0 },
-        { range: [401, 600], rate: 9.3, name: "5th Slab", increasePercent: 0 },
-        { range: [601, null], rate: 10.7, name: "6th Slab", increasePercent: 0 }
+        { range: [0, 50], rate: 4.63, name: "Lifeline", increasePercent: 0 },
+        { range: [51, 75], rate: 5.26, name: "1st Slab", increasePercent: 0 },
+        { range: [76, 200], rate: 8.50, name: "2nd Slab", increasePercent: 0 },
+        { range: [201, 300], rate: 9.10, name: "3rd Slab", increasePercent: 0 },
+        { range: [301, 400], rate: 9.62, name: "4th Slab", increasePercent: 0 },
+        { range: [401, 600], rate: 15.01, name: "5th Slab", increasePercent: 0 },
+        { range: [601, null], rate: 17.35, name: "6th Slab", increasePercent: 0 }
     ],
     savingsGoal: 0,
     badges: [],
@@ -411,11 +411,181 @@ function updateSidebarUserInfo() {
             (L === 'en' ? 'User' : 'ইউজার');
         re.className = "sidebar-user-role";
     }
+
+    if (typeof updateNotificationBadge === "function") {
+        updateNotificationBadge();
+    }
+}
+
+// ==================== SMART NOTIFICATION CENTER ====================
+function getActiveNotifications() {
+    var L = APP.language || 'bn';
+    var notifs = [];
+    var meterData = (typeof getActiveMeterData === 'function') ? getActiveMeterData() : ((APP.activeMeterId && APP.metersData) ? APP.metersData[APP.activeMeterId] : null);
+    var meter = (typeof getActiveMeter === 'function') ? getActiveMeter() : (APP.meters ? APP.meters.find(function(m) { return m.id === APP.activeMeterId; }) : null);
+    var balance = meterData ? (Number(meterData.currentBalance) || 0) : 0;
+
+    // 1. Balance Alerts
+    if (balance <= 200) {
+        notifs.push({
+            id: 'low_bal_critical',
+            type: 'critical',
+            icon: '🚨',
+            title: L === 'en' ? 'Critical Low Balance!' : 'জরুরি ব্যালেন্স অ্যালার্ট!',
+            msg: L === 'en' ? `Balance is only ৳${balance.toFixed(2)}. Recharge soon to avoid disconnection.` : `ব্যালেন্স মাত্র ৳ ${balance.toFixed(2)}! বিদ্যুৎ সংযোগ সচল রাখতে অবিলম্বে রিচার্জ করুন।`,
+            time: L === 'en' ? 'Right now' : 'এখনই'
+        });
+    } else if (balance <= 500) {
+        notifs.push({
+            id: 'low_bal_warning',
+            type: 'warning',
+            icon: '⚠️',
+            title: L === 'en' ? 'Low Balance Warning' : 'ব্যালেন্স সতর্কবার্তা',
+            msg: L === 'en' ? `Current balance is ৳${balance.toFixed(2)}. Consider recharging soon.` : `বর্তমান ব্যালেন্স ৳ ${balance.toFixed(2)}। কিছুদিনের মধ্যে রিচার্জ করার পরামর্শ দেওয়া হচ্ছে।`,
+            time: L === 'en' ? 'Active' : 'চলতি'
+        });
+    } else {
+        notifs.push({
+            id: 'bal_healthy',
+            type: 'success',
+            icon: '✅',
+            title: L === 'en' ? 'Balance is Sufficient' : 'ব্যালেন্স সন্তোষজনক',
+            msg: L === 'en' ? `Active balance: ৳${balance.toFixed(2)}. System is running normally.` : `চলতি ব্যালেন্স: ৳ ${balance.toFixed(2)}। বিদ্যুৎ সেবা স্বাভাবিক রয়েছে।`,
+            time: L === 'en' ? 'Normal' : 'স্বাভাবিক'
+        });
+    }
+
+    // 2. Current Month Slab Alert
+    if (meterData && meterData.transactions) {
+        var now = new Date();
+        var curMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        var monthUnits = 0;
+        var monthRecharges = 0;
+
+        meterData.transactions.forEach(function(t) {
+            var d = new Date(t.date || t.timestamp);
+            if (isNaN(d.getTime())) return;
+            var tMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (tMonth === curMonth) {
+                if (t.type === 'electricity_bill' || t.type === 'bill') {
+                    monthUnits += (Number(t.units) || 0);
+                } else if (t.type === 'recharge' || t.deductions) {
+                    monthRecharges += (Number(t.amount) || 0);
+                }
+            }
+        });
+
+        if (monthUnits > 50) {
+            notifs.push({
+                id: 'slab_overflow',
+                type: 'info',
+                icon: '⚡',
+                title: L === 'en' ? 'Lifeline Slab Limit Exceeded' : 'লাইফলাইন স্ল্যাব (৫০ ইউনিট) পূর্ণ',
+                msg: L === 'en' ? `You have used ${monthUnits.toFixed(1)} kWh this month. Higher tier rate applies.` : `চলতি মাসে ${monthUnits.toFixed(1)} ইউনিট ব্যবহৃত হয়েছে। এখন ২য় বা উচ্চতর স্ল্যাব রেট প্রযোজ্য।`,
+                time: L === 'en' ? 'This month' : 'এই মাস'
+            });
+        }
+
+        if (monthRecharges === 0) {
+            notifs.push({
+                id: 'no_recharge_month',
+                type: 'warning',
+                icon: '📅',
+                title: L === 'en' ? 'Monthly Recharge Reminder' : 'মাসিক রিচার্জ রিমাইন্ডার',
+                msg: L === 'en' ? 'No recharge recorded yet for this month.' : 'চলতি মাসে এখনও কোনো রিচার্জ রেকর্ড করা হয়নি।',
+                time: L === 'en' ? 'Reminder' : 'রিমাইন্ডার'
+            });
+        }
+    }
+
+    // 3. System Notification
+    notifs.push({
+        id: 'system_ver',
+        type: 'info',
+        icon: 'ℹ️',
+        title: L === 'en' ? 'App Version v2.2.6' : 'অ্যাপ সংস্করণ v2.2.6',
+        msg: L === 'en' ? 'Smart prepaid meter tracking is fully active and synchronized.' : 'স্মার্ট প্রিপেইড মিটার ট্র্যাকার এবং সরকারি ট্যারিফ রেট কার্যকর আছে।',
+        time: L === 'en' ? 'Latest' : 'আপ-টু-ডেট'
+    });
+
+    return notifs;
+}
+
+function updateNotificationBadge() {
+    var dot = document.querySelector('.notification-dot');
+    if (!dot) return;
+    var notifs = getActiveNotifications();
+    var hasAlerts = notifs.some(function(n) { return n.type === 'critical' || n.type === 'warning'; });
+    dot.style.display = hasAlerts ? 'block' : 'none';
+}
+
+function toggleNotificationPanel(event) {
+    if (event) event.stopPropagation();
+    var existing = document.getElementById('appNotificationDropdown');
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    var L = APP.language || 'bn';
+    var notifs = getActiveNotifications();
+    var panel = document.createElement('div');
+    panel.id = 'appNotificationDropdown';
+    panel.style.cssText = 'position: absolute; top: 62px; right: 20px; width: 340px; max-width: calc(100vw - 30px); background: #ffffff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; z-index: 10000; overflow: hidden; animation: fadeIn 0.2s ease;';
+
+    var headerHtml = `
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>🔔</span> <span>${L === 'en' ? 'Notifications' : 'নোটিফিকেশন ও অ্যালার্ট'}</span>
+            </div>
+            <span style="background: rgba(255,255,255,0.25); font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600;">${notifs.length}</span>
+        </div>
+    `;
+
+    var listHtml = '<div style="max-height: 380px; overflow-y: auto; padding: 10px;">';
+    notifs.forEach(function(n) {
+        var borderLeftColor = n.type === 'critical' ? '#ef4444' : (n.type === 'warning' ? '#f59e0b' : (n.type === 'success' ? '#10b981' : '#3b82f6'));
+        var bg = n.type === 'critical' ? '#fef2f2' : (n.type === 'warning' ? '#fffbeb' : '#f8fafc');
+
+        listHtml += `
+            <div style="background: ${bg}; border-left: 4px solid ${borderLeftColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div style="font-weight: 700; font-size: 13px; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+                        <span>${n.icon}</span> <span>${n.title}</span>
+                    </div>
+                    <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">${n.time}</span>
+                </div>
+                <div style="font-size: 12px; color: #475569; line-height: 1.4;">${n.msg}</div>
+            </div>
+        `;
+    });
+    listHtml += '</div>';
+
+    var footerHtml = `
+        <div style="padding: 10px; text-align: center; border-top: 1px solid #f1f5f9; background: #fafafa;">
+            <button onclick="document.getElementById('appNotificationDropdown').remove()" style="background: none; border: none; color: #667eea; font-weight: 600; font-size: 12px; cursor: pointer;">
+                ${L === 'en' ? 'Close' : 'বন্ধ করুন'}
+            </button>
+        </div>
+    `;
+
+    panel.innerHTML = headerHtml + listHtml + footerHtml;
+    document.body.appendChild(panel);
+
+    // Auto close on outside click
+    function onDocClick(e) {
+        if (!panel.contains(e.target) && !e.target.closest('#headerNotificationBtn') && !e.target.closest('.header-icon-btn')) {
+            panel.remove();
+            document.removeEventListener('click', onDocClick);
+        }
+    }
+    setTimeout(function() {
+        document.addEventListener('click', onDocClick);
+    }, 100);
 }
 
 function showNotificationToast() {
-    var L = APP.language || 'bn';
-    showToast(L === 'en' ? '🔔 No new unread notifications' : '🔔 কোনো নতুন নোটিফিকেশন নেই', 'info');
+    toggleNotificationPanel();
 }
 
 function logout() {

@@ -46,26 +46,75 @@ function calcFromUnits() {
         return;
     }
     
-    var total = calculateBillFromUnits(units);
+    var L = APP.language;
+    var tariffRates = (APP.tariffRates && APP.tariffRates.length > 0) ? APP.tariffRates : [];
+    var demandCharge = Number(APP.settings.demandCharge) || 0;
+    var vatRate = (APP.settings.vatRate !== undefined && APP.settings.vatRate !== null) ? Number(APP.settings.vatRate) : 5.0;
+    var rebateRate = (APP.settings.rebateRate !== undefined && APP.settings.rebateRate !== null) ? Number(APP.settings.rebateRate) : 0.6;
+    
+    // Calculate Energy Charge across slabs
+    var energyCharge = 0;
+    var remaining = units;
+    var slabRows = [];
+    
+    for (var i = 0; i < tariffRates.length; i++) {
+        if (remaining <= 0) break;
+        var slab = tariffRates[i];
+        var min = slab.range[0], max = slab.range[1];
+        var slabUnits = (max === null || max === undefined) ? remaining : Math.min(remaining, max - min + 1);
+        var cost = slabUnits * Number(slab.rate);
+        energyCharge += cost;
+        slabRows.push({
+            name: slab.name,
+            units: slabUnits,
+            rate: slab.rate,
+            cost: cost
+        });
+        remaining -= slabUnits;
+    }
+    
+    var subtotal = energyCharge + demandCharge;
+    var vat = Math.round(subtotal * (vatRate / 100) * 100) / 100;
+    var rebate = Math.round(subtotal * (rebateRate / 100) * 100) / 100;
+    var total = Math.round((subtotal + vat - rebate) * 100) / 100;
+    
     document.getElementById('calcAmount').value = total.toFixed(2);
     
     var resultDiv = document.getElementById('calcResult');
     resultDiv.style.display = 'block';
     
-    var L = APP.language;
-    var demandCharge = APP.settings.demandCharge || 0;
+    var slabTableHtml = '<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">' +
+        '<thead><tr style="border-bottom:2px solid rgba(255,255,255,0.3);">' +
+            '<th style="padding:6px;text-align:left;">'+(L==='en'?'Slab':'স্ল্যাব')+'</th>' +
+            '<th style="padding:6px;text-align:center;">'+(L==='en'?'Rate':'রেট')+'</th>' +
+            '<th style="padding:6px;text-align:center;">'+(L==='en'?'Units':'ইউনিট')+'</th>' +
+            '<th style="padding:6px;text-align:right;">'+(L==='en'?'Cost':'টাকা')+'</th>' +
+        '</tr></thead><tbody>' +
+        slabRows.map(function(s) {
+            return '<tr style="border-bottom:1px solid rgba(255,255,255,0.15);">' +
+                '<td style="padding:6px 4px;">' + s.name + '</td>' +
+                '<td style="padding:6px 4px;text-align:center;">৳ ' + Number(s.rate).toFixed(2) + '</td>' +
+                '<td style="padding:6px 4px;text-align:center;">' + s.units.toFixed(2) + '</td>' +
+                '<td style="padding:6px 4px;text-align:right;font-weight:600;">৳ ' + s.cost.toFixed(2) + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table>';
     
     document.getElementById('calcDetails').innerHTML = [
-        '<div style="display: grid; grid-template-columns: repeat(2,1fr); gap: 10px;">',
+        '<div style="display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; font-size: 13.5px;">',
             '<div><strong>'+(L==='en'?'Total Units':'মোট ইউনিট')+':</strong> '+units.toFixed(2)+' kWh</div>',
+            '<div><strong>'+(L==='en'?'Energy Charge':'বিদ্যুৎ শক্তি খরচ')+':</strong> ৳ '+energyCharge.toFixed(2)+'</div>',
             '<div><strong>'+(L==='en'?'Demand Charge':'ডিমান্ড চার্জ')+':</strong> ৳ '+demandCharge.toFixed(2)+'</div>',
-            '<div style="grid-column: span 2;"><strong>'+(L==='en'?'Slab-wise Breakdown':'স্ল্যাব ভিত্তিক ব্রেকডাউন')+':</strong></div>',
+            '<div><strong>'+(L==='en'?'Subtotal':'উপমোট (চার্জ সহ)')+':</strong> ৳ '+subtotal.toFixed(2)+'</div>',
+            '<div><strong>'+(L==='en'?'Govt VAT ('+vatRate+'%)':'সরকারি ভ্যাট ('+vatRate+'%)')+':</strong> +৳ '+vat.toFixed(2)+'</div>',
+            '<div><strong>'+(L==='en'?'Rebate Discount ('+rebateRate+'%)':'রিবেট ছাড় ('+rebateRate+'%)')+':</strong> -৳ '+rebate.toFixed(2)+'</div>',
         '</div>',
-        '<div style="margin-top: 10px;">',
-            getSlabBreakdownHTML(units, L),
+        '<div style="margin-top: 12px;">',
+            '<div style="font-weight:600;font-size:13px;margin-bottom:4px;">'+(L==='en'?'Slab-wise Breakdown':'স্ল্যাব ভিত্তিক হিসাব')+':</div>',
+            slabTableHtml,
         '</div>',
-        '<div style="margin-top: 15px; font-size: 24px; font-weight: bold; text-align: center;">',
-            (L==='en'?'Total Bill:':'মোট বিল:')+' ৳ '+total.toFixed(2),
+        '<div style="margin-top: 15px; padding-top: 12px; border-top: 2px dashed rgba(255,255,255,0.3); font-size: 22px; font-weight: bold; text-align: center;">',
+            (L==='en'?'Total Bill Payable:':'সর্বমোট প্রদেয় বিল:')+' ৳ '+total.toFixed(2),
         '</div>',
     ].join('');
 }
@@ -77,25 +126,80 @@ function calcFromAmount() {
         return;
     }
     
-    var units = calculateUnitsFromTaka(amount);
+    var L = APP.language;
+    var demandCharge = Number(APP.settings.demandCharge) || 0;
+    var vatRate = (APP.settings.vatRate !== undefined && APP.settings.vatRate !== null) ? Number(APP.settings.vatRate) : 5.0;
+    var rebateRate = (APP.settings.rebateRate !== undefined && APP.settings.rebateRate !== null) ? Number(APP.settings.rebateRate) : 0.6;
+    var tariffRates = (APP.tariffRates && APP.tariffRates.length > 0) ? APP.tariffRates : [];
+    
+    // Net usable for electricity energy charge after demand charge and net VAT-rebate factor
+    // Total = (EnergyCharge + DemandCharge) * (1 + (vatRate - rebateRate)/100)
+    var taxFactor = 1 + ((vatRate - rebateRate) / 100);
+    var subtotal = amount / taxFactor;
+    var usableForEnergy = Math.max(0, subtotal - demandCharge);
+    var estVat = Math.round(subtotal * (vatRate / 100) * 100) / 100;
+    var estRebate = Math.round(subtotal * (rebateRate / 100) * 100) / 100;
+    
+    // Convert usableForEnergy to units across slabs
+    var units = 0;
+    var remainingMoney = usableForEnergy;
+    var slabRows = [];
+    
+    for (var i = 0; i < tariffRates.length; i++) {
+        if (remainingMoney <= 0) break;
+        var slab = tariffRates[i];
+        var min = slab.range[0], max = slab.range[1];
+        var maxUnitsInSlab = (max === null || max === undefined) ? Infinity : max - min + 1;
+        var costForFullSlab = maxUnitsInSlab === Infinity ? Infinity : maxUnitsInSlab * Number(slab.rate);
+        
+        var moneyInSlab = Math.min(remainingMoney, costForFullSlab);
+        var unitsInSlab = moneyInSlab / Number(slab.rate);
+        units += unitsInSlab;
+        slabRows.push({
+            name: slab.name,
+            units: unitsInSlab,
+            rate: slab.rate,
+            cost: moneyInSlab
+        });
+        remainingMoney -= moneyInSlab;
+    }
+    
     document.getElementById('calcUnits').value = units.toFixed(2);
     
     var resultDiv = document.getElementById('calcResult');
     resultDiv.style.display = 'block';
     
-    var L = APP.language;
-    var demandCharge = APP.settings.demandCharge || 0;
-    var usableAmount = Math.max(0, amount - demandCharge);
+    var slabTableHtml = '<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">' +
+        '<thead><tr style="border-bottom:2px solid rgba(255,255,255,0.3);">' +
+            '<th style="padding:6px;text-align:left;">'+(L==='en'?'Slab':'স্ল্যাব')+'</th>' +
+            '<th style="padding:6px;text-align:center;">'+(L==='en'?'Rate':'রেট')+'</th>' +
+            '<th style="padding:6px;text-align:center;">'+(L==='en'?'Units':'ইউনিট')+'</th>' +
+            '<th style="padding:6px;text-align:right;">'+(L==='en'?'Amount':'টাকা')+'</th>' +
+        '</tr></thead><tbody>' +
+        slabRows.map(function(s) {
+            return '<tr style="border-bottom:1px solid rgba(255,255,255,0.15);">' +
+                '<td style="padding:6px 4px;">' + s.name + '</td>' +
+                '<td style="padding:6px 4px;text-align:center;">৳ ' + Number(s.rate).toFixed(2) + '</td>' +
+                '<td style="padding:6px 4px;text-align:center;">' + s.units.toFixed(2) + '</td>' +
+                '<td style="padding:6px 4px;text-align:right;font-weight:600;">৳ ' + s.cost.toFixed(2) + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table>';
     
     document.getElementById('calcDetails').innerHTML = [
-        '<div style="display: grid; grid-template-columns: repeat(2,1fr); gap: 10px;">',
-            '<div><strong>'+(L==='en'?'Total Amount':'মোট পরিমাণ')+':</strong> ৳ '+amount.toFixed(2)+'</div>',
+        '<div style="display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; font-size: 13.5px;">',
+            '<div><strong>'+(L==='en'?'Recharge Amount':'মোট রিচার্জ')+':</strong> ৳ '+amount.toFixed(2)+'</div>',
             '<div><strong>'+(L==='en'?'Demand Charge':'ডিমান্ড চার্জ')+':</strong> ৳ '+demandCharge.toFixed(2)+'</div>',
-            '<div><strong>'+(L==='en'?'Usable Amount':'ব্যবহারযোগ্য পরিমাণ')+':</strong> ৳ '+usableAmount.toFixed(2)+'</div>',
-            '<div><strong>'+(L==='en'?'Estimated Units':'আনুমানিক ইউনিট')+':</strong> '+units.toFixed(2)+' kWh</div>',
+            '<div><strong>'+(L==='en'?'Est. Govt VAT ('+vatRate+'%)':'আনুমানিক ভ্যাট ('+vatRate+'%)')+':</strong> +৳ '+estVat.toFixed(2)+'</div>',
+            '<div><strong>'+(L==='en'?'Est. Rebate ('+rebateRate+'%)':'আনুমানিক রিবেট ('+rebateRate+'%)')+':</strong> -৳ '+estRebate.toFixed(2)+'</div>',
+            '<div style="grid-column: span 2;"><strong>'+(L==='en'?'Usable Balance for Units':'বিদ্যুৎ ব্যবহারের নিট ব্যালেন্স')+':</strong> ৳ '+usableForEnergy.toFixed(2)+'</div>',
         '</div>',
-        '<div style="margin-top: 15px; font-size: 24px; font-weight: bold; text-align: center;">',
-            (L==='en'?'You can use approx.':'আপনি প্রায় ব্যবহার করতে পারবেন')+' '+units.toFixed(2)+' kWh',
+        '<div style="margin-top: 12px;">',
+            '<div style="font-weight:600;font-size:13px;margin-bottom:4px;">'+(L==='en'?'Estimated Slab Breakdown':'স্ল্যাব অনুযায়ী সম্ভাব্য ইউনিট')+':</div>',
+            slabTableHtml,
+        '</div>',
+        '<div style="margin-top: 15px; padding-top: 12px; border-top: 2px dashed rgba(255,255,255,0.3); font-size: 22px; font-weight: bold; text-align: center;">',
+            (L==='en'?'Estimated Total Units:':'আনুমানিক মোট ইউনিট:')+' '+units.toFixed(2)+' kWh',
         '</div>',
     ].join('');
 }

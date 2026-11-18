@@ -123,7 +123,7 @@ function showAnalytics() {
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <span style="background: rgba(255,255,255,0.2); color: white; padding: 5px 15px; border-radius: 20px; font-size: 13px;">⚡ ${L === 'en' ? 'Live' : 'লাইভ'}</span>
-                <button class="btn" style="background: white; color: #667eea; padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="showToast('${L === 'en' ? 'Exporting analytics...' : 'এনালিটিক্স এক্সপোর্ট হচ্ছে...'}', 'info')">📥 ${L === 'en' ? 'Export' : 'এক্সপোর্ট'}</button>
+                <button class="btn" style="background: white; color: #667eea; padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="exportAnalytics()">📥 ${L === 'en' ? 'Export Excel' : 'এক্সপোর্ট এক্সেল'}</button>
             </div>
         </div>
 
@@ -482,4 +482,83 @@ function loadChartJsFromCDN() {
         showToast('Chart.js লোড করতে ব্যর্থ!', 'error');
     };
     document.head.appendChild(script);
+}
+
+// ==================== EXPORT ANALYTICS (EXCEL) ====================
+function exportAnalytics() {
+    var L = APP.language || 'bn';
+    var meterData = (typeof getActiveMeterData === 'function') ? getActiveMeterData() : ((APP.activeMeterId && APP.metersData) ? APP.metersData[APP.activeMeterId] : null);
+    var meter = (typeof getActiveMeter === 'function') ? getActiveMeter() : (APP.meters ? APP.meters.find(function(m) { return m.id === APP.activeMeterId; }) : null);
+    var meterNo = meter ? (meter.meterNumber || meter.meterNo || 'meter') : 'meter';
+    var transactions = (meterData && meterData.transactions) ? meterData.transactions : [];
+
+    if (transactions.length === 0) {
+        showToast(L === 'en' ? 'No analytics data to export' : 'এক্সপোর্ট করার মতো কোনো ডেটা নেই', 'warning');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        showToast(L === 'en' ? 'Excel library not ready. Printing instead...' : 'এক্সেল লাইব্রেরি প্রস্তুত নয়। প্রিন্ট করা হচ্ছে...', 'info');
+        window.print();
+        return;
+    }
+
+    try {
+        var wb = XLSX.utils.book_new();
+
+        // 1. Monthly Summary Sheet
+        var monthlySummary = (typeof getMonthlySummary === 'function') ? getMonthlySummary(APP.activeMeterId) : {};
+        var monthlyRows = Object.keys(monthlySummary).sort().reverse().map(function(k) {
+            var m = monthlySummary[k];
+            var row = {};
+            row[L === 'en' ? 'Month' : 'মাস'] = m.displayMonth || k;
+            row[L === 'en' ? 'Recharge (Taka)' : 'রিচার্জ (টাকা)'] = Number(m.recharge || 0).toFixed(2);
+            row[L === 'en' ? 'Electricity Bill (Taka)' : 'বিদ্যুৎ বিল (টাকা)'] = Number(m.bill || 0).toFixed(2);
+            row[L === 'en' ? 'End Balance (Taka)' : 'মাস শেষের ব্যালেন্স (টাকা)'] = Number(m.endBalance !== undefined ? m.endBalance : (m.recharge - m.bill)).toFixed(2);
+            row[L === 'en' ? 'Units Used (kWh)' : 'ব্যবহৃত ইউনিট (kWh)'] = Number(m.units || 0).toFixed(2);
+            return row;
+        });
+        
+        if (monthlyRows.length > 0) {
+            var wsMonthly = XLSX.utils.json_to_sheet(monthlyRows);
+            XLSX.utils.book_append_sheet(wb, wsMonthly, L === 'en' ? 'Monthly Stats' : 'মাসিক পরিসংখ্যান');
+        }
+
+        // 2. Cost Breakdown Sheet
+        var rechargeTotal = 0, netRechargeTotal = 0, demandTotal = 0, vatTotal = 0, rebateTotal = 0, billTotal = 0;
+        transactions.forEach(function(t) {
+            if (t.type === 'recharge' || t.deductions) {
+                rechargeTotal += (Number(t.amount) || 0);
+                if (t.deductions) {
+                    netRechargeTotal += (Number(t.deductions.netAmount) || 0);
+                    demandTotal += (Number(t.deductions.demandCharge) || 0);
+                    vatTotal += (Number(t.deductions.vat) || 0);
+                    rebateTotal += (Number(t.deductions.rebate) || 0);
+                } else {
+                    netRechargeTotal += (Number(t.amount) || 0);
+                }
+            } else if (t.type === 'electricity_bill' || t.type === 'bill') {
+                billTotal += (Number(t.amount) || 0);
+            }
+        });
+
+        var costRows = [
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Total Electricity Energy Bill' : 'বিদ্যুৎ ব্যবহারের মূল বিল'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: billTotal.toFixed(2) },
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Total Demand Charge Deductions' : 'মোট ডিমান্ড চার্জ কর্তন'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: demandTotal.toFixed(2) },
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Total Govt VAT' : 'মোট সরকারি ভ্যাট'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: vatTotal.toFixed(2) },
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Total Prepaid Rebate Discount' : 'মোট প্রিপেইড রিবেট ছাড়'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: rebateTotal.toFixed(2) },
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Total Gross Recharge' : 'সর্বমোট মোট রিচার্জ'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: rechargeTotal.toFixed(2) },
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Total Net Recharge Usable' : 'ব্যবহারযোগ্য মোট রিচার্জ'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: netRechargeTotal.toFixed(2) },
+            { [L === 'en' ? 'Item' : 'বিবরণ']: (L === 'en' ? 'Current Meter Balance' : 'বর্তমান মিটার ব্যালেন্স'), [L === 'en' ? 'Amount (Taka)' : 'পরিমাণ (টাকা)']: Number(meterData.currentBalance || 0).toFixed(2) }
+        ];
+        var wsCost = XLSX.utils.json_to_sheet(costRows);
+        XLSX.utils.book_append_sheet(wb, wsCost, L === 'en' ? 'Cost Breakdown' : 'খরচ বিশ্লেষণ');
+
+        var fileName = (L === 'en' ? 'Analytics_' : 'এনালিটিক্স_') + meterNo + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
+        XLSX.writeFile(wb, fileName);
+        showToast(L === 'en' ? '📊 Analytics exported to Excel successfully!' : '📊 এনালিটিক্স সফলভাবে এক্সেলে এক্সপোর্ট হয়েছে!', 'success');
+    } catch(err) {
+        console.error('Export error:', err);
+        showToast(L === 'en' ? 'Failed to export analytics' : 'এনালিটিক্স এক্সপোর্ট করতে ব্যর্থ হয়েছে', 'error');
+    }
 }

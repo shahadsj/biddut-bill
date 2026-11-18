@@ -31,26 +31,52 @@ function getMonthColor(displayMonth) {
 }
 
 function genSlabDefs(L) {
-    if (L === 'en') {
-        return [
-            { name: 'Lifeline (0-50)', min: 0, max: 50, rate: 3.5 },
-            { name: '1st Slab (51-75)', min: 51, max: 75, rate: 4 },
-            { name: '2nd Slab (76-200)', min: 76, max: 200, rate: 5.45 },
-            { name: '3rd Slab (201-300)', min: 201, max: 300, rate: 5.7 },
-            { name: '4th Slab (301-400)', min: 301, max: 400, rate: 6.02 },
-            { name: '5th Slab (401-600)', min: 401, max: 600, rate: 9.3 },
-            { name: '6th Slab (601+)', min: 601, max: Infinity, rate: 10.7 }
-        ];
-    }
-    return [
-        { name: 'Lifeline (০-৫০)', min: 0, max: 50, rate: 3.5 },
-        { name: '১ম স্ল্যাব (৫১-৭৫)', min: 51, max: 75, rate: 4 },
-        { name: '২য় স্ল্যাব (৭৬-২০০)', min: 76, max: 200, rate: 5.45 },
-        { name: '৩য় স্ল্যাব (২০১-৩০০)', min: 201, max: 300, rate: 5.7 },
-        { name: '৪র্থ স্ল্যাব (৩০১-৪০০)', min: 301, max: 400, rate: 6.02 },
-        { name: '৫ম স্ল্যাব (৪০১-৬০০)', min: 401, max: 600, rate: 9.3 },
-        { name: '৬ষ্ঠ স্ল্যাব (৬০১+)', min: 601, max: Infinity, rate: 10.7 }
+    // ✅ সর্বদা Settings থেকে ডায়নামিক রেট গ্রহণ করবে (কোনো ফিক্সড বা হার্ডকোডেড রেট থাকবে না)
+    var rawRates = (typeof APP !== 'undefined' && APP.tariffRates && APP.tariffRates.length > 0) ? APP.tariffRates : [
+        { range: [0, 50], rate: 4.63, name: "Lifeline" },
+        { range: [51, 75], rate: 5.26, name: "1st Slab" },
+        { range: [76, 200], rate: 8.50, name: "2nd Slab" },
+        { range: [201, 300], rate: 9.10, name: "3rd Slab" },
+        { range: [301, 400], rate: 9.62, name: "4th Slab" },
+        { range: [401, 600], rate: 15.01, name: "5th Slab" },
+        { range: [601, null], rate: 17.35, name: "6th Slab" }
     ];
+
+    var bnNum = function(num) {
+        if (typeof convertEnglishToBangla === 'function') return convertEnglishToBangla(String(num));
+        var banglaDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+        return String(num).replace(/[0-9]/g, function(d) { return banglaDigits[d] || d; });
+    };
+
+    var bnOrdinal = ['১ম', '২য়', '৩য়', '৪র্থ', '৫ম', '৬ষ্ঠ', '৭ম', '৮ম'];
+
+    return rawRates.map(function(r, index) {
+        var min = (r.range && r.range[0] !== undefined) ? r.range[0] : 0;
+        var max = (r.range && r.range[1] !== null && r.range[1] !== undefined) ? r.range[1] : Infinity;
+        var baseName = r.name || ('Slab ' + (index + 1));
+        var rangeLabelEn = (max === Infinity) ? (min + '+') : (min + '-' + max);
+        var localizedName = baseName;
+
+        if (L === 'bn') {
+            if (baseName.toLowerCase().indexOf('lifeline') !== -1 || index === 0) {
+                localizedName = 'লাইফলাইন (' + bnNum(min) + '-' + bnNum(max) + ')';
+            } else {
+                var ord = bnOrdinal[index] || (bnNum(index + 1) + 'ম');
+                var rangeLabelBn = (max === Infinity) ? (bnNum(min) + '+') : (bnNum(min) + '-' + bnNum(max));
+                localizedName = ord + ' স্ল্যাব (' + rangeLabelBn + ')';
+            }
+        } else {
+            localizedName = baseName + ' (' + rangeLabelEn + ')';
+        }
+
+        return {
+            name: localizedName,
+            baseName: baseName,
+            min: min,
+            max: max,
+            rate: Number(r.rate) || 0
+        };
+    });
 }
 
 function getMonths(L) {

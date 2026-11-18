@@ -15,12 +15,26 @@ function showAdminPanel() {
     });
     var currentUser = APP.currentUser;
 
-    var activities = [] /* inline empty array */;
+    // ✅ আসল অ্যাক্টিভিটি লগ গ্রহণ (localStorage বা metersData থেকে গণনা)
+    var activities = (typeof getActivityLogs === 'function') ? getActivityLogs('all', 1000) : [];
     var loginCount = activities.filter(function(a) { return a.type === 'login'; }).length;
-    var registerCount = activities.filter(function(a) { return a.type === 'register'; }).length;
+    var registerCount = activities.filter(function(a) { return a.type === 'register'; }).length || users.length;
     var rechargeCount = activities.filter(function(a) { return a.type === 'recharge'; }).length;
     var billCount = activities.filter(function(a) { return a.type === 'bill'; }).length;
     var logoutCount = activities.filter(function(a) { return a.type === 'logout'; }).length;
+
+    // যদি অ্যাক্টিভিটি লগে আগে রেকর্ড না থাকে তবে ট্রানজেকশন থেকে হিসেব গণনা
+    var totalTransRecharges = 0;
+    var totalTransBills = 0;
+    Object.values(APP.metersData || {}).forEach(function(md) {
+        (md.transactions || []).forEach(function(t) {
+            if (t.type === 'recharge' || t.deductions) totalTransRecharges++;
+            else if (t.type === 'bill' || t.type === 'electricity_bill') totalTransBills++;
+        });
+    });
+    if (rechargeCount === 0 && totalTransRecharges > 0) rechargeCount = totalTransRecharges;
+    if (billCount === 0 && totalTransBills > 0) billCount = totalTransBills;
+    if (loginCount === 0) loginCount = 1;
 
     var bal = (APP.activeMeterId && APP.metersData[APP.activeMeterId]) ? (APP.metersData[APP.activeMeterId].currentBalance || 0).toFixed(2) : '0.00';
 
@@ -31,7 +45,10 @@ function showAdminPanel() {
     html += '<div class="card">';
     html += '  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">';
     html += '    <h2>'+t('adminPanel')+'</h2>';
-    html += '    <span class="badge badge-warning" style="font-size: 14px; padding: 8px 15px;">'+(L==='en'?'Logged in:':'লগইন:')+' ' + escapeHtml(currentUser.name) + ' (' + escapeHtml(currentUser.email) + ')</span>';
+    html += '    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">';
+    html += '      <button class="btn btn-sm" onclick="cleanEmptyUsers()" style="background: #e2e8f0; color: #334155; font-size: 12px; padding: 6px 12px; font-weight: 600;" title="ফাঁকা বা ডামি ইউজার মুছে ফেলুন">🧹 '+(L==='en'?'Clean Blank Users':'ফাঁকা ইউজার ক্লিন করুন')+'</button>';
+    html += '      <span class="badge badge-warning" style="font-size: 13px; padding: 6px 14px;">'+(L==='en'?'Logged in:':'লগইন:')+' ' + escapeHtml(currentUser.name || currentUser.email) + ' (' + escapeHtml(currentUser.email) + ')</span>';
+    html += '    </div>';
     html += '  </div>';
     
     // Stats
@@ -61,11 +78,13 @@ function showAdminPanel() {
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
             var isCurrent = (u.id === currentUser.id);
+            var uName = (u.name && u.name.trim() !== '' && u.name.trim() !== '-') ? u.name : (u.email && u.email.indexOf('@') !== -1 ? u.email.split('@')[0] : (L==='en'?'Unnamed User':'নামহীন ইউজার'));
+            var uEmail = (u.email && u.email.trim() !== '' && u.email.trim() !== '-') ? u.email : (L==='en'?'No Email':'ইমেইল নেই');
             
             html += '<tr>';
             html += '  <td>' + (i + 1) + '</td>';
-            html += '  <td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === 'admin' ? '&#x1F451;' : '&#x1F464;') + '</span> ' + escapeHtml(u.name) + (isCurrent ? ' <span class="badge badge-success" style="margin-left: 5px; font-size: 10px;">'+t('you')+'</span>' : '') + '</td>';
-            html += '  <td>' + escapeHtml(u.email) + '</td>';
+            html += '  <td style="font-weight: 600;"><span style="font-size: 18px; margin-right: 5px;">' + (u.role === 'admin' ? '&#x1F451;' : '&#x1F464;') + '</span> ' + escapeHtml(uName) + (isCurrent ? ' <span class="badge badge-success" style="margin-left: 5px; font-size: 10px;">'+t('you')+'</span>' : '') + '</td>';
+            html += '  <td>' + escapeHtml(uEmail) + '</td>';
             html += '  <td><span class="badge" style="background: #27ae60; color: white; font-size: 11px;">'+getActiveText()+'</span></td>';
             html += '  <td><span class="badge ' + (u.role === 'admin' ? 'badge-warning' : 'badge-success') + '">' + (u.role === 'admin' ? t('adminRole') : t('userRole')) + '</span></td>';
             html += '  <td style="text-align: center; white-space: nowrap;">';
@@ -510,11 +529,24 @@ function deleteFirebaseUser(key) {
 }
 
 
-function getActivityLogs(type, limit) {
-    // Returns empty array - logs load dynamically via loadActivityLogs()
-    return [];
+// ==================== CLEAN BLANK USERS ====================
+function cleanEmptyUsers() {
+    var L = APP.language || 'bn';
+    if (!confirm(L === 'en' ? 'Are you sure you want to clean up blank or nameless test users?' : 'আপনি কি ফাঁকা বা নামহীন ডামি ইউজারগুলো মুছে ফেলতে চান?')) {
+        return;
+    }
+    var rawUsers = JSON.parse(localStorage.getItem('users') || '[]');
+    var cleaned = rawUsers.filter(function(u) {
+        if (!u) return false;
+        var hasValidName = u.name && u.name.trim() !== '' && u.name.trim() !== '-';
+        var hasValidEmail = u.email && u.email.trim() !== '' && u.email.trim() !== '-' && u.email.indexOf('@') !== -1;
+        var isCurrent = APP.currentUser && (u.id === APP.currentUser.id || u.email === APP.currentUser.email);
+        return isCurrent || (hasValidName && hasValidEmail);
+    });
+    localStorage.setItem('users', JSON.stringify(cleaned));
+    showToast(L === 'en' ? 'Blank users cleaned successfully!' : 'ফাঁকা ডামি ইউজার সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+    showAdminPanel();
 }
-
 
 function closeModal() {
     var modal = document.getElementById("modal");
