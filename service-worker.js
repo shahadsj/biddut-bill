@@ -2,7 +2,7 @@
 // Biddut Bill - PWA Service Worker
 // Version: 2.0.0
 
-const CACHE_NAME = 'biddut-bill-v2.0.0';
+const CACHE_NAME = 'biddut-bill-v2.0.5';
 const OFFLINE_URL = '/index.html';
 
 // Files to cache
@@ -25,6 +25,8 @@ const urlsToCache = [
   '/js/backup.js',
   '/js/admin.js',
   '/js/profile.js',
+  '/js/rent.js',
+  '/js/expenses.js',
   '/js/utils.js',
   '/js/firebase-init.js',
   'https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap',

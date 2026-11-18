@@ -492,11 +492,13 @@ function initApp() {
                                 if (data) {
                                     if (data.rentData) {
                                         APP.rentData = data.rentData;
-                                        console.log('✅ রিফ্রেশে রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData?.records?.length || 0);
+                                        if (!Array.isArray(APP.rentData.records)) APP.rentData.records = [];
+                                        console.log('✅ রিফ্রেশে রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData.records.length);
                                     }
                                     if (data.expenseData) {
                                         APP[expenseKey] = data.expenseData;
-                                        console.log('✅ রিফ্রেশে এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey]?.records?.length || 0);
+                                        if (!Array.isArray(APP[expenseKey].records)) APP[expenseKey].records = [];
+                                        console.log('✅ রিফ্রেশে এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey].records.length);
                                     }
                                     if (APP.currentPage === 'rent') {
                                         showRentReport();
@@ -518,7 +520,8 @@ function initApp() {
                                         var data = snapshot.val();
                                         if (data && data.rentData) {
                                             APP.rentData = data.rentData;
-                                            console.log('✅ রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData?.records?.length || 0);
+                                            if (!Array.isArray(APP.rentData.records)) APP.rentData.records = [];
+                                            console.log('✅ রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData.records.length);
                                             if (APP.currentPage === 'rent') {
                                                 showRentReport();
                                             }
@@ -803,12 +806,14 @@ if (document.readyState === "loading") {
                         // রেন্ট
                         if (data.rentData) {
                             APP.rentData = data.rentData;
-                            console.log('✅ রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData?.records?.length || 0);
+                            if (!Array.isArray(APP.rentData.records)) APP.rentData.records = [];
+                            console.log('✅ রেন্ট ডাটা লোড! রেকর্ড:', APP.rentData.records.length);
                         }
                         // এক্সপেন্স
                         if (data.expenseData) {
                             APP[expenseKey] = data.expenseData;
-                            console.log('✅ এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey]?.records?.length || 0);
+                            if (!Array.isArray(APP[expenseKey].records)) APP[expenseKey].records = [];
+                            console.log('✅ এক্সপেন্স ডাটা লোড! রেকর্ড:', APP[expenseKey].records.length);
                         }
                         // পেজ রিফ্রেশ
                         if (APP.currentPage === 'rent') {

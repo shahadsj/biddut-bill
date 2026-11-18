@@ -381,12 +381,13 @@ function updateExpenseTotals() {
 
     expenseData.records.forEach(function(record) {
         var type = record.type || 'other';
+        var amt = parseFloat(record.amount) || 0;
         if (totals[type] !== undefined) {
-            totals[type] += record.amount || 0;
+            totals[type] += amt;
         } else {
-            totals.other += record.amount || 0;
+            totals.other += amt;
         }
-        totalOverall += record.amount || 0;
+        totalOverall += amt;
     });
 
     expenseData.totalBazar = totals.bazar;
@@ -412,23 +413,44 @@ function showExpenseReport() {
     }
     
     var expenseData = getExpenseData();
-    if (!expenseData) {
-        expenseData = {
-            records: [],
-            totalBazar: 0,
-            totalGas: 0,
-            totalInternet: 0,
-            totalMobile: 0,
-            totalElectricity: 0,
-            totalWater: 0,
-            totalGrocery: 0,
-            totalOther: 0,
-            totalOverall: 0
-        };
+    if (!expenseData.records || !Array.isArray(expenseData.records)) {
+        expenseData.records = [];
     }
+
+    // ✅ রেকর্ড থেকে সরাসরি লাইভ ক্যাটাগরি ও ওভারঅল টোটাল হিসাব
+    var categoryTotals = {
+        bazar: 0, gas: 0, internet: 0, mobile: 0, 
+        electricity: 0, water: 0, grocery: 0, other: 0
+    };
+    var totalOverall = 0;
+
+    expenseData.records.forEach(function(record) {
+        var type = record.type || 'other';
+        var amt = parseFloat(record.amount) || 0;
+        if (categoryTotals[type] !== undefined) {
+            categoryTotals[type] += amt;
+        } else {
+            categoryTotals.other += amt;
+        }
+        totalOverall += amt;
+    });
+
+    expenseData.totalBazar = categoryTotals.bazar;
+    expenseData.totalGas = categoryTotals.gas;
+    expenseData.totalInternet = categoryTotals.internet;
+    expenseData.totalMobile = categoryTotals.mobile;
+    expenseData.totalElectricity = categoryTotals.electricity;
+    expenseData.totalWater = categoryTotals.water;
+    expenseData.totalGrocery = categoryTotals.grocery;
+    expenseData.totalOther = categoryTotals.other;
+    expenseData.totalOverall = totalOverall;
     
     var records = expenseData.records.slice().sort(function(a, b) {
-        return b.month.localeCompare(a.month) || b.createdAt.localeCompare(a.createdAt);
+        var ma = (a && a.month) ? String(a.month) : '';
+        var mb = (b && b.month) ? String(b.month) : '';
+        var ca = (a && a.createdAt) ? String(a.createdAt) : '';
+        var cb = (b && b.createdAt) ? String(b.createdAt) : '';
+        return mb.localeCompare(ma) || cb.localeCompare(ca);
     });
 
     var html = '<div class="card">';
@@ -455,7 +477,7 @@ function showExpenseReport() {
     ];
 
     expenseTypes.forEach(function(type) {
-        var total = expenseData['total' + type.key.charAt(0).toUpperCase() + type.key.slice(1)] || 0;
+        var total = categoryTotals[type.key] || 0;
         var color = getExpenseTypeColor(type.key);
         html += '<div style="background: ' + color + '; border-radius: 12px; padding: 14px; color: #fff; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">';
         html += '<div style="font-size: 11px; opacity: 0.8;">' + type.label + '</div>';
@@ -468,7 +490,7 @@ function showExpenseReport() {
     // Total Overall
     html += '<div style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; padding: 16px; color: #fff; text-align: center; margin-bottom: 16px;">';
     html += '<div style="font-size: 13px; opacity: 0.8;">' + (L === 'en' ? 'Total Overall Expense' : 'সর্বমোট খরচ') + '</div>';
-    html += '<div style="font-size: 28px; font-weight: 700;">৳ ' + formatNumberWithComma(expenseData.totalOverall || 0) + '</div>';
+    html += '<div style="font-size: 28px; font-weight: 700;">৳ ' + formatNumberWithComma(totalOverall) + '</div>';
     html += '</div>';
 
     // Table

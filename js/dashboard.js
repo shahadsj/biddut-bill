@@ -829,7 +829,7 @@ function showDashboard() {
                 <p class="hero-subtitle">${L === 'en' ? 'Overall status of electricity bill management' : 'বিদ্যুৎ বিল ব্যবস্থাপনার সার্বিক অবস্থা'}</p>
             </div>
             <div class="hero-illustration">
-                <svg viewBox="0 0 880 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-panoramic-svg" preserveAspectRatio="xMaxYMid meet" style="width: 100%; height: 75px; display: block;">
+                <svg viewBox="0 0 1200 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-panoramic-svg" preserveAspectRatio="none" style="width: 100%; height: 75px; display: block;">
                     <defs>
                         <linearGradient id="heroSunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stop-color="#fb923c" stop-opacity="0.65"/>
@@ -847,101 +847,133 @@ function showDashboard() {
 
                     <!-- Soft Clouds in Sky -->
                     <g fill="#e2e8f0" opacity="0.45">
-                        <path d="M 40,30 Q 60,18 80,24 Q 100,16 120,26 Q 135,20 150,30 Z"/>
-                        <path d="M 310,24 Q 330,12 350,18 Q 370,10 390,20 Q 405,15 420,24 Z"/>
-                        <path d="M 560,26 Q 580,14 600,20 Q 620,12 640,22 Q 655,16 670,26 Z"/>
+                        <path d="M 30,28 Q 50,16 70,22 Q 90,14 110,24 Q 125,18 140,28 Z"/>
+                        <path d="M 320,24 Q 340,12 360,18 Q 380,10 400,20 Q 415,15 430,24 Z"/>
+                        <path d="M 640,26 Q 660,14 680,20 Q 700,12 720,22 Q 735,16 750,26 Z"/>
+                        <path d="M 920,22 Q 940,12 960,18 Q 980,10 1000,20 Q 1015,14 1030,22 Z"/>
                     </g>
 
-                    <!-- Rising Golden Sun -->
-                    <circle cx="750" cy="40" r="26" fill="url(#heroSunGrad)"/>
-                    <circle cx="750" cy="40" r="16" fill="#f59e0b" opacity="0.65"/>
+                    <!-- Rising Golden Sun near far right tower -->
+                    <circle cx="1080" cy="40" r="26" fill="url(#heroSunGrad)"/>
+                    <circle cx="1080" cy="40" r="16" fill="#f59e0b" opacity="0.65"/>
 
-                    <!-- Modern City Skyline Silhouette Layers -->
+                    <!-- Modern City Skyline Silhouette Layers (continuous across 1200px) -->
                     <g fill="url(#heroCity1)">
-                        <rect x="150" y="52" width="22" height="33" rx="1"/>
-                        <rect x="176" y="44" width="28" height="41" rx="1"/>
-                        <rect x="208" y="55" width="24" height="30" rx="1"/>
-                        <rect x="340" y="46" width="30" height="39" rx="1"/>
-                        <rect x="374" y="38" width="26" height="47" rx="1"/>
-                        <rect x="404" y="48" width="28" height="37" rx="1"/>
-                        <rect x="560" y="48" width="25" height="37" rx="1"/>
-                        <rect x="589" y="40" width="32" height="45" rx="1"/>
-                        <rect x="625" y="46" width="26" height="39" rx="1"/>
-                        <rect x="655" y="52" width="24" height="33" rx="1"/>
-                        <rect x="780" y="54" width="26" height="31" rx="1"/>
-                        <rect x="810" y="48" width="30" height="37" rx="1"/>
+                        <rect x="20" y="54" width="24" height="31" rx="1"/>
+                        <rect x="48" y="46" width="26" height="39" rx="1"/>
+                        <rect x="110" y="52" width="22" height="33" rx="1"/>
+                        <rect x="136" y="44" width="28" height="41" rx="1"/>
+                        <rect x="168" y="55" width="24" height="30" rx="1"/>
+                        <rect x="300" y="48" width="26" height="37" rx="1"/>
+                        <rect x="330" y="42" width="30" height="43" rx="1"/>
+                        <rect x="435" y="46" width="30" height="39" rx="1"/>
+                        <rect x="469" y="38" width="26" height="47" rx="1"/>
+                        <rect x="499" y="48" width="28" height="37" rx="1"/>
+                        <rect x="630" y="50" width="26" height="35" rx="1"/>
+                        <rect x="660" y="44" width="30" height="41" rx="1"/>
+                        <rect x="755" y="48" width="25" height="37" rx="1"/>
+                        <rect x="784" y="40" width="32" height="45" rx="1"/>
+                        <rect x="820" y="46" width="26" height="39" rx="1"/>
+                        <rect x="850" y="52" width="24" height="33" rx="1"/>
+                        <rect x="970" y="46" width="28" height="39" rx="1"/>
+                        <rect x="1002" y="40" width="26" height="45" rx="1"/>
+                        <rect x="1115" y="54" width="26" height="31" rx="1"/>
+                        <rect x="1145" y="48" width="30" height="37" rx="1"/>
                     </g>
                     <g fill="url(#heroCity2)">
-                        <rect x="238" y="56" width="28" height="29" rx="1"/>
-                        <rect x="270" y="48" width="25" height="37" rx="1"/>
-                        <rect x="299" y="52" width="26" height="33" rx="1"/>
-                        <rect x="446" y="52" width="30" height="33" rx="1"/>
-                        <rect x="480" y="44" width="26" height="41" rx="1"/>
-                        <rect x="510" y="50" width="28" height="35" rx="1"/>
-                        <rect x="695" y="50" width="28" height="35" rx="1"/>
-                        <rect x="727" y="42" width="26" height="43" rx="1"/>
+                        <rect x="78" y="52" width="26" height="33" rx="1"/>
+                        <rect x="198" y="56" width="28" height="29" rx="1"/>
+                        <rect x="230" y="48" width="25" height="37" rx="1"/>
+                        <rect x="259" y="52" width="26" height="33" rx="1"/>
+                        <rect x="365" y="50" width="28" height="35" rx="1"/>
+                        <rect x="535" y="52" width="30" height="33" rx="1"/>
+                        <rect x="569" y="44" width="26" height="41" rx="1"/>
+                        <rect x="599" y="50" width="28" height="35" rx="1"/>
+                        <rect x="695" y="52" width="25" height="33" rx="1"/>
+                        <rect x="885" y="50" width="28" height="35" rx="1"/>
+                        <rect x="917" y="42" width="26" height="43" rx="1"/>
+                        <rect x="1035" y="50" width="30" height="35" rx="1"/>
+                        <rect x="1069" y="44" width="26" height="41" rx="1"/>
                     </g>
 
-                    <!-- Graceful Sagging High-Voltage Transmission Cables (Across 880px) -->
-                    <path d="M 0,44 Q 95,56 190,26 Q 305,54 420,22 Q 545,54 670,28 Q 775,50 880,42" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
-                    <path d="M 0,54 Q 95,68 190,40 Q 305,68 420,36 Q 545,68 670,42 Q 775,62 880,52" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
-                    <path d="M 0,64 Q 95,78 190,52 Q 305,78 420,48 Q 545,78 670,54 Q 775,72 880,62" stroke="#94a3b8" stroke-width="1.1" fill="none" opacity="0.65"/>
+                    <!-- Graceful Sagging High-Voltage Transmission Cables (Across 1200px) -->
+                    <path d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
+                    <path d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
+                    <path d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#94a3b8" stroke-width="1.1" fill="none" opacity="0.65"/>
 
-                    <!-- Tower 1 (Mid-Left Pylon at x=190) -->
-                    <path d="M 190 10 L 174 85 L 206 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
-                    <line x1="160" y1="32" x2="220" y2="32" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
-                    <line x1="152" y1="52" x2="228" y2="52" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
-                    <line x1="178" y1="32" x2="202" y2="52" stroke="#334155" stroke-width="1.5"/>
-                    <line x1="202" y1="32" x2="178" y2="52" stroke="#334155" stroke-width="1.5"/>
-                    <line x1="174" y1="52" x2="206" y2="85" stroke="#334155" stroke-width="1.5"/>
-                    <line x1="206" y1="52" x2="174" y2="85" stroke="#334155" stroke-width="1.5"/>
+                    <!-- Tower 1 (Left Pylon at x=80, right next to text) -->
+                    <path d="M 80 10 L 64 85 L 96 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
+                    <line x1="50" y1="32" x2="110" y2="32" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
+                    <line x1="42" y1="52" x2="118" y2="52" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
+                    <line x1="68" y1="32" x2="92" y2="52" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="92" y1="32" x2="68" y2="52" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="64" y1="52" x2="96" y2="85" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="96" y1="52" x2="64" y2="85" stroke="#334155" stroke-width="1.5"/>
 
-                    <!-- Tower 2 (Center Main Pylon at x=420) -->
-                    <path d="M 420 8 L 402 85 L 438 85 Z" stroke="#1e293b" stroke-width="2.4" fill="none"/>
-                    <line x1="388" y1="30" x2="452" y2="30" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>
-                    <line x1="380" y1="50" x2="460" y2="50" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>
-                    <line x1="408" y1="30" x2="432" y2="50" stroke="#1e293b" stroke-width="1.6"/>
-                    <line x1="432" y1="30" x2="408" y2="50" stroke="#1e293b" stroke-width="1.6"/>
-                    <line x1="402" y1="50" x2="438" y2="85" stroke="#1e293b" stroke-width="1.6"/>
-                    <line x1="438" y1="50" x2="402" y2="85" stroke="#1e293b" stroke-width="1.6"/>
+                    <!-- Tower 2 (Mid-Left Pylon at x=400) -->
+                    <path d="M 400 8 L 382 85 L 418 85 Z" stroke="#1e293b" stroke-width="2.4" fill="none"/>
+                    <line x1="368" y1="30" x2="432" y2="30" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>
+                    <line x1="360" y1="50" x2="440" y2="50" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>
+                    <line x1="388" y1="30" x2="412" y2="50" stroke="#1e293b" stroke-width="1.6"/>
+                    <line x1="412" y1="30" x2="388" y2="50" stroke="#1e293b" stroke-width="1.6"/>
+                    <line x1="382" y1="50" x2="418" y2="85" stroke="#1e293b" stroke-width="1.6"/>
+                    <line x1="418" y1="50" x2="382" y2="85" stroke="#1e293b" stroke-width="1.6"/>
 
-                    <!-- Tower 3 (Right Perspective Pylon at x=670) -->
-                    <path d="M 670 12 L 656 85 L 684 85 Z" stroke="#475569" stroke-width="2" fill="none"/>
-                    <line x1="644" y1="34" x2="696" y2="34" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="638" y1="52" x2="702" y2="52" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="660" y1="34" x2="680" y2="52" stroke="#475569" stroke-width="1.4"/>
-                    <line x1="680" y1="34" x2="660" y2="52" stroke="#475569" stroke-width="1.4"/>
-                    <line x1="656" y1="52" x2="684" y2="85" stroke="#475569" stroke-width="1.4"/>
-                    <line x1="684" y1="52" x2="656" y2="85" stroke="#475569" stroke-width="1.4"/>
+                    <!-- Tower 3 (Mid-Right Pylon at x=720) -->
+                    <path d="M 720 10 L 704 85 L 736 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
+                    <line x1="690" y1="32" x2="750" y2="32" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
+                    <line x1="682" y1="52" x2="758" y2="52" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
+                    <line x1="708" y1="32" x2="732" y2="52" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="732" y1="32" x2="708" y2="52" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="704" y1="52" x2="736" y2="85" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="736" y1="52" x2="704" y2="85" stroke="#334155" stroke-width="1.5"/>
 
-                    <!-- Rolling Green Landscape Base (Continuous across 880px) -->
-                    <path d="M 0,85 C 80,75 160,82 240,78 C 320,74 400,80 480,76 C 560,72 640,80 720,75 C 800,70 850,78 880,76 L 880,85 L 0,85 Z" fill="#86efac" opacity="0.85"/>
-                    <path d="M 0,85 C 100,78 200,84 300,80 C 420,76 520,82 620,78 C 720,74 800,82 880,78 L 880,85 L 0,85 Z" fill="#4ade80" opacity="0.75"/>
-                    <path d="M 0,85 C 120,81 250,85 380,82 C 500,79 650,84 780,81 L 880,82 L 880,85 L 0,85 Z" fill="#22c55e" opacity="0.9"/>
+                    <!-- Tower 4 (Far-Right Perspective Pylon at x=1040) -->
+                    <path d="M 1040 12 L 1026 85 L 1054 85 Z" stroke="#475569" stroke-width="2" fill="none"/>
+                    <line x1="1014" y1="34" x2="1066" y2="34" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="1008" y1="52" x2="1072" y2="52" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="1030" y1="34" x2="1050" y2="52" stroke="#475569" stroke-width="1.4"/>
+                    <line x1="1050" y1="34" x2="1030" y2="52" stroke="#475569" stroke-width="1.4"/>
+                    <line x1="1026" y1="52" x2="1054" y2="85" stroke="#475569" stroke-width="1.4"/>
+                    <line x1="1054" y1="52" x2="1026" y2="85" stroke="#475569" stroke-width="1.4"/>
+
+                    <!-- Rolling Green Landscape Base (Continuous across 1200px) -->
+                    <path d="M 0,85 C 100,75 200,82 300,78 C 400,74 500,80 600,76 C 700,72 800,80 900,75 C 1000,70 1100,78 1200,76 L 1200,85 L 0,85 Z" fill="#86efac" opacity="0.85"/>
+                    <path d="M 0,85 C 120,78 240,84 360,80 C 480,76 600,82 720,78 C 840,74 960,82 1080,77 L 1200,78 L 1200,85 L 0,85 Z" fill="#4ade80" opacity="0.75"/>
+                    <path d="M 0,85 C 150,81 300,85 450,82 C 600,79 750,84 900,81 C 1050,78 1150,83 1200,82 L 1200,85 L 0,85 Z" fill="#22c55e" opacity="0.9"/>
 
                     <!-- Lush Green Tree Clusters Across the Horizon -->
                     <g fill="#15803d">
-                        <circle cx="35" cy="78" r="6"/>
-                        <circle cx="44" cy="75" r="8" fill="#16a34a"/>
-                        <circle cx="54" cy="77" r="7" fill="#22c55e"/>
-                        <circle cx="135" cy="77" r="7"/>
-                        <circle cx="146" cy="74" r="9" fill="#16a34a"/>
-                        <circle cx="158" cy="77" r="6" fill="#22c55e"/>
-                        <circle cx="265" cy="78" r="7"/>
-                        <circle cx="276" cy="74" r="9" fill="#16a34a"/>
-                        <circle cx="288" cy="77" r="6" fill="#22c55e"/>
-                        <circle cx="370" cy="78" r="6"/>
-                        <circle cx="380" cy="74" r="8" fill="#16a34a"/>
-                        <circle cx="495" cy="77" r="7"/>
-                        <circle cx="507" cy="73" r="9" fill="#16a34a"/>
-                        <circle cx="519" cy="76" r="6" fill="#22c55e"/>
-                        <circle cx="615" cy="78" r="7"/>
-                        <circle cx="626" cy="75" r="9" fill="#16a34a"/>
-                        <circle cx="735" cy="77" r="7"/>
-                        <circle cx="746" cy="73" r="9" fill="#16a34a"/>
-                        <circle cx="758" cy="76" r="6" fill="#22c55e"/>
-                        <circle cx="835" cy="78" r="6"/>
-                        <circle cx="845" cy="74" r="8" fill="#16a34a"/>
+                        <circle cx="25" cy="78" r="6"/>
+                        <circle cx="34" cy="75" r="8" fill="#16a34a"/>
+                        <circle cx="44" cy="77" r="7" fill="#22c55e"/>
+                        <circle cx="120" cy="77" r="7"/>
+                        <circle cx="131" cy="74" r="9" fill="#16a34a"/>
+                        <circle cx="143" cy="77" r="6" fill="#22c55e"/>
+                        <circle cx="230" cy="78" r="7"/>
+                        <circle cx="241" cy="74" r="9" fill="#16a34a"/>
+                        <circle cx="253" cy="77" r="6" fill="#22c55e"/>
+                        <circle cx="340" cy="78" r="6"/>
+                        <circle cx="350" cy="74" r="8" fill="#16a34a"/>
+                        <circle cx="460" cy="77" r="7"/>
+                        <circle cx="472" cy="73" r="9" fill="#16a34a"/>
+                        <circle cx="484" cy="76" r="6" fill="#22c55e"/>
+                        <circle cx="575" cy="78" r="7"/>
+                        <circle cx="586" cy="75" r="9" fill="#16a34a"/>
+                        <circle cx="670" cy="77" r="7"/>
+                        <circle cx="681" cy="73" r="9" fill="#16a34a"/>
+                        <circle cx="693" cy="76" r="6" fill="#22c55e"/>
+                        <circle cx="795" cy="78" r="6"/>
+                        <circle cx="805" cy="74" r="8" fill="#16a34a"/>
+                        <circle cx="895" cy="77" r="7"/>
+                        <circle cx="906" cy="73" r="9" fill="#16a34a"/>
+                        <circle cx="918" cy="76" r="6" fill="#22c55e"/>
+                        <circle cx="1005" cy="78" r="6"/>
+                        <circle cx="1015" cy="74" r="8" fill="#16a34a"/>
+                        <circle cx="1110" cy="77" r="7"/>
+                        <circle cx="1121" cy="74" r="9" fill="#16a34a"/>
+                        <circle cx="1165" cy="78" r="6"/>
+                        <circle cx="1175" cy="74" r="8" fill="#16a34a"/>
                     </g>
                 </svg>
             </div>

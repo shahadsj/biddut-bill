@@ -2,9 +2,10 @@
 // RENT MANAGEMENT - সম্পূর্ণ ফাংশন (কমা + এডিট সহ)
 // ============================================================
 
-// ✅ রেন্ট ডাটা ইনিশিয়ালাইজ
-if (typeof APP !== 'undefined' && APP) {
-    if (!APP.rentData) {
+// ✅ রেন্ট ডাটা ইনিশিয়ালাইজ ও সেফ এক্সেস
+function ensureRentData() {
+    if (typeof APP === 'undefined' || !APP) return { records: [] };
+    if (!APP.rentData || typeof APP.rentData !== 'object') {
         APP.rentData = {
             records: [],
             totalRent: 0,
@@ -13,7 +14,12 @@ if (typeof APP !== 'undefined' && APP) {
             totalOverall: 0
         };
     }
+    if (!Array.isArray(APP.rentData.records)) {
+        APP.rentData.records = [];
+    }
+    return APP.rentData;
 }
+ensureRentData();
 
 // ============================================================
 // ✅ কমা সেপারেটর ফাংশন
@@ -391,13 +397,14 @@ function getCurrentMonthRent(meterId) {
 // ============================================================
 function showRentReport() {
     var L = APP.language || 'bn';
+    ensureRentData();
     
-    if (!APP.rentData) {
-        APP.rentData = { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 };
-    }
-    
-    var records = APP.rentData.records.slice().sort(function(a, b) {
-        return b.month.localeCompare(a.month) || b.createdAt.localeCompare(a.createdAt);
+    var records = (APP.rentData.records || []).slice().sort(function(a, b) {
+        var ma = (a && a.month) ? String(a.month) : '';
+        var mb = (b && b.month) ? String(b.month) : '';
+        var ca = (a && a.createdAt) ? String(a.createdAt) : '';
+        var cb = (b && b.createdAt) ? String(b.createdAt) : '';
+        return mb.localeCompare(ma) || cb.localeCompare(ca);
     });
 
     // ✅ মিটার ভিত্তিক গ্রুপিং
@@ -582,10 +589,7 @@ function deleteRent(rentId) {
 // ============================================================
 function renderRentWidget() {
     var L = APP.language || 'bn';
-    
-    if (!APP.rentData) {
-        APP.rentData = { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 };
-    }
+    ensureRentData();
     
     if (!APP.rentData.records || APP.rentData.records.length === 0) {
         return '<div class="rent-widget" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">' +
