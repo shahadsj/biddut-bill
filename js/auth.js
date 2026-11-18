@@ -15,7 +15,7 @@ function showLoginPage() {
         <div class="auth-page-wrapper">
             <div class="auth-card-modern">
                 <!-- Logo Badge -->
-                <div class="auth-bolt-badge">⚡</div>
+                <div class="auth-bolt-badge"><img src="favicon.svg" alt="বিদ্যুৎ বিল"></div>
                 <h1 class="auth-title">বিদ্যুৎ বিল</h1>
                 <p class="auth-subtitle">Electricity Bill Manager</p>
 
@@ -78,7 +78,7 @@ function showRegisterPage() {
         <div class="auth-page-wrapper">
             <div class="auth-card-modern">
                 <!-- Logo Badge -->
-                <div class="auth-bolt-badge">⚡</div>
+                <div class="auth-bolt-badge"><img src="favicon.svg" alt="বিদ্যুৎ বিল"></div>
                 <h1 class="auth-title">বিদ্যুৎ বিল</h1>
                 <p class="auth-subtitle">Electricity Bill Manager</p>
 

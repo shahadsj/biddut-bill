@@ -1,10 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3498db"/>
-      <stop offset="100%" style="stop-color:#2ecc71"/>
+    <!-- Background Gradient (Electric Teal to Vibrant Emerald) -->
+    <linearGradient id="customBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="50%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#059669"/>
     </linearGradient>
+    <!-- Inner Glow -->
+    <radialGradient id="customRadialGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0.32"/>
+      <stop offset="60%" stop-color="#a7f3d0" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#047857" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 3D Thunderbolt: Left Facet (Light Golden White) -->
+    <linearGradient id="customFacetLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#facc15"/>
+    </linearGradient>
+    <!-- 3D Thunderbolt: Right Facet (Deep Golden Amber) -->
+    <linearGradient id="customFacetRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="55%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <!-- Energy Orbit Ring Gradient -->
+    <linearGradient id="customRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#a7f3d0"/>
+    </linearGradient>
+    <!-- Rich Shadow for Bolt -->
+    <filter id="customShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#042f2e" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
-  <rect width="100" height="100" rx="20" fill="url(#bg)"/>
-  <text x="50" y="68" font-size="55" text-anchor="middle" fill="white">⚡</text>
+
+  <!-- Background Squircle -->
+  <rect width="512" height="512" rx="115" fill="url(#customBgGrad)"/>
+  <rect width="512" height="512" rx="115" fill="url(#customRadialGlow)"/>
+
+  <!-- Energy Orbit Rings from Option 2 -->
+  <circle cx="256" cy="256" r="162" fill="none" stroke="url(#customRingGrad)" stroke-width="4.5" stroke-dasharray="10 14" opacity="0.55"/>
+  <circle cx="256" cy="256" r="186" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+
+  <!-- 3D Geometric Faceted Thunderbolt from Option 2 -->
+  <g filter="url(#customShadow)">
+    <!-- Left Facet (Light side) -->
+    <polygon points="275,65 155,275 250,275 220,445 262,260 275,65" fill="url(#customFacetLeft)"/>
+    <!-- Right Facet (Shadow side) -->
+    <polygon points="275,65 262,260 220,445 365,225 272,225 275,65" fill="url(#customFacetRight)"/>
+  </g>
+
+  <!-- Sparkle Stars -->
+  <circle cx="160" cy="150" r="4.5" fill="#ffffff" opacity="0.9"/>
+  <circle cx="360" cy="360" r="5" fill="#fef08a" opacity="0.85"/>
 </svg>

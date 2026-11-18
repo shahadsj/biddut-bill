@@ -4,13 +4,19 @@
   "description": "Electricity bill management system",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#667eea",
+  "background_color": "#0d9488",
+  "theme_color": "#0d9488",
   "orientation": "portrait",
   "scope": "/",
   "lang": "bn-BD",
   "dir": "ltr",
   "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "icon-192.png",
       "sizes": "192x192",
