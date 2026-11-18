@@ -762,3 +762,33 @@ function __(key) {
     return translations[key] || key;
 }
 
+// ==================== TRANSACTION DESCRIPTION FORMATTER ====================
+function formatTxDescription(desc) {
+    if (!desc || desc === '-') return '-';
+    // দশমিক ক্লিন করুন
+    desc = desc.replace(/(\d+)\.(\d{2})\d+/g, '$1.$2');
+    
+    // পাইপ '|' বিভাজক থাকলে ব্যাজ/চিপ হিসেবে সাজান
+    if (desc.indexOf('|') !== -1) {
+        var parts = desc.split('|').map(function(p) { return p.trim(); }).filter(Boolean);
+        var chipsHtml = parts.map(function(part) {
+            var chipClass = 'tx-chip';
+            if (part.indexOf('মাসিক রিচার্জ') !== -1 || part.indexOf('Monthly Recharge') !== -1) {
+                chipClass += ' tx-chip-primary';
+            } else if (part.indexOf('ডিমান্ড চার্জ') !== -1 || part.indexOf('Demand Charge') !== -1) {
+                chipClass += ' tx-chip-orange';
+            } else if (part.indexOf('ভ্যাট') !== -1 || part.indexOf('VAT') !== -1) {
+                chipClass += ' tx-chip-pink';
+            } else if (part.indexOf('রিবেট') !== -1 || part.indexOf('Rebate') !== -1) {
+                chipClass += ' tx-chip-green';
+            } else if (part.indexOf('নেট') !== -1 || part.indexOf('Net') !== -1) {
+                chipClass += ' tx-chip-purple';
+            }
+            return '<span class="' + chipClass + '">' + part + '</span>';
+        }).join(' ');
+        return '<div class="tx-desc-chips">' + chipsHtml + '</div>';
+    }
+    
+    return '<span class="tx-desc-text">' + desc + '</span>';
+}
+

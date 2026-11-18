@@ -1123,19 +1123,35 @@ function showDashboard() {
             <div class="billing-cards-grid">
                 <!-- বিদ্যুৎ চার্জ (Orange) -->
                 <div class="deduction-card orange">
-                    <div class="deduction-icon-box">⚡</div>
+                    <div class="deduction-icon-box" title="${L === 'en' ? 'Electricity Demand Charge' : 'বিদ্যুৎ চার্জ'}">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M13 2L3 14h7v8l11-12h-8z"/>
+                        </svg>
+                    </div>
                     <div class="deduction-label">${L === 'en' ? 'Electricity Charge' : 'বিদ্যুৎ চার্জ'}</div>
                     <div class="deduction-value">৳ ${(summary.totalDemand || 0).toFixed(2)}</div>
                 </div>
                 <!-- ভ্যাট (Red/Pink) -->
                 <div class="deduction-card pink">
-                    <div class="deduction-icon-box">⊕</div>
+                    <div class="deduction-icon-box" title="${L === 'en' ? 'VAT Tax Receipt' : 'ভ্যাট রসিদ'}">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="rgba(255,255,255,0.22)"></path>
+                            <circle cx="10" cy="12" r="1.5" fill="currentColor"></circle>
+                            <circle cx="14" cy="16" r="1.5" fill="currentColor"></circle>
+                            <line x1="14" y1="12" x2="10" y2="16"></line>
+                        </svg>
+                    </div>
                     <div class="deduction-label">${L === 'en' ? 'VAT' : 'ভ্যাট'}</div>
                     <div class="deduction-value">৳ ${(summary.totalVat || 0).toFixed(2)}</div>
                 </div>
                 <!-- রিবেট (Green) -->
                 <div class="deduction-card green">
-                    <div class="deduction-icon-box">🛡️</div>
+                    <div class="deduction-icon-box" title="${L === 'en' ? 'Rebate Savings Tag' : 'রিবেট ছাড়'}">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" fill="rgba(255,255,255,0.22)"></path>
+                            <line x1="7" y1="7" x2="7.01" y2="7" stroke-width="3"></line>
+                        </svg>
+                    </div>
                     <div class="deduction-label">${L === 'en' ? 'Rebate' : 'রিবেট'}</div>
                     <div class="deduction-value">৳ ${(summary.totalRebate || 0).toFixed(2)}</div>
                 </div>
@@ -1474,9 +1490,8 @@ function showDashboard() {
                                 <td class="tx-cell-amt ${amountClass}">${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
                                 <td class="tx-cell-units">${t.units ? t.units.toFixed(2) : '-'}</td>
                                 <td class="tx-cell-balance">${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
-                                <td class="tx-cell-desc">
-                                    <span class="desc-badge-icon">📊</span>
-                                    <span>${description}</span>
+                                <td class="tx-cell-desc" title="${(description || '').replace(/"/g, '&quot;')}">
+                                    ${formatTxDescription(description)}
                                 </td>
                             </tr>
                             `;

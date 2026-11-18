@@ -132,7 +132,7 @@ function showTransactions() {
                                 <td>${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
                                 <td>${unitsDisplay}</td>
                                 <td>${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
-                                <td style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: 13px; word-break: break-word; max-width: 250px;">${description}</td>
+                                <td class="tx-cell-desc" style="max-width: none; min-width: 250px;" title="${(description || '').replace(/"/g, '&quot;')}">${formatTxDescription(description)}</td>
                                 <td>
                                     <button class="btn btn-sm" onclick="editTransaction('${t.id}')">${L==='en'?'Edit':'এডিট'}</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteTransaction('${t.id}')">${L==='en'?'Delete':'ডিলিট'}</button>

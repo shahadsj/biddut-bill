@@ -35,13 +35,13 @@
     <link rel="manifest" href="manifest.json">
     
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.1.5">
-    <link rel="apple-touch-icon" href="icon-192.png?v=2.1.5">
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=2.1.5">
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=2.1.5">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.1.8">
+    <link rel="apple-touch-icon" href="icon-192.png?v=2.1.8">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=2.1.8">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=2.1.8">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="css/style.css?v=2.1.5">
+    <link rel="stylesheet" href="css/style.css?v=2.1.8">
     
     <!-- Google Fonts - বাংলা -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,45 +74,123 @@
                 
                 <nav class="sidebar-nav">
                     <div class="nav-item active" onclick="navigateTo('dashboard')">
-                        <span class="nav-icon">📊</span> <span class="nav-text" data-key="sidebarDashboard">ড্যাশবোর্ড</span>
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="9" rx="1.5" fill="currentColor" fill-opacity="0.25"></rect>
+                                <rect x="14" y="3" width="7" height="5" rx="1.5"></rect>
+                                <rect x="14" y="12" width="7" height="9" rx="1.5" fill="currentColor" fill-opacity="0.25"></rect>
+                                <rect x="3" y="16" width="7" height="5" rx="1.5"></rect>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarDashboard">ড্যাশবোর্ড</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('meters')">
-                        <span class="nav-icon">⚡</span> <span class="nav-text" data-key="sidebarMeters">মিটার ম্যানেজমেন্ট</span>
+                        <span class="nav-icon" style="color: #fbbf24;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.25"></polygon>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarMeters">মিটার ম্যানেজমেন্ট</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('transactions')">
-                        <span class="nav-icon">💳</span> <span class="nav-text" data-key="sidebarTransactions">ট্রানজেকশন</span>
+                        <span class="nav-icon" style="color: #38bdf8;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="5" width="20" height="14" rx="2.5" fill="currentColor" fill-opacity="0.2"></rect>
+                                <line x1="2" y1="10" x2="22" y2="10"></line>
+                                <circle cx="7" cy="15" r="1.5" fill="currentColor"></circle>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarTransactions">ট্রানজেকশন</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('calculator')">
-                        <span class="nav-icon">🧮</span> <span class="nav-text" data-key="sidebarCalculator">ক্যালকুলেটর</span>
+                        <span class="nav-icon" style="color: #c084fc;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="2" width="16" height="20" rx="3" fill="currentColor" fill-opacity="0.2"></rect>
+                                <line x1="8" y1="6" x2="16" y2="6"></line>
+                                <line x1="16" y1="14" x2="16" y2="18"></line>
+                                <path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"></path>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarCalculator">ক্যালকুলেটর</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('reports')">
-                        <span class="nav-icon">📈</span> <span class="nav-text" data-key="sidebarReports">রিপোর্ট</span>
+                        <span class="nav-icon" style="color: #34d399;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="currentColor" fill-opacity="0.18"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarReports">রিপোর্ট</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('analytics')">
-                        <span class="nav-icon">📉</span> <span class="nav-text" data-key="sidebarAnalytics">এনালিটিক্স</span>
+                        <span class="nav-icon" style="color: #f472b6;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                                <polyline points="3 8 9 12 15 6 21 10" stroke-width="2.2"></polyline>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarAnalytics">এনালিটিক্স</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('settings')">
-                        <span class="nav-icon">⚙️</span> <span class="nav-text" data-key="sidebarSettings">সেটিংস</span>
+                        <span class="nav-icon" style="color: #cbd5e1;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.25"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarSettings">সেটিংস</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('profile')">
-                        <span class="nav-icon">👥</span> <span class="nav-text" data-key="sidebarProfile">ব্যবহারকারী</span>
+                        <span class="nav-icon" style="color: #60a5fa;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="currentColor" fill-opacity="0.2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarProfile">ব্যবহারকারী</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('backup')">
-                        <span class="nav-icon">💾</span> <span class="nav-text" data-key="sidebarBackup">তথ্য ব্যবস্থাপনা</span>
+                        <span class="nav-icon" style="color: #38bdf8;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="currentColor" fill-opacity="0.2"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarBackup">তথ্য ব্যবস্থাপনা</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('expenses')">
-                        <span class="nav-icon">🛒</span> <span class="nav-text" data-key="sidebarExpenses">অতিরিক্ত খরচ</span>
+                        <span class="nav-icon" style="color: #fb923c;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" fill="currentColor" fill-opacity="0.2"></path>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarExpenses">অতিরিক্ত খরচ</span>
                     </div>
                     <div class="nav-item" onclick="navigateTo('rent')">
-                        <span class="nav-icon">🏠</span> <span class="nav-text" data-key="sidebarRent">ভাড়া ব্যবস্থাপনা</span>
+                        <span class="nav-icon" style="color: #4ade80;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="currentColor" fill-opacity="0.2"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarRent">ভাড়া ব্যবস্থাপনা</span>
                     </div>
                     <div class="nav-item" id="adminNav" style="display:none;" onclick="navigateTo('admin')">
-                        <span class="nav-icon">👑</span> <span class="nav-text" data-key="sidebarAdmin">অ্যাডমিন প্যানেল</span>
+                        <span class="nav-icon" style="color: #fbbf24;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" fill="currentColor" fill-opacity="0.25"></path>
+                                <circle cx="12" cy="18" r="2" fill="currentColor"></circle>
+                            </svg>
+                        </span> <span class="nav-text" data-key="sidebarAdmin">অ্যাডমিন প্যানেল</span>
                     </div>
                     
                     <!-- Sidebar User Info Box with Quick Logout -->
                     <div class="sidebar-user-box" id="sidebarUserInfo">
-                        <div class="sidebar-user-avatar">👤</div>
+                        <div class="sidebar-user-avatar">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="currentColor" fill-opacity="0.25"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
                         <div class="sidebar-user-meta">
                             <div class="sidebar-user-name" id="sidebarUserName">ইউজার</div>
                             <div class="sidebar-user-role" id="sidebarUserRole">User</div>
@@ -130,7 +208,7 @@
                 <!-- Sidebar Footer with Pylon Illustration & Copyright -->
                 <div class="sidebar-footer-wrap">
                     <div class="sidebar-pylon-svg">
-                        <svg viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-height: 95px; height: auto;">
+                        <svg viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-height: 140px; height: auto;">
                             <!-- Distant City Skyline Silhouettes -->
                             <path d="M0 130 L0 115 L14 115 L14 105 L28 105 L28 118 L46 118 L46 108 L62 108 L62 130 L158 130 L158 110 L174 110 L174 120 L194 120 L194 104 L208 104 L208 130 Z" fill="white" fill-opacity="0.18"/>
                             
@@ -434,22 +512,22 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <!-- JavaScript Files -->
-    <script src="js/utils.js?v=2.1.5"></script>
-<script src="js/auth.js?v=2.1.5"></script>
-<script src="js/app.js?v=2.1.5"></script>
-<script src="js/firebase-init.js?v=2.1.5"></script>
-<script src="js/dashboard.js?v=2.1.5"></script>
-<script src="js/meters.js?v=2.1.5"></script>
-<script src="js/transactions.js?v=2.1.5"></script>
-<script src="js/calculator.js?v=2.1.5"></script>
-<script src="js/reports.js?v=2.1.5"></script>
-<script src="js/analytics.js?v=2.1.5"></script>
-<script src="js/settings.js?v=2.1.5"></script>
-<script src="js/backup.js?v=2.1.5"></script>
-<script src="js/admin.js?v=2.1.5"></script>
-<script src="js/profile.js?v=2.1.5"></script>
-<script src="js/rent.js?v=2.1.5"></script>
-<script src="js/expenses.js?v=2.1.5"></script>
+    <script src="js/utils.js?v=2.1.8"></script>
+<script src="js/auth.js?v=2.1.8"></script>
+<script src="js/app.js?v=2.1.8"></script>
+<script src="js/firebase-init.js?v=2.1.8"></script>
+<script src="js/dashboard.js?v=2.1.8"></script>
+<script src="js/meters.js?v=2.1.8"></script>
+<script src="js/transactions.js?v=2.1.8"></script>
+<script src="js/calculator.js?v=2.1.8"></script>
+<script src="js/reports.js?v=2.1.8"></script>
+<script src="js/analytics.js?v=2.1.8"></script>
+<script src="js/settings.js?v=2.1.8"></script>
+<script src="js/backup.js?v=2.1.8"></script>
+<script src="js/admin.js?v=2.1.8"></script>
+<script src="js/profile.js?v=2.1.8"></script>
+<script src="js/rent.js?v=2.1.8"></script>
+<script src="js/expenses.js?v=2.1.8"></script>
 
     <!-- ==================== PWA SCRIPT ==================== -->
     <script>
