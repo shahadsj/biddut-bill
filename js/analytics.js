@@ -269,18 +269,18 @@ function showAnalytics() {
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js not loaded, retrying...');
                 setTimeout(function() {
-                    drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal);
+                    drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal, rebateTotal);
                 }, 1000);
                 return;
             }
-            drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal);
+            drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal, rebateTotal);
         }, 600);
     }
 }
 
 // ==================== DRAW ANALYTICS CHARTS ====================
-function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal) {
-
+function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabels, yearExpense, rechargeTotal, expenseTotal, demandTotal, vatTotal, rebateTotal) {
+    var L = APP.language || 'bn';
     console.log('Drawing charts...');
 
     // ===== CHECK IF CHART.JS IS LOADED =====
