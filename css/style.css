@@ -97,6 +97,43 @@ body {
     }
 }
 
+/* ==================== ELECTRIC SHOCK & POWER SURGE ==================== */
+@keyframes authSevereShock {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    12% { transform: translate(-10px, -6px) scale(0.98) rotate(-2deg); filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.9)); }
+    24% { transform: translate(9px, 8px) scale(1.02) rotate(2deg); filter: drop-shadow(0 0 35px rgba(245, 158, 11, 1)); }
+    36% { transform: translate(-8px, 6px) scale(0.97) rotate(-1.5deg); filter: drop-shadow(0 0 45px rgba(239, 68, 68, 1)); }
+    48% { transform: translate(7px, -7px) scale(1.03) rotate(1.5deg); }
+    60% { transform: translate(-5px, 4px) scale(0.99) rotate(-1deg); }
+    72% { transform: translate(5px, -4px) scale(1.01) rotate(0.8deg); }
+    84% { transform: translate(-2px, 3px) scale(1) rotate(-0.4deg); }
+    100% { transform: translate(0, 0) scale(1) rotate(0deg); filter: none; }
+}
+
+@keyframes authPowerSurge {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
+    40% { transform: scale(1.025); filter: drop-shadow(0 0 50px rgba(16, 185, 129, 0.95)) drop-shadow(0 0 25px rgba(56, 189, 248, 0.9)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.5)); }
+}
+
+.auth-card-shock {
+    animation: authSevereShock 0.75s cubic-bezier(.36,.07,.19,.97) both !important;
+    border: 2px solid #ef4444 !important;
+}
+
+.auth-card-surge {
+    animation: authPowerSurge 0.8s ease-out both !important;
+    border: 2px solid #10b981 !important;
+}
+
+.auth-wire-spark {
+    stroke-dasharray: 6 4;
+    animation: authWireDash 0.35s linear infinite;
+}
+@keyframes authWireDash {
+    to { stroke-dashoffset: -20; }
+}
+
 .auth-card-modern {
     position: relative;
     z-index: 10;
