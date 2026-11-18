@@ -695,17 +695,16 @@ function updateAllSidebarTexts() {
     }
 }
 
-// ==================== SLAB BASED UNIT CALCULATOR ====================
-function calculateUnitsFromAmount(amount, currentBalance, meterId) {
+// ==================== SLAB BASED UNIT & RATE DETAILS ====================
+function calculateSlabDetailsFromAmount(amount, currentBalance, meterId) {
     var diffAmount = Math.abs(amount - currentBalance);
-    if (diffAmount <= 0) return 0;
+    if (diffAmount <= 0) {
+        return { totalUnits: 0, slabsUsed: [], slabNames: '', rateTexts: '' };
+    }
     
-    var meterData = APP.metersData[meterId];
-    if (!meterData) return 0;
+    var meterData = APP.metersData ? APP.metersData[meterId] : null;
+    var transactions = (meterData && meterData.transactions) ? meterData.transactions : [];
     
-    var transactions = meterData.transactions || [];
-    
-    // বর্তমান মাসের ব্যবহার করা ইউনিট ট্র্যাক করুন
     var now = new Date();
     var currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
     
@@ -726,6 +725,8 @@ function calculateUnitsFromAmount(amount, currentBalance, meterId) {
     var remainingTaka = diffAmount;
     var totalUnits = 0;
     var usedUnits = usedUnitsThisMonth;
+    var slabsUsed = [];
+    var L = APP.language || 'bn';
     
     for (var i = 0; i < tariffRates.length; i++) {
         if (remainingTaka <= 0) break;
@@ -736,8 +737,6 @@ function calculateUnitsFromAmount(amount, currentBalance, meterId) {
         var rate = slab.rate;
         
         var maxUnitsInSlab = (max === null || max === undefined) ? Infinity : max - min + 1;
-        
-        // এই স্ল্যাবে ইতিমধ্যে কত ইউনিট ব্যবহার হয়েছে
         var usedInThisSlab = Math.max(0, Math.min(usedUnits - min + 1, maxUnitsInSlab));
         var remainingInThisSlab = maxUnitsInSlab - usedInThisSlab;
         
@@ -747,12 +746,49 @@ function calculateUnitsFromAmount(amount, currentBalance, meterId) {
         var takaInThisSlab = Math.min(remainingTaka, costForRemainingUnits);
         var unitsInThisSlab = takaInThisSlab / rate;
         
+        if (unitsInThisSlab > 0) {
+            var rangeStr = (max === null || max === undefined) ? (min + '+') : (min + '-' + max);
+            var slabDisplay = slab.name;
+            if (L === 'bn') {
+                if (slab.name === 'Lifeline') slabDisplay = 'লাইফলাইন';
+                else if (slab.name === '1st Slab') slabDisplay = '১ম স্ল্যাব';
+                else if (slab.name === '2nd Slab') slabDisplay = '২য় স্ল্যাব';
+                else if (slab.name === '3rd Slab') slabDisplay = '৩য় স্ল্যাব';
+                else if (slab.name === '4th Slab') slabDisplay = '৪র্থ স্ল্যাব';
+                else if (slab.name === '5th Slab') slabDisplay = '৫ম স্ল্যাব';
+                else if (slab.name === '6th Slab') slabDisplay = '৬ষ্ঠ স্ল্যাব';
+            }
+            slabsUsed.push({
+                name: slabDisplay,
+                range: rangeStr,
+                rate: rate,
+                units: Math.round(unitsInThisSlab * 100) / 100,
+                cost: Math.round(takaInThisSlab * 100) / 100
+            });
+        }
+        
         totalUnits += unitsInThisSlab;
         remainingTaka -= takaInThisSlab;
         usedUnits += unitsInThisSlab;
     }
     
-    return Math.round(totalUnits * 100) / 100;
+    totalUnits = Math.round(totalUnits * 100) / 100;
+    
+    var slabNames = slabsUsed.map(function(s) { return s.name + ' (' + s.range + ' kWh)'; }).join(' + ');
+    var rateTexts = slabsUsed.map(function(s) { return '৳ ' + s.rate.toFixed(2) + '/ইউনিট'; }).join(', ');
+    
+    return {
+        totalUnits: totalUnits,
+        slabsUsed: slabsUsed,
+        slabNames: slabNames || (L === 'en' ? 'Lifeline (0-50 kWh)' : 'লাইফলাইন (০-৫০ kWh)'),
+        rateTexts: rateTexts || (L === 'en' ? '৳ 4.63/Unit' : '৳ ৪.৬৩/ইউনিট')
+    };
+}
+
+// ==================== SLAB BASED UNIT CALCULATOR ====================
+function calculateUnitsFromAmount(amount, currentBalance, meterId) {
+    var details = calculateSlabDetailsFromAmount(amount, currentBalance, meterId);
+    return details.totalUnits;
 }
 
 // ==================== TRANSLATION HELPER ====================
@@ -763,10 +799,47 @@ function __(key) {
 }
 
 // ==================== TRANSACTION DESCRIPTION FORMATTER ====================
-function formatTxDescription(desc) {
+function formatTxDescription(desc, tx) {
     if (!desc || desc === '-') return '-';
     // দশমিক ক্লিন করুন
     desc = desc.replace(/(\d+)\.(\d{2})\d+/g, '$1.$2');
+    
+    // অটো-এনরিচ: যদি পুরোনো বিল ট্রানজেকশনে স্ল্যাব ও রেট না থাকে তবে তা স্বয়ংক্রিয়ভাবে স্ল্যাব ডিটেক্ট করে যুক্ত করুন
+    if (desc.indexOf('|') === -1 && (desc.indexOf('খরচ') !== -1 || desc.indexOf('Expense') !== -1 || (tx && (tx.type === 'bill' || tx.type === 'electricity_bill')))) {
+        var amt = (tx && tx.amount) ? tx.amount : 0;
+        var u = (tx && tx.units) ? tx.units : 0;
+        if (!u) {
+            var m = desc.match(/Units:\s*([\d.]+)/i);
+            if (m) u = parseFloat(m[1]) || 0;
+        }
+        if (!amt) {
+            var m2 = desc.match(/-\s*([\d.]+)\s*টাকা/);
+            if (m2) amt = parseFloat(m2[1]) || 0;
+        }
+        
+        if (u > 0 && amt > 0) {
+            var calculatedRate = amt / u;
+            var matchedSlab = 'লাইফলাইন (০-৫০ kWh)';
+            var tariffRates = APP.tariffRates || [];
+            for (var i = 0; i < tariffRates.length; i++) {
+                var s = tariffRates[i];
+                if (Math.abs(s.rate - calculatedRate) < 0.15) {
+                    var rangeStr = s.range[1] ? (s.range[0] + '-' + s.range[1]) : (s.range[0] + '+');
+                    var sName = s.name === 'Lifeline' ? 'লাইফলাইন' : s.name;
+                    matchedSlab = sName + ' (' + rangeStr + ' kWh)';
+                    calculatedRate = s.rate;
+                    break;
+                }
+            }
+            
+            var newBalMatch = desc.match(/নতুন ব্যালেন্স:\s*([\d.]+)\s*টাকা/);
+            var newBal = newBalMatch ? newBalMatch[1] : (tx && tx.balanceAfter ? tx.balanceAfter.toFixed(2) : '');
+            var dateMatch = desc.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+            var dateStr = dateMatch ? dateMatch[1] : '';
+            
+            desc = '📊 বিদ্যুৎ বিল - ' + amt.toFixed(2) + ' টাকা | ⚡ ইউনিট: ' + u.toFixed(2) + ' kWh | 🏷️ স্ল্যাব: ' + matchedSlab + ' | 💲 রেট: ৳ ' + calculatedRate.toFixed(2) + '/ইউনিট' + (newBal ? ' | 💰 ব্যালেন্স: ' + newBal + ' টাকা' : '') + (dateStr ? ' | 📅 ' + dateStr : '');
+        }
+    }
     
     // পাইপ '|' বিভাজক থাকলে ব্যাজ/চিপ হিসেবে সাজান
     if (desc.indexOf('|') !== -1) {
@@ -775,6 +848,8 @@ function formatTxDescription(desc) {
             var chipClass = 'tx-chip';
             if (part.indexOf('মাসিক রিচার্জ') !== -1 || part.indexOf('Monthly Recharge') !== -1) {
                 chipClass += ' tx-chip-primary';
+            } else if (part.indexOf('বিদ্যুৎ বিল') !== -1 || part.indexOf('বিল') !== -1 || part.indexOf('খরচ') !== -1 || part.indexOf('Expense') !== -1) {
+                chipClass += ' tx-chip-orange';
             } else if (part.indexOf('ডিমান্ড চার্জ') !== -1 || part.indexOf('Demand Charge') !== -1) {
                 chipClass += ' tx-chip-orange';
             } else if (part.indexOf('ভ্যাট') !== -1 || part.indexOf('VAT') !== -1) {
@@ -783,6 +858,16 @@ function formatTxDescription(desc) {
                 chipClass += ' tx-chip-green';
             } else if (part.indexOf('নেট') !== -1 || part.indexOf('Net') !== -1) {
                 chipClass += ' tx-chip-purple';
+            } else if (part.indexOf('স্ল্যাব') !== -1 || part.indexOf('Slab') !== -1) {
+                chipClass += ' tx-chip-green';
+            } else if (part.indexOf('রেট') !== -1 || part.indexOf('Rate') !== -1) {
+                chipClass += ' tx-chip-purple';
+            } else if (part.indexOf('ইউনিট') !== -1 || part.indexOf('Units') !== -1) {
+                chipClass += ' tx-chip-cyan';
+            } else if (part.indexOf('ব্যালেন্স') !== -1 || part.indexOf('Balance') !== -1) {
+                chipClass += ' tx-chip-primary';
+            } else if (part.indexOf('📅') !== -1) {
+                chipClass += ' tx-chip-slate';
             }
             return '<span class="' + chipClass + '">' + part + '</span>';
         }).join(' ');

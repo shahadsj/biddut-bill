@@ -253,6 +253,7 @@ function login() {
                     }
 
                     updateSidebarUserInfo();
+                    if (typeof createMobileNav === "function") createMobileNav();
 
                     // Load from Firebase
                     if (typeof loadFromCloud === "function") {

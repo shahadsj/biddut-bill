@@ -4353,6 +4353,18 @@ html, body {
     border-color: #ddd6fe;
     font-weight: 700;
 }
+.tx-chip-cyan {
+    background: #ecfeff;
+    color: #0e7490;
+    border-color: #a5f3fc;
+    font-weight: 600;
+}
+.tx-chip-slate {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #cbd5e1;
+    font-weight: 500;
+}
 .tx-desc-text {
     display: inline-block;
     word-break: break-word;
@@ -4377,23 +4389,37 @@ html, body {
     cursor: pointer;
 }
 
-/* 9. মোবাইল বটম নেভিগেশন বার */
+/* 9. মোবাইল বটম নেভিগেশন বার (সম্পূর্ণ আধুনিক ও হরিজোন্টাল স্ক্রোলযোগ্য) */
 .mobile-bottom-nav {
     display: none;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: #ffffff;
-    border-top: 1px solid #e2e8f0;
-    padding: 6px 10px;
-    z-index: 999;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 6px 8px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.mobile-bottom-nav::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 .mobile-nav-items {
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    gap: 4px;
+    width: max-content;
+    min-width: 100%;
+    padding: 0 4px;
 }
 .mobile-nav-item {
     background: transparent;
@@ -4401,29 +4427,58 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    justify-content: center;
+    gap: 3px;
     padding: 6px 12px;
-    border-radius: 14px;
+    border-radius: 12px;
     color: #64748b;
     cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 58px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 62px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.mobile-nav-item:active {
+    transform: scale(0.92);
 }
 .mobile-nav-item .nav-icon {
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    transition: transform 0.2s ease;
+}
+.mobile-nav-item .nav-icon svg {
+    width: 20px;
+    height: 20px;
+    display: block;
 }
 .mobile-nav-item .nav-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.1px;
+    transition: color 0.2s ease;
 }
 .mobile-nav-item.active {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background: linear-gradient(135deg, #4b2ac8 0%, #31158a 100%) !important;
+    box-shadow: 0 3px 12px rgba(75, 42, 200, 0.35) !important;
+}
+.mobile-nav-item.active .nav-icon {
+    transform: scale(1.08);
+}
+.mobile-nav-item.active .nav-icon svg {
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    stroke: #ffffff !important;
 }
 .mobile-nav-item.active .nav-label {
     color: #ffffff !important;
+    font-weight: 700 !important;
 }
 @media (max-width: 768px) {
     .mobile-bottom-nav {

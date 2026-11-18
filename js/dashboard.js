@@ -842,10 +842,70 @@ function showDashboard() {
         return `<option value="${m.id}" ${selected}>${displayName} - ${m.meterNumber || m.meterNo}</option>`;
     }).join('');
 
-    // Usage percentage for balance progress bar
-    var usagePct = 1.0;
-    if (totalRecharge > 0) {
-        usagePct = Math.min(Math.max(((totalExpense % totalRecharge) / totalRecharge) * 100, 1.0), 99.0);
+    // ✅ রিচার্জ চক্র ভিত্তিক ব্যালেন্স প্রগ্রেস বার (Usable Net Balance Cycle)
+    // লজিক: রিচার্জের নেট ব্যালেন্স (ডিমান্ড চার্জ ও ভ্যাট বাদে যে টাকা ব্যবহারের যোগ্য) + আগের ব্যালেন্স = ১০০% শুরুর সাইকেল
+    // এরপর বিল বাবদ খরচ হলে সেই সাইকেল থেকে শতকরা হার হ্রাস পাবে
+    var cycleBase = 0;
+    var cycleExpense = 0;
+
+    var sortedTx = (transactions || []).slice().sort(function(a, b) {
+        var tA = new Date(a.date || a.timestamp || 0).getTime();
+        var tB = new Date(b.date || b.timestamp || 0).getTime();
+        return tA - tB;
+    });
+
+    var lastRechargeIdx = -1;
+    for (var i = sortedTx.length - 1; i >= 0; i--) {
+        var txItem = sortedTx[i];
+        if (txItem.type === 'recharge' || (txItem.deductions && txItem.deductions.netAmount)) {
+            lastRechargeIdx = i;
+            break;
+        }
+    }
+
+    if (lastRechargeIdx !== -1) {
+        var rTx = sortedTx[lastRechargeIdx];
+        if (rTx.balanceAfter !== undefined && rTx.balanceAfter !== null && Number(rTx.balanceAfter) > 0) {
+            cycleBase = Number(rTx.balanceAfter);
+        } else {
+            var net = (rTx.deductions && rTx.deductions.netAmount) ? Number(rTx.deductions.netAmount) : Number(rTx.amount || 0);
+            cycleBase = net;
+        }
+
+        // ঐ রিচার্জের পর থেকে মোট কত টাকা বিল খরচ হয়েছে
+        for (var j = lastRechargeIdx + 1; j < sortedTx.length; j++) {
+            var bTx = sortedTx[j];
+            if (bTx.type === 'bill' || bTx.type === 'electricity_bill') {
+                cycleExpense += (Number(bTx.amount) || 0);
+            }
+        }
+
+        if (balance + cycleExpense > cycleBase) {
+            cycleBase = balance + cycleExpense;
+        }
+    } else {
+        (transactions || []).forEach(function(tx) {
+            if (tx.type === 'bill' || tx.type === 'electricity_bill') {
+                cycleExpense += (Number(tx.amount) || 0);
+            }
+        });
+        cycleBase = balance + cycleExpense;
+        if (cycleBase <= 0) cycleBase = balance > 0 ? balance : 1000;
+    }
+
+    var currBal = Math.max(0, Number(balance) || 0);
+    var balancePct = cycleBase > 0 ? Math.min(Math.max((currBal / cycleBase) * 100, 0), 100) : 0;
+    var usagePct = cycleBase > 0 ? Math.min(Math.max((cycleExpense / cycleBase) * 100, 0), 100) : 0;
+    if (cycleExpense === 0 && balancePct < 100) {
+        usagePct = Math.max(0, 100 - balancePct);
+    }
+
+    // ব্যালেন্স অনুযায়ী ডায়নামিক রঙ ও ব্যাকগ্রাউন্ড
+    var balanceProgressBg = 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'; // সবুজ (স্বাস্থ্যকর ব্যালেন্স)
+    if (balancePct < 25) {
+        balanceProgressBg = 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)'; // লাল (সতর্কতা)
+    } else if (balancePct < 55) {
+        balanceProgressBg = 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)'; // হলুদ/অরেঞ্জ (মাঝারি)
     }
 
     // Rent records dynamic aggregation
@@ -1190,11 +1250,11 @@ function showDashboard() {
                 <div class="balance-progress-wrap">
                     <div class="progress-labels">
                         <span>0%</span>
-                        <span>${L === 'en' ? 'Usage' : 'ব্যবহার'}: ${usagePct.toFixed(1)}%</span>
+                        <span>${L === 'en' ? 'Remaining Balance' : 'অবশিষ্ট ব্যালেন্স'}: ${balancePct.toFixed(1)}% (${L === 'en' ? 'Used' : 'খরচ'}: ${usagePct.toFixed(1)}%)</span>
                         <span>100%</span>
                     </div>
                     <div class="progress-track">
-                        <div class="progress-bar-fill" style="width: ${usagePct}%;"></div>
+                        <div class="progress-bar-fill" style="width: ${balancePct.toFixed(1)}%; background: ${balanceProgressBg};"></div>
                     </div>
                 </div>
             </div>
@@ -1491,7 +1551,7 @@ function showDashboard() {
                                 <td class="tx-cell-units">${t.units ? t.units.toFixed(2) : '-'}</td>
                                 <td class="tx-cell-balance">${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
                                 <td class="tx-cell-desc" title="${(description || '').replace(/"/g, '&quot;')}">
-                                    ${formatTxDescription(description)}
+                                    ${formatTxDescription(description, t)}
                                 </td>
                             </tr>
                             `;
@@ -1545,22 +1605,64 @@ function initDashboardCharts(meterId, transactions, summary, monthExpense) {
 
         var labels = [];
         var dataPoints = [];
+        var isEn = (localStorage.getItem('language') === 'en');
         var monthNamesBn = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টে', 'অক্টো', 'নবে', 'ডিসে'];
+        var monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var monthNames = isEn ? monthNamesEn : monthNamesBn;
 
-        if (billTx.length >= 2) {
-            var recent = billTx.slice(-7);
-            recent.forEach(function(t) {
-                var d = new Date(t.date || t.timestamp);
-                var lbl = !isNaN(d.getTime()) ? (d.getDate() + ' ' + monthNamesBn[d.getMonth()]) : '-';
-                labels.push(lbl);
-                dataPoints.push(Number(t.amount || 0));
-            });
-        } else {
-            labels = ['১০ নবে', '১১ নবে', '১২ নবে', '১৩ নবে', '১৪ নবে', '১৫ নবে', '১৬ নবে'];
-            dataPoints = [50, 100, 65, 128.85, 80, 140, 75];
-            if (billTx.length === 1) {
-                dataPoints[3] = Number(billTx[0].amount || 128.85);
+        function toBnDigits(num) {
+            var bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            return String(num).replace(/\d/g, function(d) { return bnDigits[d]; });
+        }
+
+        // Aggregate real daily expenses (YYYY-MM-DD)
+        var dailyExpenseMap = {};
+        billTx.forEach(function(t) {
+            var d = new Date(t.date || t.timestamp);
+            if (!isNaN(d.getTime())) {
+                var y = d.getFullYear();
+                var m = String(d.getMonth() + 1).padStart(2, '0');
+                var day = String(d.getDate()).padStart(2, '0');
+                var key = y + '-' + m + '-' + day;
+                dailyExpenseMap[key] = (dailyExpenseMap[key] || 0) + (Number(t.amount) || 0);
             }
+        });
+
+        // Determine reference date (today, or newest transaction if in past/future)
+        var refDate = new Date();
+        if (billTx.length > 0) {
+            var latestTxDate = null;
+            billTx.forEach(function(t) {
+                var d = new Date(t.date || t.timestamp);
+                if (!isNaN(d.getTime())) {
+                    if (!latestTxDate || d > latestTxDate) {
+                        latestTxDate = d;
+                    }
+                }
+            });
+            if (latestTxDate) {
+                var diffDays = (refDate.getTime() - latestTxDate.getTime()) / (1000 * 3600 * 24);
+                if (diffDays > 7 || latestTxDate > refDate) {
+                    refDate = new Date(latestTxDate);
+                }
+            }
+        }
+
+        // Rolling last 7 days ending at refDate
+        for (var i = 6; i >= 0; i--) {
+            var dayDate = new Date(refDate);
+            dayDate.setDate(refDate.getDate() - i);
+            var y = dayDate.getFullYear();
+            var m = String(dayDate.getMonth() + 1).padStart(2, '0');
+            var day = String(dayDate.getDate()).padStart(2, '0');
+            var key = y + '-' + m + '-' + day;
+
+            var dayNum = dayDate.getDate();
+            var dayStr = isEn ? String(dayNum) : toBnDigits(dayNum);
+            var monthStr = monthNames[dayDate.getMonth()];
+            labels.push(dayStr + ' ' + monthStr);
+            var dayAmount = dailyExpenseMap[key] || 0;
+            dataPoints.push(Math.round(dayAmount * 100) / 100);
         }
 
         var ctx = expenseCanvas.getContext('2d');

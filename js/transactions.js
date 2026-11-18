@@ -132,7 +132,7 @@ function showTransactions() {
                                 <td>${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
                                 <td>${unitsDisplay}</td>
                                 <td>${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
-                                <td class="tx-cell-desc" style="max-width: none; min-width: 250px;" title="${(description || '').replace(/"/g, '&quot;')}">${formatTxDescription(description)}</td>
+                                <td class="tx-cell-desc" style="max-width: none; min-width: 250px;" title="${(description || '').replace(/"/g, '&quot;')}">${formatTxDescription(description, t)}</td>
                                 <td>
                                     <button class="btn btn-sm" onclick="editTransaction('${t.id}')">${L==='en'?'Edit':'এডিট'}</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteTransaction('${t.id}')">${L==='en'?'Delete':'ডিলিট'}</button>
@@ -748,20 +748,30 @@ function updateBalance() {
         updateActiveMeterData(updatedData);
         
     } else {
-        // খরচ - ইউনিট সহ
+        // খরচ - ইউনিট, স্ল্যাব ও রেট বিস্তারিত
         var spentAmount = diffAmount;
         var balanceAfter = amount;
         
-        // ✅ description তৈরি করুন - ইউনিট সবসময় দেখান (যদি 0 হয় তাও)
-        var description = '📊 ' + (L === 'en' ? 'Balance Update (Expense)' : 'ব্যালেন্স আপডেট (খরচ)') + 
-            ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
-            ' - ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা') + 
-            ' - ' + formattedDate;
+        var slabDetails = calculateSlabDetailsFromAmount(amount, currentBalance, APP.activeMeterId);
+        estimatedUnits = slabDetails.totalUnits;
+        var slabName = slabDetails.slabNames;
+        var slabRate = slabDetails.rateTexts;
         
-        // ✅ ইউনিট যোগ করুন (যদি 0 হয় তাও দেখান)
-        if (estimatedUnits !== undefined && estimatedUnits !== null) {
-            description += ' (Units: ' + estimatedUnits.toFixed(2) + ' kWh)';
+        var descParts = [];
+        descParts.push('📊 ' + (L === 'en' ? 'Electricity Bill' : 'বিদ্যুৎ বিল') + ' - ' + spentAmount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
+        if (estimatedUnits > 0) {
+            descParts.push('⚡ ' + (L === 'en' ? 'Units' : 'ইউনিট') + ': ' + estimatedUnits.toFixed(2) + ' kWh');
         }
+        if (slabName) {
+            descParts.push('🏷️ ' + (L === 'en' ? 'Slab' : 'স্ল্যাব') + ': ' + slabName);
+        }
+        if (slabRate) {
+            descParts.push('💲 ' + (L === 'en' ? 'Rate' : 'রেট') + ': ' + slabRate);
+        }
+        descParts.push('💰 ' + (L === 'en' ? 'New Balance' : 'নতুন ব্যালেন্স') + ': ' + amount.toFixed(2) + ' ' + (L === 'en' ? 'Taka' : 'টাকা'));
+        descParts.push('📅 ' + formattedDate);
+        
+        var description = descParts.join(' | ');
         
         var transaction = {
             id: 'balance_update_' + Date.now().toString(),
@@ -769,6 +779,8 @@ function updateBalance() {
             type: 'electricity_bill',
             amount: spentAmount,
             units: estimatedUnits,
+            slab: slabName,
+            rate: slabRate,
             balanceAfter: balanceAfter,
             date: date,
             description: description,

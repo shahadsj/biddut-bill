@@ -310,6 +310,11 @@ function navigateTo(page) {
     // Close mobile drawer if open
     closeMobileSidebar();
     
+    // Ensure mobile nav exists on mobile screens
+    if (window.innerWidth <= 768 && !document.getElementById('mobileBottomNav')) {
+        createMobileNav();
+    }
+    
     // Update mobile nav active
     updateMobileNavActive(page);
     
@@ -455,6 +460,9 @@ function initApp() {
             document.getElementById("authPage").style.display = "none";
             document.getElementById("appPage").style.display = "block";
             
+            // Create mobile bottom navigation
+            createMobileNav();
+            
             var adminNav = document.getElementById("adminNav");
             if (adminNav && APP.currentUser.role === "admin") adminNav.style.display = "block";
             if (typeof updateSidebarUserInfo === "function") updateSidebarUserInfo();
@@ -581,39 +589,138 @@ function initApp() {
 
 // ==================== MOBILE BOTTOM NAVIGATION ====================
 function createMobileNav() {
-    if (document.getElementById('mobileBottomNav')) return;
+    var existing = document.getElementById('mobileBottomNav');
+    if (existing) {
+        existing.remove();
+    }
+    
+    var L = APP.language || 'bn';
+    var isEn = (L === 'en');
+    var isAdmin = APP.currentUser && (APP.currentUser.role === 'admin' || APP.currentUser.email === 'k.m.abubakkarsiddek@gmail.com');
     
     var navItems = [
-        { id: 'dashboard', icon: '🏠', label: APP.language === 'en' ? 'Dashboard' : 'ড্যাশবোর্ড' },
-        { id: 'meters', icon: '⚡', label: APP.language === 'en' ? 'Meters' : 'মিটার' },
-        { id: 'calculator', icon: '🧮', label: APP.language === 'en' ? 'Calculator' : 'ক্যালকুলেটর' },
-        { id: 'reports', icon: '📈', label: APP.language === 'en' ? 'Reports' : 'রিপোর্ট' },
-        { id: 'settings', icon: '⚙️', label: APP.language === 'en' ? 'Settings' : 'সেটিংস' }
+        {
+            id: 'dashboard',
+            label: isEn ? 'Dashboard' : 'ড্যাশবোর্ড',
+            color: '#818cf8',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5" fill="currentColor" fill-opacity="0.25"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5" fill="currentColor" fill-opacity="0.25"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>'
+        },
+        {
+            id: 'meters',
+            label: isEn ? 'Meters' : 'মিটার',
+            color: '#fbbf24',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.25"></polygon></svg>'
+        },
+        {
+            id: 'transactions',
+            label: isEn ? 'Transactions' : 'ট্রানজেকশন',
+            color: '#38bdf8',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5" fill="currentColor" fill-opacity="0.2"></rect><line x1="2" y1="10" x2="22" y2="10"></line><circle cx="7" cy="15" r="1.5" fill="currentColor"></circle></svg>'
+        },
+        {
+            id: 'calculator',
+            label: isEn ? 'Calculator' : 'ক্যালকুলেটর',
+            color: '#c084fc',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="3" fill="currentColor" fill-opacity="0.2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"></path></svg>'
+        },
+        {
+            id: 'reports',
+            label: isEn ? 'Reports' : 'রিপোর্ট',
+            color: '#34d399',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="currentColor" fill-opacity="0.18"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>'
+        },
+        {
+            id: 'analytics',
+            label: isEn ? 'Analytics' : 'এনালিটিক্স',
+            color: '#f472b6',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><polyline points="3 8 9 12 15 6 21 10" stroke-width="2.2"></polyline></svg>'
+        },
+        {
+            id: 'rent',
+            label: isEn ? 'Rent' : 'ভাড়া ব্যবস্থাপনা',
+            color: '#4ade80',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="currentColor" fill-opacity="0.2"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>'
+        },
+        {
+            id: 'expenses',
+            label: isEn ? 'Extra' : 'অতিরিক্ত খরচ',
+            color: '#fb923c',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" fill="currentColor" fill-opacity="0.2"></path></svg>'
+        },
+        {
+            id: 'settings',
+            label: isEn ? 'Settings' : 'সেটিংস',
+            color: '#cbd5e1',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.25"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>'
+        },
+        {
+            id: 'profile',
+            label: isEn ? 'Profile' : 'ব্যবহারকারী',
+            color: '#60a5fa',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="currentColor" fill-opacity="0.2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>'
+        },
+        {
+            id: 'backup',
+            label: isEn ? 'Backup' : 'তথ্য ব্যবস্থাপনা',
+            color: '#38bdf8',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="currentColor" fill-opacity="0.2"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>'
+        }
     ];
+
+    if (isAdmin) {
+        navItems.push({
+            id: 'admin',
+            label: isEn ? 'Admin' : 'অ্যাডমিন',
+            color: '#fbbf24',
+            svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" fill="currentColor" fill-opacity="0.25"></path><circle cx="12" cy="18" r="2" fill="currentColor"></circle></svg>'
+        });
+    }
+
+    // "সব মেনু" (All / Menu drawer) button
+    navItems.push({
+        id: 'mobileSidebarMenuBtn',
+        isAction: true,
+        action: 'toggleSidebar',
+        label: isEn ? 'All Menu' : 'সব মেনু',
+        color: '#a855f7',
+        svg: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>'
+    });
     
     var html = '<div class="mobile-bottom-nav" id="mobileBottomNav">';
     html += '<div class="mobile-nav-items">';
     
     navItems.forEach(function(item) {
-        var activeClass = APP.currentPage === item.id ? 'active' : '';
-        html += '<button class="mobile-nav-item ' + activeClass + '" onclick="navigateTo(\'' + item.id + '\')" data-page="' + item.id + '">';
-        html += '<span class="nav-icon">' + item.icon + '</span>';
-        html += '<span class="nav-label">' + item.label + '</span>';
-        html += '</button>';
+        if (item.isAction) {
+            html += '<button class="mobile-nav-item" onclick="' + item.action + '()" title="' + item.label + '">';
+            html += '<span class="nav-icon" style="color: ' + item.color + ';">' + item.svg + '</span>';
+            html += '<span class="nav-label">' + item.label + '</span>';
+            html += '</button>';
+        } else {
+            var activeClass = APP.currentPage === item.id ? 'active' : '';
+            html += '<button class="mobile-nav-item ' + activeClass + '" onclick="navigateTo(\'' + item.id + '\')" data-page="' + item.id + '" title="' + item.label + '">';
+            html += '<span class="nav-icon" style="color: ' + item.color + ';">' + item.svg + '</span>';
+            html += '<span class="nav-label">' + item.label + '</span>';
+            html += '</button>';
+        }
     });
     
     html += '</div>';
     html += '</div>';
     
     document.body.insertAdjacentHTML('beforeend', html);
+    updateMobileNavActive(APP.currentPage || 'dashboard');
 }
 
 function updateMobileNavActive(page) {
     var items = document.querySelectorAll('.mobile-nav-item');
     items.forEach(function(item) {
-        item.classList.remove('active');
         if (item.getAttribute('data-page') === page) {
             item.classList.add('active');
+            try {
+                item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            } catch(e) {}
+        } else if (item.hasAttribute('data-page')) {
+            item.classList.remove('active');
         }
     });
 }
