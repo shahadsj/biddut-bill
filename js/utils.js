@@ -202,12 +202,46 @@ function getMonthlySummary(meterId) {
                 remainingUnits -= unitsInThisSlab;
             }
             
+            // Month end balance from latest transaction in this month
+            var monthTx = data.transactions || [];
+            var lastTxInMonth = monthTx.length > 0 ? monthTx[monthTx.length - 1] : null;
+            var monthEndBalance = (lastTxInMonth && lastTxInMonth.balanceAfter !== undefined && lastTxInMonth.balanceAfter !== null) 
+                ? Number(lastTxInMonth.balanceAfter) 
+                : null;
+            
+            // Net recharge considering deductions (Demand Charge, VAT, Rebate)
+            var netRechargeTotal = 0;
+            var totalDemandDeducted = 0;
+            var totalVatDeducted = 0;
+            var totalRebateCredited = 0;
+            monthTx.forEach(function(tx) {
+                if (tx.type === 'recharge' || tx.deductions) {
+                    if (tx.deductions) {
+                        netRechargeTotal += (Number(tx.deductions.netAmount) || 0);
+                        totalDemandDeducted += (Number(tx.deductions.demandCharge) || 0);
+                        totalVatDeducted += (Number(tx.deductions.vat) || 0);
+                        totalRebateCredited += (Number(tx.deductions.rebate) || 0);
+                    } else {
+                        netRechargeTotal += (Number(tx.amount) || 0);
+                    }
+                }
+            });
+
+            if (monthEndBalance === null) {
+                monthEndBalance = Math.round((netRechargeTotal - data.billTotal) * 100) / 100;
+            }
+
             // summary-তে যোগ করুন
             summary[key] = {
                 displayMonth: data.displayMonth,
                 recharge: data.rechargeTotal,
+                netRecharge: netRechargeTotal,
                 bill: data.billTotal,
-                balance: data.rechargeTotal - data.billTotal,
+                demandCharge: totalDemandDeducted,
+                vat: totalVatDeducted,
+                rebate: totalRebateCredited,
+                balance: monthEndBalance,
+                endBalance: monthEndBalance,
                 units: data.totalUnits,
                 billCount: data.billCount,
                 rechargeCount: data.rechargeCount,

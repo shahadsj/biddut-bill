@@ -36,6 +36,7 @@ function showAnalytics() {
     var trendLabels = [];
     var trendRecharge = [];
     var trendExpense = [];
+    var trendBalance = [];
     var trendUnits = [];
 
     last6Months.forEach(function(key) {
@@ -44,6 +45,7 @@ function showAnalytics() {
             trendLabels.push(m.displayMonth || key);
             trendRecharge.push(m.recharge || 0);
             trendExpense.push(m.bill || 0);
+            trendBalance.push(m.endBalance !== undefined ? m.endBalance : (m.balance !== undefined ? m.balance : (m.recharge - m.bill)));
             trendUnits.push(m.units || 0);
         }
     });
@@ -84,17 +86,25 @@ function showAnalytics() {
 
     // Cost breakdown
     var rechargeTotal = 0,
+        netRechargeTotal = 0,
         expenseTotal = 0,
         demandTotal = 0,
-        vatTotal = 0;
+        vatTotal = 0,
+        rebateTotal = 0;
 
     transactions.forEach(function(t) {
-        if (t.type === 'recharge') {
-            rechargeTotal += t.amount || 0;
+        if (t.type === 'recharge' || t.deductions) {
+            rechargeTotal += (Number(t.amount) || 0);
+            if (t.deductions) {
+                netRechargeTotal += (Number(t.deductions.netAmount) || 0);
+                demandTotal += (Number(t.deductions.demandCharge) || 0);
+                vatTotal += (Number(t.deductions.vat) || 0);
+                rebateTotal += (Number(t.deductions.rebate) || 0);
+            } else {
+                netRechargeTotal += (Number(t.amount) || 0);
+            }
         } else if (t.type === 'electricity_bill' || t.type === 'bill') {
-            expenseTotal += t.amount || 0;
-            demandTotal += t.demandCharge || 0;
-            vatTotal += t.vat || 0;
+            expenseTotal += (Number(t.amount) || 0);
         }
     });
 
@@ -207,14 +217,14 @@ function showAnalytics() {
                     ${trendLabels.map(function(label, i) {
                         var recharge = trendRecharge[i] || 0;
                         var expense = trendExpense[i] || 0;
-                        var balance = recharge - expense;
+                        var balance = trendBalance[i] !== undefined ? trendBalance[i] : (recharge - expense);
                         return `
                             <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
                                 <span style="font-weight: 500;">${label}</span>
                                 <div style="display: flex; gap: 12px;">
                                     <span style="color: #27ae60;">+${taka}${recharge.toFixed(2)}</span>
                                     <span style="color: #e74c3c;">-${taka}${expense.toFixed(2)}</span>
-                                    <span style="font-weight: 600;">${taka}${balance.toFixed(2)}</span>
+                                    <span style="font-weight: 600; color: #667eea;">${taka}${balance.toFixed(2)}</span>
                                 </div>
                             </div>
                         `;
@@ -412,20 +422,29 @@ function drawAnalyticsCharts(trendLabels, trendRecharge, trendExpense, yearLabel
                 window.costChart = null;
             }
             
-            var costData = [rechargeTotal, expenseTotal, demandTotal, vatTotal];
+            var costLabels = [L === 'en' ? 'Electricity Bill' : 'বিদ্যুৎ বিল', L === 'en' ? 'Demand Charge' : 'ডিমান্ড চার্জ', L === 'en' ? 'VAT' : 'ভ্যাট'];
+            var costData = [expenseTotal, demandTotal, vatTotal];
+            var costColors = ['#e74c3c', '#f39c12', '#3498db'];
+            if (rebateTotal > 0) {
+                costLabels.push(L === 'en' ? 'Rebate (Credit)' : 'রিবেট (ছাড়)');
+                costData.push(rebateTotal);
+                costColors.push('#27ae60');
+            }
             var hasCostData = costData.some(function(v) { return v > 0; });
             
             if (!hasCostData) {
-                costData = [1, 0, 0, 0];
+                costLabels = ['কোন ডাটা নেই'];
+                costData = [1];
+                costColors = ['#cbd5e1'];
             }
 
             window.costChart = new Chart(ctx3, {
                 type: 'doughnut',
                 data: {
-                    labels: ['রিচার্জ', 'বিল', 'ডিমান্ড', 'ভ্যাট'],
+                    labels: costLabels,
                     datasets: [{
                         data: costData,
-                        backgroundColor: ['#27ae60', '#e74c3c', '#f39c12', '#3498db'],
+                        backgroundColor: costColors,
                         borderWidth: 0
                     }]
                 },
