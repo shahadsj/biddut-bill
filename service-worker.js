@@ -2,33 +2,35 @@
 // Biddut Bill - PWA Service Worker
 // Version: 2.0.0
 
-const CACHE_NAME = 'biddut-bill-v2.0.8';
-const OFFLINE_URL = '/index.html';
+const CACHE_NAME = 'biddut-bill-v2.0.9';
+const OFFLINE_URL = './index.html';
 
 // Files to cache
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.svg',
-  '/assets/login-bg.svg',
-  '/css/style.css',
-  '/js/app.js',
-  '/js/auth.js',
-  '/js/dashboard.js',
-  '/js/meters.js',
-  '/js/transactions.js',
-  '/js/calculator.js',
-  '/js/reports.js',
-  '/js/analytics.js',
-  '/js/settings.js',
-  '/js/backup.js',
-  '/js/admin.js',
-  '/js/profile.js',
-  '/js/rent.js',
-  '/js/expenses.js',
-  '/js/utils.js',
-  '/js/firebase-init.js',
+  './',
+  './index.html',
+  './manifest.json',
+  './favicon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './assets/login-bg.svg',
+  './css/style.css',
+  './js/app.js',
+  './js/auth.js',
+  './js/dashboard.js',
+  './js/meters.js',
+  './js/transactions.js',
+  './js/calculator.js',
+  './js/reports.js',
+  './js/analytics.js',
+  './js/settings.js',
+  './js/backup.js',
+  './js/admin.js',
+  './js/profile.js',
+  './js/rent.js',
+  './js/expenses.js',
+  './js/utils.js',
+  './js/firebase-init.js',
   'https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -45,14 +47,20 @@ self.addEventListener('install', function(event) {
     caches.open(CACHE_NAME)
       .then(function(cache) {
         console.log('[ServiceWorker] Caching app shell');
-        return cache.addAll(urlsToCache);
+        return Promise.all(
+          urlsToCache.map(function(url) {
+            return cache.add(url).catch(function(err) {
+              console.warn('[ServiceWorker] Non-critical cache skip:', url, err);
+            });
+          })
+        );
       })
       .then(function() {
         console.log('[ServiceWorker] Skip waiting');
         return self.skipWaiting();
       })
       .catch(function(error) {
-        console.error('[ServiceWorker] Install failed:', error);
+        console.error('[ServiceWorker] Install error:', error);
       })
   );
 });

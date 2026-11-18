@@ -15,17 +15,33 @@
     
     <title>বিদ্যুৎ বিল | Biddut Bill</title>
     
+    <!-- Early PWA Catch: Capture beforeinstallprompt immediately -->
+    <script>
+        window.deferredPrompt = null;
+        window.isAppInstalled = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            window.deferredPrompt = e;
+            console.log('⚡ [Early Catch] beforeinstallprompt event captured!');
+        });
+        window.addEventListener('appinstalled', function() {
+            window.isAppInstalled = true;
+            window.deferredPrompt = null;
+            console.log('⚡ [Early Catch] App installed successfully');
+        });
+    </script>
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.0.8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.0.9">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="css/style.css?v=2.0.8">
+    <link rel="stylesheet" href="css/style.css?v=2.0.9">
     
     <!-- Google Fonts - বাংলা -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -418,22 +434,22 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <!-- JavaScript Files -->
-    <script src="js/utils.js?v=2.0.8"></script>
-<script src="js/auth.js?v=2.0.8"></script>
-<script src="js/app.js?v=2.0.8"></script>
-<script src="js/firebase-init.js?v=2.0.8"></script>
-<script src="js/dashboard.js?v=2.0.8"></script>
-<script src="js/meters.js?v=2.0.8"></script>
-<script src="js/transactions.js?v=2.0.8"></script>
-<script src="js/calculator.js?v=2.0.8"></script>
-<script src="js/reports.js?v=2.0.8"></script>
-<script src="js/analytics.js?v=2.0.8"></script>
-<script src="js/settings.js?v=2.0.8"></script>
-<script src="js/backup.js?v=2.0.8"></script>
-<script src="js/admin.js?v=2.0.8"></script>
-<script src="js/profile.js?v=2.0.8"></script>
-<script src="js/rent.js?v=2.0.8"></script>
-<script src="js/expenses.js?v=2.0.8"></script>
+    <script src="js/utils.js?v=2.0.9"></script>
+<script src="js/auth.js?v=2.0.9"></script>
+<script src="js/app.js?v=2.0.9"></script>
+<script src="js/firebase-init.js?v=2.0.9"></script>
+<script src="js/dashboard.js?v=2.0.9"></script>
+<script src="js/meters.js?v=2.0.9"></script>
+<script src="js/transactions.js?v=2.0.9"></script>
+<script src="js/calculator.js?v=2.0.9"></script>
+<script src="js/reports.js?v=2.0.9"></script>
+<script src="js/analytics.js?v=2.0.9"></script>
+<script src="js/settings.js?v=2.0.9"></script>
+<script src="js/backup.js?v=2.0.9"></script>
+<script src="js/admin.js?v=2.0.9"></script>
+<script src="js/profile.js?v=2.0.9"></script>
+<script src="js/rent.js?v=2.0.9"></script>
+<script src="js/expenses.js?v=2.0.9"></script>
 
     <!-- ==================== PWA SCRIPT ==================== -->
     <script>
@@ -455,36 +471,37 @@
         // ============================================================
         // 2. PWA INSTALL PROMPT - RELIABLE & UNIVERSAL
         // ============================================================
-        let deferredPrompt = null;
         let installBanner = null;
-        let isInstalled = false;
+        let isInstalled = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true || window.isAppInstalled === true;
 
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-            isInstalled = true;
+        if (isInstalled) {
             console.log('✅ App is running in standalone mode (installed)');
         }
 
         // গ্লোবাল ফাংশন - যেকোনো জায়গা থেকে ইনস্টল ট্রিগার করার জন্য
         window.triggerPWAInstall = async function() {
-            if (deferredPrompt) {
+            var promptEvent = window.deferredPrompt || deferredPrompt;
+            if (promptEvent) {
                 try {
-                    deferredPrompt.prompt();
-                    const choice = await deferredPrompt.userChoice;
-                    if (choice.outcome === 'accepted') {
+                    promptEvent.prompt();
+                    const choice = await promptEvent.userChoice;
+                    if (choice && choice.outcome === 'accepted') {
                         console.log('✅ User accepted PWA install');
                         isInstalled = true;
+                        window.isAppInstalled = true;
                         hideAllInstallPrompts();
                         if (typeof showToast === 'function') {
                             showToast('📲 অ্যাপ সফলভাবে ইনস্টল হচ্ছে!', 'success');
                         }
                     }
+                    window.deferredPrompt = null;
                     deferredPrompt = null;
                     return;
                 } catch (err) {
                     console.warn('deferredPrompt error, falling back to instructions:', err);
                 }
             }
-            // যদি ব্রাউজার নেটিভ প্রম্পট ব্লক করে থাকে বা iOS হয়, নির্দেশিকা দেখান
+            // যদি ব্রাউজার সরাসরি প্রম্পট না দেয় (যেমন Safari/iOS বা ইতোমধ্যে ইনস্টল থাকলে), নির্দেশিকা দেখান
             showInstallInstructionModal();
         };
 
@@ -632,7 +649,7 @@
         // ব্রাউজার যদি beforeinstallprompt সাপোর্ট করে
         window.addEventListener('beforeinstallprompt', function(e) {
             e.preventDefault();
-            deferredPrompt = e;
+            window.deferredPrompt = e;
             console.log('✅ beforeinstallprompt event fired - App can be installed');
             if (!isInstalled) {
                 createInstallBanner();
