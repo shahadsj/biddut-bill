@@ -11,19 +11,46 @@ function showTransactions() {
     var dateLocale = L === 'en' ? 'en-US' : 'bn-BD';
 
     var meterData = getActiveMeterData();
-    var transactions = (meterData.transactions || []).sort(function(a, b) {
+    var rawTx = (meterData && meterData.transactions) ? meterData.transactions : [];
+    var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' && rawTx ? Object.values(rawTx) : []);
+
+    var transactions = txList.slice().sort(function(a, b) {
         var dateA = a.date || a.timestamp || 0;
         var dateB = b.date || b.timestamp || 0;
         return new Date(dateB) - new Date(dateA);
     });
 
     var today = new Date().toISOString().split('T')[0];
+    var activeMeter = (APP.meters || []).find(function(m) {
+        return m.id === APP.activeMeterId || m.meterNumber === APP.activeMeterId || m.meterNo === APP.activeMeterId;
+    }) || (meterData && meterData.meterInfo) || { name: 'মিটার', meterNumber: APP.activeMeterId || '-' };
 
     document.getElementById('pageContent').innerHTML = `
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                 <h2>${L==='en'?'Transaction Management':'ট্রানজেকশন ম্যানেজমেন্ট'}</h2>
                 <button class="btn" onclick="showAddTransactionForm()">+ ${L==='en'?'New Transaction':'নতুন ট্রানজেকশন'}</button>
+            </div>
+
+            <!-- Active Meter Info Strip -->
+            <div style="background: linear-gradient(135deg, rgba(99,102,241,0.07), rgba(59,130,246,0.07)); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; padding: 10px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">⚡</span>
+                    <div>
+                        <strong style="color: var(--primary); font-size: 15px;">${activeMeter.name || 'মিটার'}</strong>
+                        <span style="color: var(--text-light); font-size: 13px; margin-left: 8px;">(${L === 'en' ? 'Meter No' : 'মিটার নং'}: ${activeMeter.meterNumber || '-'})</span>
+                    </div>
+                </div>
+                ${(APP.meters && APP.meters.length > 1) ? `
+                    <select onchange="switchMeter(this.value); showTransactions();" class="form-control" style="width: auto; padding: 6px 12px; font-size: 13px;">
+                        ${APP.meters.map(function(m) { return `<option value="${m.id}" ${m.id === APP.activeMeterId ? 'selected' : ''}>${m.name} (${m.meterNumber})</option>`; }).join('')}
+                    </select>
+                ` : ''}
+            </div>
+
+            <!-- Helper Notice -->
+            <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #166534; line-height: 1.5;">
+                💡 <strong>${L === 'en' ? 'Note' : 'পরামর্শ'}:</strong> ${L === 'en' ? 'After recharging via bKash, Nagad or vending station, enter the amount below and click "Add Monthly Recharge" to calculate VAT, Demand Charge & Rebate automatically.' : 'বিকাশ, নগদ বা ভেন্ডিং থেকে রিচার্জ করার পর নিচের "মাসিক রিচার্জ" ঘরে টাকার পরিমাণ লিখে "মাসিক রিচার্জ যোগ করুন" চাপুন—ভ্যাট, ডিমান্ড ও রিবেট স্বয়ংক্রিয়ভাবে ব্যালেন্সে যুক্ত হবে।'}
             </div>
 
             <!-- Quick Recharge & Balance Update Forms -->

@@ -439,11 +439,17 @@ function showClearDataConfirmation() {
         '<h2>&#x26A0;&#xFE0F; '+(L==='en'?'Delete All Data':'সমস্ত ডাটা মুছে ফেলুন')+'</h2>',
         '<div style="background: #ffeaa7; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #fdcb6e;">',
             '<p style="color: #d63031; font-weight: bold;">&#x1F534; '+(L==='en'?'Warning!':'সতর্কতা!')+'</p>',
-            '<p>'+(L==='en'?'This will permanently delete all data and cannot be undone!':'এই অপারেশন সমস্ত ডাটা স্থায়ীভাবে মুছে ফেলবে এবং আন্ডু করা যাবে না!')+'</p>',
+            '<p>'+(L==='en'?'This will permanently delete all meters, transactions, settings, rent, and expenses!':'এই অপারেশন আপনার সমস্ত মিটার, ট্রানজেকশন, সেটিংস, ভাড়া ও খরচের ডাটা চিরতরে মুছে ফেলবে!')+'</p>',
         '</div>',
         '<div class="form-group">',
-            '<label>'+(L==='en'?'Type "DELETE" to confirm':'নিশ্চিত করতে "ডিলিট" লিখুন')+'</label>',
-            '<input type="text" class="form-control" id="confirmText" placeholder="'+(L==='en'?'Type DELETE':'ডিলিট লিখুন')+'" autocomplete="off">',
+            '<label>'+(L==='en'?'Type "DELETE" or "ডিলিট" to confirm:':'নিশ্চিত করতে "DELETE" বা "ডিলিট" লিখুন:')+'</label>',
+            '<input type="text" class="form-control" id="confirmText" placeholder="'+(L==='en'?'Type DELETE':'DELETE বা ডিলিট লিখুন')+'" autocomplete="off" style="font-size: 16px;">',
+        '</div>',
+        '<div style="margin: 15px 0;">',
+            '<label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--danger); font-weight: 600;">',
+                '<input type="checkbox" id="instantConfirmCheck" onchange="toggleClearBtnByCheck(this.checked)">',
+                '<span>'+(L==='en'?'I confirm deleting all data permanently':'হ্যাঁ, আমি সব ডাটা স্থায়ীভাবে মুছে ফেলতে সম্মত')+'</span>',
+            '</label>',
         '</div>',
         '<div style="display: flex; gap: 10px; margin-top: 20px;">',
             '<button class="btn btn-danger" onclick="clearAllData()" id="clearDataBtn" disabled style="opacity: 0.5;">&#x1F5D1;&#xFE0F; '+(L==='en'?'Delete All Data':'সব ডাটা মুছুন')+'</button>',
@@ -456,14 +462,18 @@ function showClearDataConfirmation() {
         var clearBtn = document.getElementById('clearDataBtn');
         if (confirmInput && clearBtn) {
             confirmInput.addEventListener('input', function(e) {
-                if (APP.language==='en' ? e.target.value==='DELETE' : e.target.value==='ডিলিট') {
+                var val = (e.target.value || '').trim().toLowerCase();
+                if (val === 'delete' || val === 'ডিলিট') {
                     clearBtn.disabled = false;
                     clearBtn.style.opacity = '1';
                     clearBtn.style.cursor = 'pointer';
                 } else {
-                    clearBtn.disabled = true;
-                    clearBtn.style.opacity = '0.5';
-                    clearBtn.style.cursor = 'default';
+                    var chk = document.getElementById('instantConfirmCheck');
+                    if (!chk || !chk.checked) {
+                        clearBtn.disabled = true;
+                        clearBtn.style.opacity = '0.5';
+                        clearBtn.style.cursor = 'default';
+                    }
                 }
             });
             confirmInput.focus();
@@ -472,29 +482,46 @@ function showClearDataConfirmation() {
     document.getElementById('modal').classList.add('active');
 }
 
+function toggleClearBtnByCheck(checked) {
+    var clearBtn = document.getElementById('clearDataBtn');
+    if (!clearBtn) return;
+    if (checked) {
+        clearBtn.disabled = false;
+        clearBtn.style.opacity = '1';
+        clearBtn.style.cursor = 'pointer';
+    } else {
+        var confirmInput = document.getElementById('confirmText');
+        var val = confirmInput ? (confirmInput.value || '').trim().toLowerCase() : '';
+        if (val !== 'delete' && val !== 'ডিলিট') {
+            clearBtn.disabled = true;
+            clearBtn.style.opacity = '0.5';
+            clearBtn.style.cursor = 'default';
+        }
+    }
+}
+
 function clearAllData() {
     var L = APP.language;
     var confirmText = document.getElementById('confirmText');
-    if (!confirmText) return;
-    
-    var expected = L==='en' ? 'DELETE' : 'ডিলিট';
-    if (confirmText.value !== expected) {
-        showToast(L==='en'?'Please type DELETE correctly':'সঠিকভাবে "ডিলিট" লিখুন', 'error');
+    var chk = document.getElementById('instantConfirmCheck');
+    var val = confirmText ? (confirmText.value || '').trim().toLowerCase() : '';
+    var isConfirmed = (val === 'delete' || val === 'ডিলিট') || (chk && chk.checked);
+
+    if (!isConfirmed) {
+        showToast(L==='en'?'Please type DELETE or check the box':'"DELETE" লিখুন অথবা বক্সে টিক দিন', 'error');
         return;
     }
     
     if (!confirm(L==='en'?'Final confirmation! Delete all data?':'শেষবার নিশ্চিত করুন! সমস্ত ডাটা মুছে ফেলবেন?')) return;
     
     try {
-        // Clear all data
+        // Clear all local app memory
         APP.meters = [];
         APP.metersData = {};
         APP.activeMeterId = null;
         
-        // ✅ রেন্ট ক্লিয়ার
+        // Clear rent & expense
         APP.rentData = { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 };
-        
-        // ✅ এক্সপেন্স ক্লিয়ার
         if (APP.currentUser) {
             var userId = APP.currentUser.id || APP.currentUser.email || 'default';
             var key = 'expenseData_' + userId;
@@ -524,19 +551,32 @@ function clearAllData() {
         ];
         APP.savingsGoal = 0;
         APP.badges = [];
-        localStorage.removeItem('biddut_activeMeterId');
+
+        // Clear local storage completely
+        try {
+            localStorage.removeItem('biddut_activeMeterId');
+            localStorage.removeItem('biddut_meters');
+            localStorage.removeItem('biddut_metersData');
+        } catch(e) {}
         
-        // Save and sync
-        saveData();
-        if (typeof syncAllToCloud === 'function') {
-            syncAllToCloud();
+        // Clear cloud Firebase permanently
+        if (typeof database !== 'undefined' && database && APP.currentUser) {
+            var userEmail = APP.currentUser.email.replace(/[.#$\/\[\]]/g, '_');
+            database.ref('users/' + userEmail + '/meters').set(null).catch(function(e){ console.warn(e); });
+            database.ref('users/' + userEmail + '/app').set({
+                meters: [],
+                activeMeterId: '',
+                settings: APP.settings,
+                rentData: { records: [], totalRent: 0, totalService: 0, totalParking: 0, totalOverall: 0 },
+                expenseData: { records: [], totalOverall: 0 }
+            }).catch(function(e){ console.warn(e); });
         }
         
         closeModal();
-        showToast(L==='en'?'All data cleared!':'সমস্ত ডাটা মুছে ফেলা হয়েছে!', 'success');
+        showToast(L==='en'?'All data cleared successfully!':'সমস্ত ডাটা সফলভাবে মুছে ফেলা হয়েছে!', 'success');
         setTimeout(function() {
-            navigateTo('dashboard');
-        }, 500);
+            navigateTo('meters');
+        }, 400);
     } catch (error) {
         console.error('Clear data error:', error);
         showToast((L==='en'?'Failed: ':'ব্যর্থ: ')+error.message, 'error');

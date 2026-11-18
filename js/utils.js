@@ -82,7 +82,7 @@ function calculateUnitsFromTaka(taka) {
 function getMonthlySummary(meterId) {
     var summary = {};
     try {
-        var meterData = APP.metersData ? APP.metersData[meterId] : null;
+        var meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
         if (!meterData || !meterData.transactions) return summary;
         
         var transactions = meterData.transactions || [];
@@ -458,18 +458,107 @@ function applySettings() {
 }
 
 function getActiveMeterData() {
-    if (!APP.activeMeterId) return null;
-    return APP.metersData[APP.activeMeterId] || null;
+    var data = getMeterData(APP.activeMeterId);
+    if (!data) {
+        data = {
+            transactions: [],
+            monthlyRecharges: [],
+            currentBalance: 0,
+            totalRecharge: 0,
+            totalExpended: 0
+        };
+        if (APP.activeMeterId) {
+            APP.metersData[APP.activeMeterId] = data;
+        }
+    }
+    if (data.transactions && !Array.isArray(data.transactions)) {
+        data.transactions = Object.values(data.transactions);
+    }
+    return data;
 }
 
 function updateActiveMeterData(data) {
     if (!APP.activeMeterId) return;
     APP.metersData[APP.activeMeterId] = data;
+    
+    // Also sync to matching meter id and meterNumber
+    var meter = (APP.meters || []).find(function(m) { 
+        return m.id === APP.activeMeterId || m.meterNumber === APP.activeMeterId || m.meterNo === APP.activeMeterId;
+    });
+    if (meter) {
+        if (meter.id) APP.metersData[meter.id] = data;
+        if (meter.meterNumber) APP.metersData[meter.meterNumber] = data;
+        if (meter.meterNo) APP.metersData[meter.meterNo] = data;
+    }
+    
+    try {
+        localStorage.setItem('biddut_metersData', JSON.stringify(APP.metersData));
+        if (APP.activeMeterId) localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
+    } catch(e) {}
+    
     saveData();
 }
 
 function getMeterData(meterId) {
-    return APP.metersData[meterId] || null;
+    if (!meterId && APP.activeMeterId) meterId = APP.activeMeterId;
+    if (!meterId) return null;
+    if (!APP.metersData) APP.metersData = {};
+    
+    // Find matching meter object in APP.meters
+    var meter = (APP.meters || []).find(function(m) { 
+        return m.id === meterId || m.meterNumber === meterId || m.meterNo === meterId;
+    });
+
+    var data = null;
+
+    // 1. Direct lookup by meterId
+    if (APP.metersData[meterId]) {
+        data = APP.metersData[meterId];
+    }
+    // 2. Lookup by meter's id, meterNumber, meterNo if found
+    else if (meter) {
+        if (meter.id && APP.metersData[meter.id]) data = APP.metersData[meter.id];
+        else if (meter.meterNumber && APP.metersData[meter.meterNumber]) data = APP.metersData[meter.meterNumber];
+        else if (meter.meterNo && APP.metersData[meter.meterNo]) data = APP.metersData[meter.meterNo];
+    }
+    
+    // 3. Search inside APP.metersData objects for matching meterInfo
+    if (!data) {
+        for (var k in APP.metersData) {
+            if (APP.metersData.hasOwnProperty(k)) {
+                var md = APP.metersData[k];
+                if (md && md.meterInfo) {
+                    if (md.meterInfo.id === meterId || md.meterInfo.meterNumber === meterId || md.meterInfo.meterNo === meterId ||
+                        (meter && (md.meterInfo.id === meter.id || md.meterInfo.meterNumber === meter.meterNumber))) {
+                        data = md;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    // 4. If this meter has no data record yet, create a clean empty record for THIS specific meter
+    if (!data) {
+        data = {
+            transactions: [],
+            monthlyRecharges: [],
+            currentBalance: 0,
+            totalRecharge: 0,
+            totalExpended: 0,
+            meterInfo: meter || { id: meterId, name: 'Meter', meterNumber: meterId },
+            lastUpdated: new Date().toISOString()
+        };
+        APP.metersData[meterId] = data;
+        if (meter && meter.id && meter.id !== meterId) APP.metersData[meter.id] = data;
+        if (meter && meter.meterNumber && meter.meterNumber !== meterId) APP.metersData[meter.meterNumber] = data;
+    }
+    
+    if (data.transactions && !Array.isArray(data.transactions)) {
+        data.transactions = Object.values(data.transactions);
+    }
+    
+    return data;
 }
 
 // ==================== ACTIVITY LOG ====================
@@ -520,8 +609,20 @@ function getActivityLogs(type, limit) {
     return logs;
 }
 
-// ==================== SAVE DATA (ONLY FIREBASE) ====================
+// ==================== SAVE DATA ====================
 function saveData() {
+    try {
+        if (APP.metersData) {
+            localStorage.setItem('biddut_metersData', JSON.stringify(APP.metersData));
+        }
+        if (APP.meters) {
+            localStorage.setItem('biddut_meters', JSON.stringify(APP.meters));
+        }
+        if (APP.activeMeterId) {
+            localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
+        }
+    } catch(e) {}
+
     if (typeof saveAllToCloud === 'function') {
         saveAllToCloud().catch(function(error) {
             console.warn('⚠️ Save to Firebase failed:', error);

@@ -462,6 +462,28 @@ function initApp() {
             if (typeof applySettings === "function") {
                 applySettings();
             }
+
+            // Restore cached meters and transactions immediately from localStorage
+            try {
+                var cachedMeters = localStorage.getItem('biddut_meters');
+                if (cachedMeters) {
+                    var parsedMeters = JSON.parse(cachedMeters);
+                    if (Array.isArray(parsedMeters) && parsedMeters.length > 0) {
+                        APP.meters = parsedMeters;
+                    }
+                }
+                var cachedActiveMeterId = localStorage.getItem('biddut_activeMeterId');
+                if (cachedActiveMeterId) {
+                    APP.activeMeterId = cachedActiveMeterId;
+                }
+                var cachedMetersData = localStorage.getItem('biddut_metersData');
+                if (cachedMetersData) {
+                    var parsedMD = JSON.parse(cachedMetersData);
+                    if (parsedMD && typeof parsedMD === 'object') {
+                        APP.metersData = Object.assign(parsedMD, APP.metersData || {});
+                    }
+                }
+            } catch(e) {}
             
             setTimeout(function() {
                 if (window.innerWidth <= 768) {

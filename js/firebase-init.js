@@ -172,7 +172,7 @@ function saveAllToCloud() {
             
             appRef.update(updateData).then(function() {
                 var metersRef = database.ref('users/' + userEmail + '/meters');
-                return metersRef.update(metersDataForCloud);
+                return metersRef.set(metersDataForCloud);
             }).then(function() {
                 console.log('☁️ All data saved to Firebase successfully');
                 isSyncing = false;
@@ -277,8 +277,11 @@ function loadFromCloud() {
                     var cloudMeterId = (cloudMeterData.meterInfo && cloudMeterData.meterInfo.id) ? cloudMeterData.meterInfo.id : key;
                     if (!cloudMeterId) return;
                     
-                    APP.metersData[cloudMeterId] = {
-                        transactions: cloudMeterData.transactions || [],
+                    var rawTx = cloudMeterData.transactions || [];
+                    var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' && rawTx ? Object.values(rawTx) : []);
+                    
+                    var meterEntry = {
+                        transactions: txList,
                         monthlyRecharges: cloudMeterData.monthlyRecharges || [],
                         currentBalance: cloudMeterData.currentBalance || 0,
                         totalRecharge: cloudMeterData.totalRecharge || 0,
@@ -288,7 +291,17 @@ function loadFromCloud() {
                         meterInfo: cloudMeterData.meterInfo || (APP.meters ? APP.meters.find(function(m) { return m.id === cloudMeterId; }) : null),
                         lastUpdated: new Date().toISOString()
                     };
+                    APP.metersData[cloudMeterId] = meterEntry;
+                    if (cloudMeterData.meterInfo && cloudMeterData.meterInfo.meterNumber) {
+                        APP.metersData[cloudMeterData.meterInfo.meterNumber] = meterEntry;
+                    }
+                    if (key && key !== cloudMeterId) {
+                        APP.metersData[key] = meterEntry;
+                    }
                 });
+                try {
+                    localStorage.setItem('biddut_metersData', JSON.stringify(APP.metersData));
+                } catch(e) {}
             }
             
             if ((!APP.meters || APP.meters.length === 0) && metersData) {

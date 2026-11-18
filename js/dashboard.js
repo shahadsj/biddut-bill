@@ -109,9 +109,10 @@ function createBalanceCard(balance, L) {
 // ✅ হেল্পার ফাংশন
 // ============================================================
 function getTotalKWH(meterId) {
-    const meterData = APP.metersData[meterId];
+    const meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
     if (!meterData) return 0;
-    const transactions = meterData.transactions || [];
+    var rawTransactions = meterData.transactions || [];
+    const transactions = Array.isArray(rawTransactions) ? rawTransactions : (typeof rawTransactions === 'object' && rawTransactions ? Object.values(rawTransactions) : []);
     let totalKWH = 0;
     transactions.forEach(t => {
         if (t.units) totalKWH += t.units;
@@ -120,9 +121,11 @@ function getTotalKWH(meterId) {
 }
 
 function getMonthlyAvgExpense(meterId) {
-    const meterData = APP.metersData[meterId];
+    const meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
     if (!meterData) return 0;
-    const transactions = (meterData.transactions || []).filter(t => t.type === 'electricity_bill' || t.type === 'bill');
+    var rawTx = meterData.transactions || [];
+    var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
+    const transactions = txList.filter(t => t && (t.type === 'electricity_bill' || t.type === 'bill'));
     if (transactions.length === 0) return 0;
 
     const monthMap = {};
@@ -130,7 +133,7 @@ function getMonthlyAvgExpense(meterId) {
         const d = new Date(t.date || t.timestamp);
         const key = d.getFullYear() + '-' + d.getMonth();
         if (!monthMap[key]) monthMap[key] = 0;
-        monthMap[key] += t.amount;
+        monthMap[key] += (Number(t.amount) || 0);
     });
 
     const totalExpense = Object.values(monthMap).reduce((sum, v) => sum + v, 0);
@@ -139,9 +142,11 @@ function getMonthlyAvgExpense(meterId) {
 }
 
 function getMonthlyAvgKWH(meterId) {
-    const meterData = APP.metersData[meterId];
+    const meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
     if (!meterData) return 0;
-    const transactions = (meterData.transactions || []).filter(t => t.units && t.units > 0);
+    var rawTx = meterData.transactions || [];
+    var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
+    const transactions = txList.filter(t => t && t.units && t.units > 0);
     if (transactions.length === 0) return 0;
 
     const monthMap = {};
@@ -149,7 +154,7 @@ function getMonthlyAvgKWH(meterId) {
         const d = new Date(t.date || t.timestamp);
         const key = d.getFullYear() + '-' + d.getMonth();
         if (!monthMap[key]) monthMap[key] = 0;
-        monthMap[key] += t.units;
+        monthMap[key] += (Number(t.units) || 0);
     });
 
     const totalKWH = Object.values(monthMap).reduce((sum, v) => sum + v, 0);
@@ -158,27 +163,33 @@ function getMonthlyAvgKWH(meterId) {
 }
 
 function getLastExpense(meterId) {
-    const meterData = APP.metersData[meterId];
+    const meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
     if (!meterData || !meterData.transactions) return 0;
-    const bills = meterData.transactions
-        .filter(t => t.type === 'electricity_bill' || t.type === 'bill')
+    var rawTx = meterData.transactions || [];
+    var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
+    const bills = txList
+        .filter(t => t && (t.type === 'electricity_bill' || t.type === 'bill'))
         .sort((a, b) => new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp));
-    return bills.length > 0 ? bills[0].amount : 0;
+    return bills.length > 0 ? (Number(bills[0].amount) || 0) : 0;
 }
 
 function getRecentTransactions(meterId, count) {
-    const meterData = APP.metersData[meterId];
+    const meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
     if (!meterData || !meterData.transactions) return [];
-    return meterData.transactions
+    var rawTx = meterData.transactions || [];
+    var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
+    return txList
+        .slice()
         .sort((a, b) => new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp))
         .slice(0, count || 5);
 }
 
 function getDemandVatRebateSummary(meterId) {
-    const meterData = APP.metersData[meterId];
+    const meterData = (typeof getMeterData === 'function') ? getMeterData(meterId) : (APP.metersData ? APP.metersData[meterId] : null);
     if (!meterData) return { totalDemand: 0, totalVat: 0, totalRebate: 0, totalNet: 0, rechargeCount: 0 };
     
-    const transactions = meterData.transactions || [];
+    var rawTx = meterData.transactions || [];
+    const transactions = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
     let totalDemand = 0;
     let totalVat = 0;
     let totalRebate = 0;
@@ -186,20 +197,22 @@ function getDemandVatRebateSummary(meterId) {
     let rechargeCount = 0;
     
     transactions.forEach(t => {
-        if (t.type === 'recharge' && t.deductions) {
-            totalDemand += t.deductions.demandCharge || 0;
-            totalVat += t.deductions.vat || 0;
-            totalRebate += t.deductions.rebate || 0;
-            totalNet += t.deductions.netAmount || 0;
+        if (t && (t.type === 'recharge' || t.deductions)) {
+            if (t.deductions) {
+                totalDemand += Number(t.deductions.demandCharge) || 0;
+                totalVat += Number(t.deductions.vat) || 0;
+                totalRebate += Number(t.deductions.rebate) || 0;
+                totalNet += Number(t.deductions.netAmount) || 0;
+            }
             rechargeCount++;
         }
     });
     
     return {
-        totalDemand: totalDemand,
-        totalVat: totalVat,
-        totalRebate: totalRebate,
-        totalNet: totalNet,
+        totalDemand: Math.round(totalDemand * 100) / 100,
+        totalVat: Math.round(totalVat * 100) / 100,
+        totalRebate: Math.round(totalRebate * 100) / 100,
+        totalNet: Math.round(totalNet * 100) / 100,
         rechargeCount: rechargeCount
     };
 }
@@ -620,8 +633,20 @@ function showDashboard() {
         return;
     }
 
-    if (!APP.metersData[APP.activeMeterId]) {
-        APP.metersData[APP.activeMeterId] = {
+    if (!APP.metersData) {
+        APP.metersData = {};
+    }
+
+    var meterData = (typeof getActiveMeterData === 'function') ? getActiveMeterData() : null;
+    if (!meterData && typeof getMeterData === 'function') {
+        meterData = getMeterData(APP.activeMeterId);
+    }
+    if (!meterData && APP.metersData) {
+        meterData = APP.metersData[APP.activeMeterId];
+    }
+
+    if (!meterData) {
+        meterData = {
             transactions: [],
             monthlyRecharges: [],
             currentBalance: 0,
@@ -631,15 +656,34 @@ function showDashboard() {
             meterInfo: activeMeter,
             lastUpdated: new Date().toISOString()
         };
-        saveData();
+        APP.metersData[APP.activeMeterId] = meterData;
     }
 
-    const meterData = APP.metersData[APP.activeMeterId];
-    const transactions = meterData.transactions || [];
+    var rawTransactions = meterData.transactions || [];
+    const transactions = Array.isArray(rawTransactions) ? rawTransactions : (typeof rawTransactions === 'object' && rawTransactions ? Object.values(rawTransactions) : []);
     
-    const balance = meterData.currentBalance || 0;
-    const totalRecharge = meterData.totalRecharge || 0;
-    const totalExpense = meterData.totalExpended || 0;
+    // ✅ ট্রানজেকশন অ্যারে থেকে ডায়নামিক রিচার্জ ও খরচ হিসাব (যাতে কোনোভাবেই ০ না দেখায়)
+    var calculatedRecharge = 0;
+    var calculatedExpense = 0;
+    (transactions || []).forEach(function(t) {
+        var amt = parseFloat(t.amount) || 0;
+        if (t.type === 'recharge') {
+            calculatedRecharge += amt;
+        } else if (t.type === 'bill' || t.type === 'electricity_bill') {
+            calculatedExpense += amt;
+        }
+    });
+
+    const balance = (meterData.currentBalance !== undefined && meterData.currentBalance !== null) ? meterData.currentBalance : 0;
+    var totalRecharge = (meterData.totalRecharge !== undefined && meterData.totalRecharge !== null) ? meterData.totalRecharge : 0;
+    if (calculatedRecharge > totalRecharge || totalRecharge === 0) {
+        totalRecharge = calculatedRecharge;
+    }
+    var totalExpense = (meterData.totalExpended !== undefined && meterData.totalExpended !== null) ? meterData.totalExpended : 0;
+    if (calculatedExpense > totalExpense || totalExpense === 0) {
+        totalExpense = calculatedExpense;
+    }
+
     const lastExpense = getLastExpense(APP.activeMeterId);
     const totalTransactions = transactions.length;
     const totalKWH = getTotalKWH(APP.activeMeterId);
@@ -1072,7 +1116,7 @@ function showDashboard() {
                     <span>${L === 'en' ? 'Billing, VAT & Rebate Summary' : 'বিলিং, ভ্যাট ও রিবেট সারাংশ'}</span>
                 </div>
                 <div class="billing-record-badge">
-                    <span>${L === 'en' ? 'Total Records' : 'মোট রেকর্ড'}: ${summary.rechargeCount || 8}</span>
+                    <span>${L === 'en' ? 'Total Records' : 'মোট রেকর্ড'}: ${summary.rechargeCount || 0}</span>
                 </div>
             </div>
             
@@ -1081,19 +1125,19 @@ function showDashboard() {
                 <div class="deduction-card orange">
                     <div class="deduction-icon-box">⚡</div>
                     <div class="deduction-label">${L === 'en' ? 'Electricity Charge' : 'বিদ্যুৎ চার্জ'}</div>
-                    <div class="deduction-value">৳ ${(summary.totalDemand || 1470).toFixed(2)}</div>
+                    <div class="deduction-value">৳ ${(summary.totalDemand || 0).toFixed(2)}</div>
                 </div>
                 <!-- ভ্যাট (Red/Pink) -->
                 <div class="deduction-card pink">
                     <div class="deduction-icon-box">⊕</div>
                     <div class="deduction-label">${L === 'en' ? 'VAT' : 'ভ্যাট'}</div>
-                    <div class="deduction-value">৳ ${(summary.totalVat || 469.20).toFixed(2)}</div>
+                    <div class="deduction-value">৳ ${(summary.totalVat || 0).toFixed(2)}</div>
                 </div>
                 <!-- রিবেট (Green) -->
                 <div class="deduction-card green">
                     <div class="deduction-icon-box">🛡️</div>
                     <div class="deduction-label">${L === 'en' ? 'Rebate' : 'রিবেট'}</div>
-                    <div class="deduction-value">৳ ${(summary.totalRebate || 79.77).toFixed(2)}</div>
+                    <div class="deduction-value">৳ ${(summary.totalRebate || 0).toFixed(2)}</div>
                 </div>
             </div>
             
@@ -1103,7 +1147,7 @@ function showDashboard() {
                     <span>${L === 'en' ? 'Total Credit from Rebate' : 'রিবেট থেকে মোট ক্রেডিট'}</span>
                 </div>
                 <div class="credit-amount">
-                    ৳ ${(summary.totalNet || 7365.04).toFixed(2)}
+                    ৳ ${(summary.totalNet || 0).toFixed(2)}
                 </div>
             </div>
         </div>
@@ -1565,9 +1609,9 @@ function initDashboardCharts(meterId, transactions, summary, monthExpense) {
     // 2. Donut Chart: খরচের ধরন
     var catCanvas = document.getElementById('dashboardCategoryChart');
     if (catCanvas) {
-        var demand = (summary && summary.totalDemand > 0) ? summary.totalDemand : 1470;
-        var vat = (summary && summary.totalVat > 0) ? summary.totalVat : 469.20;
-        var rebate = (summary && summary.totalRebate > 0) ? summary.totalRebate : 79.77;
+        var demand = (summary && summary.totalDemand > 0) ? summary.totalDemand : 0;
+        var vat = (summary && summary.totalVat > 0) ? summary.totalVat : 0;
+        var rebate = (summary && summary.totalRebate > 0) ? summary.totalRebate : 0;
         var total = demand + vat + rebate;
 
         var catCtx = catCanvas.getContext('2d');
