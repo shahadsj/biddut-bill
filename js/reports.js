@@ -204,7 +204,27 @@ function switchReportTab(tab) {
             var d = new Date(t.date || t.timestamp);
             if (isNaN(d.getTime())) return;
             var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-            if (monthlyData[key]) { monthlyData[key].rechargeTotal += t.amount || 0; monthlyData[key].rechargeCount++; }
+            if (!monthlyData[key]) {
+                var monthNames = L === 'en' ? 
+                    ['January','February','March','April','May','June','July','August','September','October','November','December'] :
+                    ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+                monthlyData[key] = {
+                    display: monthNames[d.getMonth()] + ' ' + d.getFullYear(),
+                    rechargeTotal: 0,
+                    rechargeCount: 0,
+                    billTotal: 0,
+                    billCount: 0,
+                    billUnits: 0
+                };
+            }
+            monthlyData[key].rechargeTotal += (Number(t.amount) || 0);
+            monthlyData[key].rechargeCount++;
+            if (t.deductions) {
+                monthlyData[key].totalDemand = (monthlyData[key].totalDemand || 0) + (Number(t.deductions.demandCharge) || 0);
+                monthlyData[key].totalVat = (monthlyData[key].totalVat || 0) + (Number(t.deductions.vat) || 0);
+                monthlyData[key].totalRebate = (monthlyData[key].totalRebate || 0) + (Number(t.deductions.rebate) || 0);
+                monthlyData[key].totalNet = (monthlyData[key].totalNet || 0) + (Number(t.deductions.netAmount) || 0);
+            }
         });
         
         var sortedMonths = Object.keys(monthlyData).sort().reverse();
@@ -216,9 +236,13 @@ function switchReportTab(tab) {
                 var m = monthlyData[key];
                 var rechargeAmount = m.rechargeTotal;
                 var hasRecharge = rechargeAmount > 0;
-                var usableAmount = hasRecharge ? Math.max(0, rechargeAmount - demandCharge) : 0;
-                var vat = hasRecharge ? Math.round((rechargeAmount * (vatRate / (100 + vatRate))) * 100) / 100 : 0;
-                var rebate = hasRecharge ? Math.round((usableAmount * (rebateRate / 100)) * 100) / 100 : 0;
+                
+                var dc = (m.totalDemand !== undefined && m.totalDemand !== null) ? m.totalDemand : (hasRecharge ? demandCharge : 0);
+                var vat = (m.totalVat !== undefined && m.totalVat !== null) ? m.totalVat : (hasRecharge ? Math.round((rechargeAmount * (vatRate / (100 + vatRate))) * 100) / 100 : 0);
+                var eligibleAmount = Math.max(0, rechargeAmount - dc);
+                var rebate = (m.totalRebate !== undefined && m.totalRebate !== null) ? m.totalRebate : (hasRecharge ? Math.round((eligibleAmount * (rebateRate / 100)) * 100) / 100 : 0);
+                var netUsable = (m.totalNet !== undefined && m.totalNet !== null) ? m.totalNet : (hasRecharge ? Math.round((rechargeAmount - dc - vat + rebate) * 100) / 100 : 0);
+
                 var mc = getMonthColor(m.display);
                 return [
                     '<div class="monthly-card">',
@@ -227,10 +251,10 @@ function switchReportTab(tab) {
                             '<div class="monthly-header-right"><span style="font-size:14px;color:white;opacity:0.9;">&#x1F4B0;</span><span style="color:white;font-size:19px;font-weight:700;">'+rechargeAmount.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</span></div>',
                         '</div>',
                         '<div class="monthly-tiles">',
-                            '<div class="monthly-tile" style="background:#f0faf0;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x1F4CB;</span><span>'+(L==='en'?'Usable':'ব্যবহারযোগ্য')+'</span></div><div class="monthly-tile-right" style="color:#e67e22;">'+usableAmount.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
-                            '<div class="monthly-tile" style="background:#fffbe6;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x26A1;</span><span>'+(L==='en'?'Demand Charge':'ডিমান্ড চার্জ')+'</span></div><div class="monthly-tile-right" style="color:#e67e22;">'+(hasRecharge ? demandCharge.toFixed(2) : '0.00')+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
+                            '<div class="monthly-tile" style="background:#f0faf0;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x1F4CB;</span><span>'+(L==='en'?'Net Usable':'ব্যবহারযোগ্য ব্যালেন্স')+'</span></div><div class="monthly-tile-right" style="color:#10b981;">'+netUsable.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
+                            '<div class="monthly-tile" style="background:#fffbe6;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x26A1;</span><span>'+(L==='en'?'Demand Charge':'ডিমান্ড চার্জ')+'</span></div><div class="monthly-tile-right" style="color:#e67e22;">'+dc.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
                             '<div class="monthly-tile" style="background:#f3e8ff;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x1F9FE;</span><span>VAT ('+vatRate+'%)</span></div><div class="monthly-tile-right" style="color:#8b5cf6;">'+vat.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
-                            '<div class="monthly-tile" style="background:#fce4ec;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x1F4B0;</span><span>'+(L==='en'?'Rebate':'রিবেট')+' ('+rebateRate+'%)</span></div><div class="monthly-tile-right" style="color:#ef4444;">'+rebate.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
+                            '<div class="monthly-tile" style="background:#fce4ec;"><div class="monthly-tile-left"><span style="font-size:16px;">&#x1F4B0;</span><span>'+(L==='en'?'Rebate':'রিবেট')+' ('+rebateRate+'%)</span></div><div class="monthly-tile-right" style="color:#059669;">'+rebate.toFixed(2)+' '+(L==='en'?'Taka':'টাকা')+'</div></div>',
                         '</div>',
                         '<div class="monthly-footer"><div class="monthly-footer-left"><span>&#x1F522; '+(L==='en'?'Recharges:':'রিচার্জ সংখ্যা:')+'</span></div><span class="monthly-pill">'+m.rechargeCount+'টি</span></div>',
                     '</div>',
