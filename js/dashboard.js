@@ -745,15 +745,16 @@ function showDashboard() {
             var currTxCount = (currMonth.billCount || 0) + (currMonth.rechargeCount || 0);
             var currUnits = currMonth.units || 0;
 
-            if (monthKeys.length === 1) {
+            if (monthKeys.length <= 1) {
+                var singleMonthTag = { label: L === 'en' ? 'Current' : 'চলতি মাস', isSingleMonth: true, direction: 'neutral' };
                 return {
-                    totalRecharge: { value: '0.0', direction: 'up' },
-                    totalExpense: { value: '0.0', direction: 'up' },
-                    totalTransactions: { value: '0.0', direction: 'up' },
-                    monthlyAvgExpense: calcPercentageTrend(currExpense, monthlyAvgExpense),
-                    totalKWH: { value: '0.0', direction: 'up' },
-                    monthlyAvgKWH: calcPercentageTrend(currUnits, monthlyAvgKWH),
-                    lastExpense: { value: '0.0', direction: 'up' }
+                    totalRecharge: singleMonthTag,
+                    totalExpense: singleMonthTag,
+                    totalTransactions: singleMonthTag,
+                    monthlyAvgExpense: singleMonthTag,
+                    totalKWH: singleMonthTag,
+                    monthlyAvgKWH: singleMonthTag,
+                    lastExpense: singleMonthTag
                 };
             }
 
@@ -817,10 +818,21 @@ function showDashboard() {
 
     function createStatCard(iconName, label, value, gradient, trend) {
         trend = trend || { value: '0.0', direction: 'up' };
-        var isUp = trend.direction !== 'down';
-        var arrow = isUp ? '↗' : '↘';
-        var sign = isUp ? '+' : '-';
-        var trendVal = (trend.value !== undefined && trend.value !== null) ? trend.value : '0.0';
+        var badgeHtml = '';
+        if (trend.isSingleMonth || trend.direction === 'neutral') {
+            var tagText = trend.label || (L === 'en' ? 'Current' : 'চলতি মাস');
+            badgeHtml = `<span class="trend-badge neutral" title="${L === 'en' ? 'Current month active data' : 'চলতি মাসের সক্রিয় তথ্য'}">${tagText}</span>`;
+        } else {
+            var isUp = trend.direction !== 'down';
+            var arrow = isUp ? '↗' : '↘';
+            var sign = isUp ? '+' : '-';
+            var trendVal = (trend.value !== undefined && trend.value !== null) ? trend.value : '0.0';
+            badgeHtml = `
+                <span class="trend-badge ${isUp ? 'up' : 'down'}">
+                    ${arrow} ${sign}${trendVal}%
+                </span>
+            `;
+        }
         return `
             <div class="stat-card">
                 <div class="stat-card-glow" style="background: ${gradient};"></div>
@@ -829,9 +841,7 @@ function showDashboard() {
                         <div class="stat-icon" style="background: ${gradient};">
                             ${getIconSVG(iconName)}
                         </div>
-                        <span class="trend-badge ${isUp ? 'up' : 'down'}">
-                            ${arrow} ${sign}${trendVal}%
-                        </span>
+                        ${badgeHtml}
                     </div>
                     <div class="stat-label">${label}</div>
                     <div class="stat-value" title="${value}">${value}</div>
@@ -985,37 +995,112 @@ function showDashboard() {
         ============================================================ -->
         <div class="dashboard-hero-banner">
             <div class="hero-text-wrap">
-                <h1 class="hero-title">${__('dashboard')}</h1>
-                <p class="hero-subtitle">${L === 'en' ? 'Overall status of electricity bill management' : 'বিদ্যুৎ বিল ব্যবস্থাপনার সার্বিক অবস্থা'}</p>
+                <div class="hero-title-group">
+                    <h1 class="hero-title">${__('dashboard')}</h1>
+                    <p class="hero-subtitle">${L === 'en' ? 'Overall status of electricity bill management' : 'বিদ্যুৎ বিল ব্যবস্থাপনার সার্বিক অবস্থা'}</p>
+                </div>
+                
+                <!-- লাইভ রিজিওনাল ডেট ও টাইম কার্ড (Live Regional Date & Time) -->
+                <div class="hero-datetime-card" id="heroDateTimeCard">
+                    <div class="datetime-primary-row">
+                        <span class="datetime-pulse-dot" title="Live Clock Active"></span>
+                        <span class="datetime-time" id="liveRegionalTime">--:--:-- --</span>
+                        <span class="datetime-period-pill" id="livePeriodPill">🌙 রাত্রি</span>
+                    </div>
+                    <div class="datetime-secondary-row">
+                        <span class="datetime-calendar-icon">📅</span>
+                        <span class="datetime-date" id="liveRegionalDate">--</span>
+                        <span class="datetime-tz-pill" id="liveRegionalTZ">🌐 Local Time</span>
+                    </div>
+                </div>
             </div>
             <div class="hero-illustration">
-                <svg viewBox="0 0 1200 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-panoramic-svg" preserveAspectRatio="none" style="width: 100%; height: 75px; display: block;">
+                <svg viewBox="0 0 1200 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-panoramic-svg" id="heroRealtimeSvg" preserveAspectRatio="none" style="width: 100%; height: 75px; display: block;">
                     <defs>
+                        <!-- Sky Gradients for Day / Sunset / Night Cycle -->
+                        <linearGradient id="skyDayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.95"/>
+                            <stop offset="55%" stop-color="#e0f2fe" stop-opacity="0.9"/>
+                            <stop offset="100%" stop-color="#f0fdf4" stop-opacity="0.95"/>
+                        </linearGradient>
+                        <linearGradient id="skySunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#312e81" stop-opacity="0.95"/>
+                            <stop offset="35%" stop-color="#86198f" stop-opacity="0.9"/>
+                            <stop offset="70%" stop-color="#ea580c" stop-opacity="0.95"/>
+                            <stop offset="100%" stop-color="#facc15" stop-opacity="0.95"/>
+                        </linearGradient>
+                        <linearGradient id="skyNightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#020617" stop-opacity="0.98"/>
+                            <stop offset="50%" stop-color="#0f172a" stop-opacity="0.95"/>
+                            <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0.98"/>
+                        </linearGradient>
                         <linearGradient id="heroSunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fb923c" stop-opacity="0.65"/>
-                            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.25"/>
+                            <stop offset="0%" stop-color="#fef08a"/>
+                            <stop offset="45%" stop-color="#f59e0b"/>
+                            <stop offset="100%" stop-color="#ea580c"/>
+                        </linearGradient>
+                        <linearGradient id="lampConeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#fef08a" stop-opacity="0.75"/>
+                            <stop offset="100%" stop-color="#fef08a" stop-opacity="0.04"/>
                         </linearGradient>
                         <linearGradient id="heroCity1" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.6"/>
-                            <stop offset="100%" stop-color="#e0e7ff" stop-opacity="0.3"/>
+                            <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.65"/>
+                            <stop offset="100%" stop-color="#e0e7ff" stop-opacity="0.35"/>
                         </linearGradient>
                         <linearGradient id="heroCity2" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#a5b4fc" stop-opacity="0.65"/>
-                            <stop offset="100%" stop-color="#c7d2fe" stop-opacity="0.3"/>
+                            <stop offset="0%" stop-color="#a5b4fc" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="#c7d2fe" stop-opacity="0.35"/>
                         </linearGradient>
                     </defs>
 
+                    <!-- Dynamic Day-Sunset-Night Sky Layers (Controlled via Real-Time JS) -->
+                    <rect id="skyLayerDay" class="sky-layer sky-layer-day" x="0" y="0" width="1200" height="85" fill="url(#skyDayGrad)"/>
+                    <rect id="skyLayerSunset" class="sky-layer sky-layer-sunset" x="0" y="0" width="1200" height="85" fill="url(#skySunsetGrad)"/>
+                    <rect id="skyLayerNight" class="sky-layer sky-layer-night" x="0" y="0" width="1200" height="85" fill="url(#skyNightGrad)"/>
+
+                    <!-- Twinkling Night Sky Stars (Visible at Night) -->
+                    <g id="heroNightStars" class="night-sky-stars">
+                        <circle cx="50" cy="12" r="1.2" fill="#ffffff" class="star-twinkle-1"/>
+                        <circle cx="110" cy="22" r="1.5" fill="#fef08a" class="star-twinkle-2"/>
+                        <circle cx="170" cy="14" r="1.0" fill="#ffffff" class="star-twinkle-3"/>
+                        <circle cx="220" cy="8" r="1.4" fill="#67e8f9" class="star-twinkle-1"/>
+                        <circle cx="300" cy="18" r="1.2" fill="#ffffff" class="star-twinkle-2"/>
+                        <circle cx="350" cy="10" r="1.5" fill="#fef08a" class="star-twinkle-3"/>
+                        <circle cx="440" cy="15" r="1.1" fill="#ffffff" class="star-twinkle-1"/>
+                        <circle cx="500" cy="22" r="1.6" fill="#ffffff" class="star-twinkle-2"/>
+                        <circle cx="570" cy="11" r="1.3" fill="#67e8f9" class="star-twinkle-3"/>
+                        <circle cx="630" cy="20" r="1.0" fill="#ffffff" class="star-twinkle-1"/>
+                        <circle cx="690" cy="8" r="1.5" fill="#fef08a" class="star-twinkle-2"/>
+                        <circle cx="760" cy="16" r="1.2" fill="#ffffff" class="star-twinkle-3"/>
+                        <circle cx="820" cy="10" r="1.4" fill="#ffffff" class="star-twinkle-1"/>
+                        <circle cx="880" cy="22" r="1.1" fill="#67e8f9" class="star-twinkle-2"/>
+                        <circle cx="940" cy="12" r="1.6" fill="#fef08a" class="star-twinkle-3"/>
+                        <circle cx="1000" cy="18" r="1.2" fill="#ffffff" class="star-twinkle-1"/>
+                        <circle cx="1070" cy="10" r="1.5" fill="#ffffff" class="star-twinkle-2"/>
+                        <circle cx="1130" cy="22" r="1.0" fill="#67e8f9" class="star-twinkle-3"/>
+                    </g>
+
+                    <!-- Real-Time Traveling Golden Sun (Arc Positioned in Real-Time) -->
+                    <g id="heroRealtimeSun" class="hero-realtime-sun" transform="translate(600, 20)">
+                        <circle cx="0" cy="0" r="24" fill="url(#heroSunGrad)" opacity="0.3"/>
+                        <circle cx="0" cy="0" r="16" fill="url(#heroSunGrad)" opacity="0.8"/>
+                        <circle cx="0" cy="0" r="10" fill="#fef08a"/>
+                    </g>
+
+                    <!-- Real-Time Traveling Luminous Crescent Moon (Arc Positioned in Real-Time) -->
+                    <g id="heroRealtimeMoon" class="hero-realtime-moon" transform="translate(600, 20)">
+                        <circle cx="0" cy="0" r="18" fill="#e0e7ff" opacity="0.2"/>
+                        <circle cx="0" cy="0" r="12" fill="#fef9c3" opacity="0.45"/>
+                        <path d="M 0,-11 A 11,11 0 1,1 -9,9 A 9,9 0 1,0 0,-11 Z" fill="#ffffff"/>
+                    </g>
+
                     <!-- Soft Clouds in Sky -->
-                    <g fill="#e2e8f0" opacity="0.45">
+                    <g fill="#e2e8f0" opacity="0.35">
                         <path d="M 30,28 Q 50,16 70,22 Q 90,14 110,24 Q 125,18 140,28 Z"/>
                         <path d="M 320,24 Q 340,12 360,18 Q 380,10 400,20 Q 415,15 430,24 Z"/>
                         <path d="M 640,26 Q 660,14 680,20 Q 700,12 720,22 Q 735,16 750,26 Z"/>
                         <path d="M 920,22 Q 940,12 960,18 Q 980,10 1000,20 Q 1015,14 1030,22 Z"/>
                     </g>
-
-                    <!-- Rising Golden Sun near far right tower -->
-                    <circle cx="1080" cy="40" r="26" fill="url(#heroSunGrad)"/>
-                    <circle cx="1080" cy="40" r="16" fill="#f59e0b" opacity="0.65"/>
 
                     <!-- Modern City Skyline Silhouette Layers (continuous across 1200px) -->
                     <g fill="url(#heroCity1)">
@@ -1056,12 +1141,80 @@ function showDashboard() {
                         <rect x="1069" y="44" width="26" height="41" rx="1"/>
                     </g>
 
-                    <!-- Graceful Sagging High-Voltage Transmission Cables (Across 1200px) -->
-                    <path d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
-                    <path d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#94a3b8" stroke-width="1.3" fill="none"/>
-                    <path d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#94a3b8" stroke-width="1.1" fill="none" opacity="0.65"/>
+                    <!-- Glowing Road Lights & City Windows (Turns on at Night) -->
+                    <g id="heroNightLights" class="hero-night-lights">
+                        <!-- Street Lamp 1 at x=180 -->
+                        <path d="M 180,82 L 180,68 Q 180,64 185,64 L 188,64" stroke="#334155" stroke-width="1.3" fill="none"/>
+                        <polygon points="188,65 174,83 202,83" fill="url(#lampConeGrad)"/>
+                        <circle cx="188" cy="65" r="2.2" class="lamp-bulb" fill="#fef08a"/>
 
-                    <!-- Tower 1 (Left Pylon at x=80, right next to text) -->
+                        <!-- Street Lamp 2 at x=290 -->
+                        <path d="M 290,82 L 290,68 Q 290,64 295,64 L 298,64" stroke="#334155" stroke-width="1.3" fill="none"/>
+                        <polygon points="298,65 284,83 312,83" fill="url(#lampConeGrad)"/>
+                        <circle cx="298" cy="65" r="2.2" class="lamp-bulb" fill="#fef08a"/>
+
+                        <!-- Street Lamp 3 at x=520 -->
+                        <path d="M 520,82 L 520,68 Q 520,64 525,64 L 528,64" stroke="#334155" stroke-width="1.3" fill="none"/>
+                        <polygon points="528,65 514,83 542,83" fill="url(#lampConeGrad)"/>
+                        <circle cx="528" cy="65" r="2.2" class="lamp-bulb" fill="#fef08a"/>
+
+                        <!-- Street Lamp 4 at x=620 -->
+                        <path d="M 620,82 L 620,68 Q 620,64 625,64 L 628,64" stroke="#334155" stroke-width="1.3" fill="none"/>
+                        <polygon points="628,65 614,83 642,83" fill="url(#lampConeGrad)"/>
+                        <circle cx="628" cy="65" r="2.2" class="lamp-bulb" fill="#fef08a"/>
+
+                        <!-- Street Lamp 5 at x=850 -->
+                        <path d="M 850,82 L 850,68 Q 850,64 855,64 L 858,64" stroke="#334155" stroke-width="1.3" fill="none"/>
+                        <polygon points="858,65 844,83 872,83" fill="url(#lampConeGrad)"/>
+                        <circle cx="858" cy="65" r="2.2" class="lamp-bulb" fill="#fef08a"/>
+
+                        <!-- Street Lamp 6 at x=950 -->
+                        <path d="M 950,82 L 950,68 Q 950,64 955,64 L 958,64" stroke="#334155" stroke-width="1.3" fill="none"/>
+                        <polygon points="958,65 944,83 972,83" fill="url(#lampConeGrad)"/>
+                        <circle cx="958" cy="65" r="2.2" class="lamp-bulb" fill="#fef08a"/>
+
+                        <!-- Cozy City Windows -->
+                        <g fill="#fde047">
+                            <rect x="24" y="58" width="4" height="4" rx="0.5"/>
+                            <rect x="32" y="58" width="4" height="4" rx="0.5"/>
+                            <rect x="52" y="50" width="4" height="4" rx="0.5"/>
+                            <rect x="62" y="50" width="4" height="4" rx="0.5"/>
+                            <rect x="52" y="60" width="4" height="4" rx="0.5"/>
+                            <rect x="140" y="48" width="5" height="5" rx="0.5"/>
+                            <rect x="150" y="48" width="5" height="5" rx="0.5"/>
+                            <rect x="334" y="46" width="5" height="5" rx="0.5"/>
+                            <rect x="346" y="46" width="5" height="5" rx="0.5"/>
+                            <rect x="473" y="42" width="4" height="4" rx="0.5"/>
+                            <rect x="483" y="42" width="4" height="4" rx="0.5"/>
+                            <rect x="473" y="52" width="4" height="4" rx="0.5"/>
+                            <rect x="664" y="48" width="5" height="5" rx="0.5"/>
+                            <rect x="676" y="48" width="5" height="5" rx="0.5"/>
+                            <rect x="788" y="44" width="4" height="4" rx="0.5"/>
+                            <rect x="800" y="44" width="4" height="4" rx="0.5"/>
+                            <rect x="788" y="54" width="4" height="4" rx="0.5"/>
+                            <rect x="1006" y="44" width="5" height="5" rx="0.5"/>
+                            <rect x="1016" y="44" width="5" height="5" rx="0.5"/>
+                            <rect x="1149" y="52" width="5" height="5" rx="0.5"/>
+                            <rect x="1161" y="52" width="5" height="5" rx="0.5"/>
+                        </g>
+                    </g>
+
+                    <!-- High-Voltage Base Transmission Cables (Across 1200px) -->
+                    <path class="cable-base" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#334155" stroke-width="1.4" fill="none"/>
+                    <path class="cable-base" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#334155" stroke-width="1.4" fill="none"/>
+                    <path class="cable-base" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#334155" stroke-width="1.2" fill="none" opacity="0.75"/>
+
+                    <!-- Continuous Flowing Electricity Pulses Across Cables -->
+                    <path class="cable-electric-pulse cyan" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                    <path class="cable-electric-pulse gold" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+                    <path class="cable-electric-pulse cyan offset-1" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                    <path class="cable-electric-pulse gold offset-1" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+                    <path class="cable-electric-pulse cyan offset-2" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#38bdf8" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+                    <path class="cable-electric-pulse gold offset-2" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+
+                    <!-- Tower 1 (Left Pylon at x=80) -->
                     <path d="M 80 10 L 64 85 L 96 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
                     <line x1="50" y1="32" x2="110" y2="32" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
                     <line x1="42" y1="52" x2="118" y2="52" stroke="#334155" stroke-width="2.2" stroke-linecap="round"/>
@@ -1096,6 +1249,22 @@ function showDashboard() {
                     <line x1="1050" y1="34" x2="1030" y2="52" stroke="#475569" stroke-width="1.4"/>
                     <line x1="1026" y1="52" x2="1054" y2="85" stroke="#475569" stroke-width="1.4"/>
                     <line x1="1054" y1="52" x2="1026" y2="85" stroke="#475569" stroke-width="1.4"/>
+
+                    <!-- Insulator Spark Nodes -->
+                    <circle cx="80" cy="26" r="2.5" class="insulator-spark"/>
+                    <circle cx="80" cy="40" r="2.5" class="insulator-spark"/>
+                    <circle cx="400" cy="24" r="2.5" class="insulator-spark"/>
+                    <circle cx="400" cy="38" r="2.5" class="insulator-spark"/>
+                    <circle cx="720" cy="26" r="2.5" class="insulator-spark"/>
+                    <circle cx="720" cy="40" r="2.5" class="insulator-spark"/>
+                    <circle cx="1040" cy="28" r="2.5" class="insulator-spark"/>
+                    <circle cx="1040" cy="42" r="2.5" class="insulator-spark"/>
+
+                    <!-- Aircraft Warning Beacon Lights on Spires -->
+                    <circle cx="80" cy="9" r="2.2" class="pylon-beacon" fill="#ef4444"/>
+                    <circle cx="400" cy="7" r="2.4" class="pylon-beacon" fill="#ef4444"/>
+                    <circle cx="720" cy="9" r="2.2" class="pylon-beacon" fill="#ef4444"/>
+                    <circle cx="1040" cy="11" r="2.2" class="pylon-beacon" fill="#ef4444"/>
 
                     <!-- Rolling Green Landscape Base (Continuous across 1200px) -->
                     <path d="M 0,85 C 100,75 200,82 300,78 C 400,74 500,80 600,76 C 700,72 800,80 900,75 C 1000,70 1100,78 1200,76 L 1200,85 L 0,85 Z" fill="#86efac" opacity="0.85"/>
@@ -1137,6 +1306,7 @@ function showDashboard() {
                     </g>
                 </svg>
             </div>
+        </div>
         </div>
 
         <!-- ============================================================
@@ -1586,6 +1756,200 @@ function showDashboard() {
     } catch(err) {
         console.error('initDashboardCharts error:', err);
     }
+
+    // Start Live Regional Clock & Real-time Sky Engine
+    try {
+        initDashboardRealTimeClock();
+    } catch(err) {
+        console.error('initDashboardRealTimeClock error:', err);
+    }
+}
+
+// ============================================================
+// 🕒 রিয়েল-টাইম রিজিওনাল ঘড়ি ও ডায়নামিক আকাশ ইঞ্জিন (Sun/Moon/Sky)
+// ============================================================
+var _dashboardClockTimer = null;
+
+function initDashboardRealTimeClock() {
+    if (_dashboardClockTimer) {
+        clearInterval(_dashboardClockTimer);
+        _dashboardClockTimer = null;
+    }
+
+    function updateClockAndSky() {
+        var timeEl = document.getElementById('liveRegionalTime');
+        var dateEl = document.getElementById('liveRegionalDate');
+        var pillEl = document.getElementById('livePeriodPill');
+        var tzEl = document.getElementById('liveRegionalTZ');
+        var skyDay = document.getElementById('skyLayerDay');
+        var skySunset = document.getElementById('skyLayerSunset');
+        var skyNight = document.getElementById('skyLayerNight');
+        var sunGroup = document.getElementById('heroRealtimeSun');
+        var moonGroup = document.getElementById('heroRealtimeMoon');
+        var starsGroup = document.getElementById('heroNightStars');
+        var nightLightsGroup = document.getElementById('heroNightLights');
+
+        // If dashboard is no longer visible, stop the interval
+        if (!timeEl && !skyDay) {
+            if (_dashboardClockTimer) {
+                clearInterval(_dashboardClockTimer);
+                _dashboardClockTimer = null;
+            }
+            return;
+        }
+
+        var now = new Date();
+        var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+        var locale = L === 'en' ? 'en-US' : 'bn-BD';
+
+        var hours = now.getHours();
+        var minutes = now.getMinutes();
+        var seconds = now.getSeconds();
+        var decimalHour = hours + (minutes / 60) + (seconds / 3600);
+
+        // 1. Regional Time & Date
+        var timeStr = now.toLocaleTimeString(locale, {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+
+        var dateStr = now.toLocaleDateString(locale, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        var tzName = '';
+        try {
+            tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        } catch(e) {
+            tzName = 'Local';
+        }
+
+        var tzDisplay = tzName ? (tzName.replace('_', ' ')) : 'Local';
+
+        // Dynamic Period Label
+        var periodLabel = '';
+        var periodIcon = '☀️';
+        if (decimalHour >= 5.0 && decimalHour < 6.5) {
+            periodLabel = L === 'en' ? 'Dawn' : 'ভোর';
+            periodIcon = '🌅';
+        } else if (decimalHour >= 6.5 && decimalHour < 12.0) {
+            periodLabel = L === 'en' ? 'Morning' : 'সকাল';
+            periodIcon = '☀️';
+        } else if (decimalHour >= 12.0 && decimalHour < 15.5) {
+            periodLabel = L === 'en' ? 'Noon' : 'দুপুর';
+            periodIcon = '🌤️';
+        } else if (decimalHour >= 15.5 && decimalHour < 17.5) {
+            periodLabel = L === 'en' ? 'Afternoon' : 'বিকেল';
+            periodIcon = '🌇';
+        } else if (decimalHour >= 17.5 && decimalHour < 19.5) {
+            periodLabel = L === 'en' ? 'Dusk' : 'সন্ধ্যা';
+            periodIcon = '🌆';
+        } else {
+            periodLabel = L === 'en' ? 'Night' : 'রাত্রি';
+            periodIcon = '🌙';
+        }
+
+        if (timeEl) timeEl.textContent = timeStr;
+        if (dateEl) dateEl.textContent = dateStr;
+        if (pillEl) pillEl.innerHTML = `${periodIcon} ${periodLabel}`;
+        if (tzEl) tzEl.textContent = '🌐 ' + tzDisplay;
+
+        // 2. Real-Time Sky Layers Opacity
+        var dayOpacity = 0;
+        var sunsetOpacity = 0;
+        var nightOpacity = 0;
+        var starsOpacity = 0;
+        var nightLightsOpacity = 0;
+
+        if (decimalHour >= 6.5 && decimalHour < 17.0) {
+            // Full Daytime
+            dayOpacity = 1;
+            sunsetOpacity = 0;
+            nightOpacity = 0;
+            starsOpacity = 0;
+            nightLightsOpacity = 0;
+        } else if (decimalHour >= 17.0 && decimalHour < 18.5) {
+            // Sunset transition (17:00 -> 18:30)
+            var p = (decimalHour - 17.0) / 1.5;
+            dayOpacity = Math.max(0, 1 - p * 1.4);
+            sunsetOpacity = Math.sin(p * Math.PI);
+            nightOpacity = Math.min(1, Math.max(0, (p - 0.3) / 0.7));
+            starsOpacity = Math.max(0, (p - 0.5) / 0.5);
+            nightLightsOpacity = Math.max(0, (p - 0.2) / 0.8);
+        } else if (decimalHour >= 18.5 && decimalHour < 20.0) {
+            // Twilight to Deep Night (18:30 -> 20:00)
+            var p = (decimalHour - 18.5) / 1.5;
+            dayOpacity = 0;
+            sunsetOpacity = Math.max(0, (1 - p) * 0.5);
+            nightOpacity = 1;
+            starsOpacity = 1;
+            nightLightsOpacity = 1;
+        } else if (decimalHour >= 20.0 || decimalHour < 5.0) {
+            // Full Deep Night (20:00 -> 05:00)
+            dayOpacity = 0;
+            sunsetOpacity = 0;
+            nightOpacity = 1;
+            starsOpacity = 1;
+            nightLightsOpacity = 1;
+        } else if (decimalHour >= 5.0 && decimalHour < 6.5) {
+            // Dawn / Sunrise (05:00 -> 06:30)
+            var p = (decimalHour - 5.0) / 1.5;
+            nightOpacity = Math.max(0, 1 - p * 1.3);
+            sunsetOpacity = Math.sin(p * Math.PI) * 0.9;
+            dayOpacity = Math.min(1, Math.max(0, (p - 0.3) / 0.7));
+            starsOpacity = Math.max(0, 1 - p * 2);
+            nightLightsOpacity = Math.max(0, 1 - p * 1.8);
+        }
+
+        if (skyDay) skyDay.style.opacity = dayOpacity.toFixed(3);
+        if (skySunset) skySunset.style.opacity = sunsetOpacity.toFixed(3);
+        if (skyNight) skyNight.style.opacity = nightOpacity.toFixed(3);
+        if (starsGroup) starsGroup.style.opacity = starsOpacity.toFixed(3);
+        if (nightLightsGroup) nightLightsGroup.style.opacity = nightLightsOpacity.toFixed(3);
+
+        // 3. Sun Real-Time Path (Daytime: 05:30 to 18:30)
+        if (sunGroup) {
+            if (decimalHour >= 5.5 && decimalHour <= 18.5) {
+                var pSun = (decimalHour - 5.5) / 13.0;
+                var xSun = 80 + pSun * 1040;
+                var ySun = 16 + 56 * Math.pow(2 * pSun - 1, 2);
+                sunGroup.setAttribute('transform', `translate(${xSun.toFixed(1)}, ${ySun.toFixed(1)})`);
+                var sunOpacity = 1;
+                if (pSun < 0.08) sunOpacity = pSun / 0.08;
+                else if (pSun > 0.92) sunOpacity = (1 - pSun) / 0.08;
+                sunGroup.style.opacity = sunOpacity.toFixed(3);
+            } else {
+                sunGroup.style.opacity = '0';
+                sunGroup.setAttribute('transform', 'translate(600, 120)');
+            }
+        }
+
+        // 4. Moon Real-Time Path (Nighttime: 17:30 to 06:30)
+        if (moonGroup) {
+            if (decimalHour >= 17.5 || decimalHour <= 6.5) {
+                var nightH = decimalHour >= 17.5 ? (decimalHour - 17.5) : (decimalHour + 6.5);
+                var pMoon = nightH / 13.0;
+                var xMoon = 80 + pMoon * 1040;
+                var yMoon = 18 + 52 * Math.pow(2 * pMoon - 1, 2);
+                moonGroup.setAttribute('transform', `translate(${xMoon.toFixed(1)}, ${yMoon.toFixed(1)})`);
+                var moonOpacity = 1;
+                if (pMoon < 0.08) moonOpacity = pMoon / 0.08;
+                else if (pMoon > 0.92) moonOpacity = (1 - pMoon) / 0.08;
+                moonGroup.style.opacity = moonOpacity.toFixed(3);
+            } else {
+                moonGroup.style.opacity = '0';
+                moonGroup.setAttribute('transform', 'translate(600, 120)');
+            }
+        }
+    }
+
+    updateClockAndSky();
+    _dashboardClockTimer = setInterval(updateClockAndSky, 1000);
 }
 
 // ============================================================

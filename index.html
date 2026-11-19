@@ -35,13 +35,13 @@
     <link rel="manifest" href="manifest.json">
     
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.2.8">
-    <link rel="apple-touch-icon" href="icon-192.png?v=2.2.8">
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=2.2.8">
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=2.2.8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.3.0">
+    <link rel="apple-touch-icon" href="icon-192.png?v=2.3.0">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=2.3.0">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=2.3.0">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="css/style.css?v=2.2.8">
+    <link rel="stylesheet" href="css/style.css?v=2.3.0">
     
     <!-- Google Fonts - বাংলা -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -267,18 +267,27 @@
                             <line x1="129" y1="94" x2="72" y2="128" stroke="white" stroke-width="1.4"/>
 
                             <!-- Graceful Sagging High-Voltage Transmission Cables -->
-                            <path d="M0 48 Q25 56 50 46" stroke="white" stroke-width="1.2" opacity="0.75"/>
-                            <path d="M170 46 Q195 56 220 48" stroke="white" stroke-width="1.2" opacity="0.75"/>
+                            <path d="M0 48 Q25 56 50 46" stroke="white" stroke-width="1.2" opacity="0.5"/>
+                            <path class="sidebar-electric-flow" d="M0 48 Q25 56 50 46" stroke="#67e8f9" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M170 46 Q195 56 220 48" stroke="white" stroke-width="1.2" opacity="0.5"/>
+                            <path class="sidebar-electric-flow" d="M170 46 Q195 56 220 48" stroke="#67e8f9" stroke-width="1.8" stroke-linecap="round"/>
 
-                            <path d="M0 76 Q30 84 60 76" stroke="white" stroke-width="1.2" opacity="0.75"/>
-                            <path d="M160 76 Q190 84 220 76" stroke="white" stroke-width="1.2" opacity="0.75"/>
+                            <path d="M0 76 Q30 84 60 76" stroke="white" stroke-width="1.2" opacity="0.5"/>
+                            <path class="sidebar-electric-flow reverse" d="M0 76 Q30 84 60 76" stroke="#fde047" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M160 76 Q190 84 220 76" stroke="white" stroke-width="1.2" opacity="0.5"/>
+                            <path class="sidebar-electric-flow reverse" d="M160 76 Q190 84 220 76" stroke="#fde047" stroke-width="1.8" stroke-linecap="round"/>
 
-                            <path d="M0 102 Q20 110 40 104" stroke="white" stroke-width="1.2" opacity="0.75"/>
-                            <path d="M180 104 Q200 110 220 102" stroke="white" stroke-width="1.2" opacity="0.75"/>
+                            <path d="M0 102 Q20 110 40 104" stroke="white" stroke-width="1.2" opacity="0.5"/>
+                            <path class="sidebar-electric-flow" d="M0 102 Q20 110 40 104" stroke="#67e8f9" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M180 104 Q200 110 220 102" stroke="white" stroke-width="1.2" opacity="0.5"/>
+                            <path class="sidebar-electric-flow" d="M180 104 Q200 110 220 102" stroke="#67e8f9" stroke-width="1.8" stroke-linecap="round"/>
+
+                            <!-- Red Aircraft Warning Beacon at Spire Top -->
+                            <circle cx="110" cy="2" r="2.5" class="sidebar-pylon-beacon" fill="#ef4444"/>
                         </svg>
                     </div>
                     <div class="sidebar-copyright">
-                        © 2026 বিদ্যুৎ বিল সিস্টেম • <span class="sidebar-version-badge" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; padding: 1px 6px; border-radius: 6px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px; border: 1px solid rgba(255, 255, 255, 0.3);">v2.2.8</span>
+                        © 2026 বিদ্যুৎ বিল সিস্টেম • <span class="sidebar-version-badge" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; padding: 1px 6px; border-radius: 6px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px; border: 1px solid rgba(255, 255, 255, 0.3);">v2.3.0</span>
                     </div>
                 </div>
             </div>
@@ -512,22 +521,22 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <!-- JavaScript Files -->
-    <script src="js/utils.js?v=2.2.8"></script>
-<script src="js/auth.js?v=2.2.8"></script>
-<script src="js/app.js?v=2.2.8"></script>
-<script src="js/firebase-init.js?v=2.2.8"></script>
-<script src="js/dashboard.js?v=2.2.8"></script>
-<script src="js/meters.js?v=2.2.8"></script>
-<script src="js/transactions.js?v=2.2.8"></script>
-<script src="js/calculator.js?v=2.2.8"></script>
-<script src="js/reports.js?v=2.2.8"></script>
-<script src="js/analytics.js?v=2.2.8"></script>
-<script src="js/settings.js?v=2.2.8"></script>
-<script src="js/backup.js?v=2.2.8"></script>
-<script src="js/admin.js?v=2.2.8"></script>
-<script src="js/profile.js?v=2.2.8"></script>
-<script src="js/rent.js?v=2.2.8"></script>
-<script src="js/expenses.js?v=2.2.8"></script>
+    <script src="js/utils.js?v=2.3.0"></script>
+<script src="js/auth.js?v=2.3.0"></script>
+<script src="js/app.js?v=2.3.0"></script>
+<script src="js/firebase-init.js?v=2.3.0"></script>
+<script src="js/dashboard.js?v=2.3.0"></script>
+<script src="js/meters.js?v=2.3.0"></script>
+<script src="js/transactions.js?v=2.3.0"></script>
+<script src="js/calculator.js?v=2.3.0"></script>
+<script src="js/reports.js?v=2.3.0"></script>
+<script src="js/analytics.js?v=2.3.0"></script>
+<script src="js/settings.js?v=2.3.0"></script>
+<script src="js/backup.js?v=2.3.0"></script>
+<script src="js/admin.js?v=2.3.0"></script>
+<script src="js/profile.js?v=2.3.0"></script>
+<script src="js/rent.js?v=2.3.0"></script>
+<script src="js/expenses.js?v=2.3.0"></script>
 
     <!-- ==================== PWA SCRIPT ==================== -->
     <script>
