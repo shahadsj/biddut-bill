@@ -3532,34 +3532,31 @@ html, body {
 /* ============================================================
    LIVE REGIONAL DATE & TIME CARD IN HERO BANNER
    ============================================================ */
-.hero-text-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex-shrink: 0;
-}
-.hero-datetime-card {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 12px;
-    padding: 6px 12px;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-    max-width: fit-content;
-}
-[data-theme="dark"] .hero-datetime-card {
-    background: rgba(30, 41, 59, 0.85);
-    border-color: rgba(51, 65, 85, 0.9);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-}
-.datetime-primary-row {
+/* ============================================================
+   TOP APP HEADER: LIVE REGIONAL DATE & TIME CENTER PILL
+   ============================================================ */
+.header-datetime-wrap {
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex: 1;
+    margin: 0 16px;
+    pointer-events: none;
+}
+.header-datetime-pill {
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 5px 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+[data-theme="dark"] .header-datetime-pill {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .datetime-pulse-dot {
     width: 8px;
@@ -3574,56 +3571,71 @@ html, body {
     70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
     100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
-.datetime-time {
-    font-size: 15px;
+.header-datetime-time {
+    font-size: 13.5px;
     font-weight: 800;
     color: #0f172a;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.3px;
 }
-[data-theme="dark"] .datetime-time {
+[data-theme="dark"] .header-datetime-time {
     color: #f1f5f9;
 }
-.datetime-period-pill {
+.header-datetime-period {
     font-size: 11px;
     font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 8px;
+    padding: 1px 7px;
+    border-radius: 6px;
     background: #eff6ff;
     color: #2563eb;
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
 }
-[data-theme="dark"] .datetime-period-pill {
+[data-theme="dark"] .header-datetime-period {
     background: rgba(59, 130, 246, 0.18);
     color: #93c5fd;
 }
-.datetime-secondary-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11.5px;
-    color: #64748b;
-    font-weight: 500;
-}
-[data-theme="dark"] .datetime-secondary-row {
-    color: #94a3b8;
-}
-.datetime-calendar-icon {
+.header-datetime-divider {
+    color: #cbd5e1;
+    font-weight: 400;
     font-size: 11px;
 }
-.datetime-tz-pill {
+[data-theme="dark"] .header-datetime-divider {
+    color: #475569;
+}
+.header-datetime-date {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+[data-theme="dark"] .header-datetime-date {
+    color: #94a3b8;
+}
+.header-datetime-tz {
     font-size: 10px;
     font-weight: 600;
-    background: #f1f5f9;
-    color: #475569;
+    background: #e2e8f0;
+    color: #334155;
     padding: 1px 6px;
     border-radius: 6px;
 }
-[data-theme="dark"] .datetime-tz-pill {
+[data-theme="dark"] .header-datetime-tz {
     background: #334155;
     color: #cbd5e1;
+}
+
+@media (max-width: 992px) {
+    .header-datetime-date,
+    .header-datetime-tz,
+    .header-datetime-divider {
+        display: none;
+    }
+}
+@media (max-width: 768px) {
+    .header-datetime-wrap {
+        display: none !important;
+    }
 }
 
 .hero-illustration svg,

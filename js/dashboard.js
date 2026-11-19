@@ -995,24 +995,8 @@ function showDashboard() {
         ============================================================ -->
         <div class="dashboard-hero-banner">
             <div class="hero-text-wrap">
-                <div class="hero-title-group">
-                    <h1 class="hero-title">${__('dashboard')}</h1>
-                    <p class="hero-subtitle">${L === 'en' ? 'Overall status of electricity bill management' : 'বিদ্যুৎ বিল ব্যবস্থাপনার সার্বিক অবস্থা'}</p>
-                </div>
-                
-                <!-- লাইভ রিজিওনাল ডেট ও টাইম কার্ড (Live Regional Date & Time) -->
-                <div class="hero-datetime-card" id="heroDateTimeCard">
-                    <div class="datetime-primary-row">
-                        <span class="datetime-pulse-dot" title="Live Clock Active"></span>
-                        <span class="datetime-time" id="liveRegionalTime">--:--:-- --</span>
-                        <span class="datetime-period-pill" id="livePeriodPill">🌙 রাত্রি</span>
-                    </div>
-                    <div class="datetime-secondary-row">
-                        <span class="datetime-calendar-icon">📅</span>
-                        <span class="datetime-date" id="liveRegionalDate">--</span>
-                        <span class="datetime-tz-pill" id="liveRegionalTZ">🌐 Local Time</span>
-                    </div>
-                </div>
+                <h1 class="hero-title">${__('dashboard')}</h1>
+                <p class="hero-subtitle">${L === 'en' ? 'Overall status of electricity bill management' : 'বিদ্যুৎ বিল ব্যবস্থাপনার সার্বিক অবস্থা'}</p>
             </div>
             <div class="hero-illustration">
                 <svg viewBox="0 0 1200 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-panoramic-svg" id="heroRealtimeSvg" preserveAspectRatio="none" style="width: 100%; height: 75px; display: block;">

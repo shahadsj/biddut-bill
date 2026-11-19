@@ -503,7 +503,7 @@ function getActiveNotifications() {
         id: 'system_ver',
         type: 'info',
         icon: 'ℹ️',
-        title: L === 'en' ? 'App Version v2.3.0' : 'অ্যাপ সংস্করণ v2.3.0',
+        title: L === 'en' ? 'App Version v2.3.1' : 'অ্যাপ সংস্করণ v2.3.1',
         msg: L === 'en' ? 'Smart prepaid meter tracking is fully active and synchronized.' : 'স্মার্ট প্রিপেইড মিটার ট্র্যাকার এবং সরকারি ট্যারিফ রেট কার্যকর আছে।',
         time: L === 'en' ? 'Latest' : 'আপ-টু-ডেট'
     });
