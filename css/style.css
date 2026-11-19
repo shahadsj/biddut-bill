@@ -4140,23 +4140,135 @@ html, body {
     gap: 20px;
     height: 210px;
 }
+#dashboardCategoryChart {
+    position: relative;
+    z-index: 1;
+}
 .donut-center-content {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    user-select: none;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.7) 100%);
+    border: 1.5px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    z-index: 20 !important;
+    overflow: visible;
+}
+.donut-center-content:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+    border-color: #f59e0b;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.45), 0 0 28px rgba(99, 102, 241, 0.35), inset 0 0 10px rgba(251, 191, 36, 0.25);
+}
+.donut-center-content:hover .center-value {
+    color: #4f46e5;
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5), 0 0 18px rgba(245, 158, 11, 0.35);
+    animation: electricBuzz 0.18s infinite alternate;
+}
+.donut-center-content:hover .electric-spark-ico {
+    opacity: 1;
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 6px #f59e0b) drop-shadow(0 0 12px #6366f1);
+    animation: electricFlicker 0.2s infinite alternate;
+}
+.donut-center-content .center-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: center;
+}
+.donut-center-content .electric-spark-ico {
+    display: inline-block;
+    color: #f59e0b;
+    font-size: 11px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+.donut-center-content .center-value {
+    font-size: 21px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-top: 2px;
+    transition: all 0.2s ease;
+}
+
+/* Electric Animations */
+@keyframes electricBuzz {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-0.8px, 0.8px); }
+    50% { transform: translate(0.8px, -0.8px); }
+    75% { transform: translate(-0.6px, -0.6px); }
+    100% { transform: translate(0.6px, 0.6px); }
+}
+@keyframes electricFlicker {
+    0% { opacity: 0.85; transform: scale(1.1) rotate(-6deg); filter: drop-shadow(0 0 4px #fbbf24); }
+    100% { opacity: 1; transform: scale(1.35) rotate(6deg); filter: drop-shadow(0 0 10px #f59e0b) drop-shadow(0 0 18px #6366f1); }
+}
+@keyframes electricBlast {
+    0% {
+        transform: translate(-50%, -50%) scale(0.92);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.9), 0 0 25px rgba(99, 102, 241, 0.8);
+        filter: brightness(1.6);
+    }
+    30% {
+        transform: translate(-50%, -50%) scale(1.18);
+        box-shadow: 0 0 30px 10px rgba(245, 158, 11, 0.85), 0 0 50px 18px rgba(99, 102, 241, 0.65);
+        filter: brightness(1.85) contrast(1.25);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        filter: brightness(1);
+    }
+}
+.donut-center-content.electric-shock {
+    animation: electricBlast 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.electric-particle {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    pointer-events: none;
-}
-.donut-center-content .center-label {
-    font-size: 10.5px;
-    color: #64748b;
-    font-weight: 500;
-}
-.donut-center-content .center-value {
     font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
+    color: #f59e0b;
+    pointer-events: none;
+    user-select: none;
+    z-index: 25;
+    transform: translate(-50%, -50%) scale(0.6);
+    filter: drop-shadow(0 0 6px #f59e0b) drop-shadow(0 0 12px #6366f1);
+    animation: particleFly 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes particleFly {
+    0% {
+        transform: translate(-50%, -50%) scale(0.6);
+        opacity: 1;
+    }
+    55% {
+        transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.35);
+        opacity: 0.95;
+        filter: drop-shadow(0 0 10px #fbbf24) drop-shadow(0 0 20px #818cf8);
+    }
+    100% {
+        transform: translate(calc(-50% + var(--tx) * 1.35), calc(-50% + var(--ty) * 1.35)) scale(0);
+        opacity: 0;
+    }
 }
 .donut-legend-wrap {
     display: flex;

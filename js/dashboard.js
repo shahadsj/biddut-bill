@@ -692,6 +692,10 @@ function showDashboard() {
     const recentTx = getRecentTransactions(APP.activeMeterId, 5);
     
     const summary = getDemandVatRebateSummary(APP.activeMeterId);
+    var deductTotal = (summary.totalDemand || 0) + (summary.totalVat || 0) + (summary.totalRebate || 0);
+    var demandPct = deductTotal > 0 ? (((summary.totalDemand || 0) / deductTotal) * 100).toFixed(1) : '0.0';
+    var vatPct = deductTotal > 0 ? (((summary.totalVat || 0) / deductTotal) * 100).toFixed(1) : '0.0';
+    var rebatePct = deductTotal > 0 ? (((summary.totalRebate || 0) / deductTotal) * 100).toFixed(1) : '0.0';
 
     const L = APP.language;
     const dateLocale = L === 'en' ? 'en-US' : 'bn-BD';
@@ -1181,14 +1185,14 @@ function showDashboard() {
             </div>
             
             <div class="billing-cards-grid">
-                <!-- বিদ্যুৎ চার্জ (Orange) -->
+                <!-- ডিমান্ড চার্জ (Orange) -->
                 <div class="deduction-card orange">
-                    <div class="deduction-icon-box" title="${L === 'en' ? 'Electricity Demand Charge' : 'বিদ্যুৎ চার্জ'}">
+                    <div class="deduction-icon-box" title="${L === 'en' ? 'Demand Charge' : 'ডিমান্ড চার্জ'}">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                             <path d="M13 2L3 14h7v8l11-12h-8z"/>
                         </svg>
                     </div>
-                    <div class="deduction-label">${L === 'en' ? 'Electricity Charge' : 'বিদ্যুৎ চার্জ'}</div>
+                    <div class="deduction-label">${L === 'en' ? 'Demand Charge' : 'ডিমান্ড চার্জ'}</div>
                     <div class="deduction-value">৳ ${(summary.totalDemand || 0).toFixed(2)}</div>
                 </div>
                 <!-- ভ্যাট (Red/Pink) -->
@@ -1469,26 +1473,29 @@ function showDashboard() {
                 <div class="donut-chart-layout">
                     <div class="donut-canvas-container" style="position: relative; width: 170px; height: 170px; flex-shrink: 0; margin: 0 auto;">
                         <canvas id="dashboardCategoryChart"></canvas>
-                        <div class="donut-center-content">
-                            <div class="center-label">${L === 'en' ? 'Total Cost' : 'মোট খরচ'}</div>
+                        <div class="donut-center-content" onclick="triggerElectricShock(this)" title="${L === 'en' ? 'Click for electric spark effect!' : 'ক্লিক করে বিদ্যুৎ চমক দেখুন!'}">
+                            <div class="center-label">
+                                <span class="electric-spark-ico">⚡</span>
+                                <span>${L === 'en' ? 'Total Cost' : 'মোট খরচ'}</span>
+                            </div>
                             <div class="center-value">৳ ${(monthExpense || 223.05).toFixed(2)}</div>
                         </div>
                     </div>
                     <div class="donut-legend-wrap">
                         <div class="legend-row">
                             <span class="legend-dot purple"></span>
-                            <span class="legend-name">${L === 'en' ? 'Electricity Charge' : 'বিদ্যুৎ চার্জ'}</span>
-                            <span class="legend-percent">66.0%</span>
+                            <span class="legend-name">${L === 'en' ? 'Demand Charge' : 'ডিমান্ড চার্জ'}</span>
+                            <span class="legend-percent">${demandPct}%</span>
                         </div>
                         <div class="legend-row">
                             <span class="legend-dot cyan"></span>
                             <span class="legend-name">${L === 'en' ? 'VAT' : 'ভ্যাট'}</span>
-                            <span class="legend-percent">21.0%</span>
+                            <span class="legend-percent">${vatPct}%</span>
                         </div>
                         <div class="legend-row">
                             <span class="legend-dot green"></span>
                             <span class="legend-name">${L === 'en' ? 'Rebate' : 'রিবেট'}</span>
-                            <span class="legend-percent">13.0%</span>
+                            <span class="legend-percent">${rebatePct}%</span>
                         </div>
                     </div>
                 </div>
@@ -1732,10 +1739,11 @@ function initDashboardCharts(meterId, transactions, summary, monthExpense) {
         var total = demand + vat + rebate;
 
         var catCtx = catCanvas.getContext('2d');
+        var L = APP.language || 'bn';
         window._dashCategoryChart = new Chart(catCtx, {
             type: 'doughnut',
             data: {
-                labels: ['বিদ্যুৎ চার্জ', 'ভ্যাট', 'রিবেট'],
+                labels: [L === 'en' ? 'Demand Charge' : 'ডিমান্ড চার্জ', L === 'en' ? 'VAT' : 'ভ্যাট', L === 'en' ? 'Rebate' : 'রিবেট'],
                 datasets: [{
                     data: [demand, vat, rebate],
                     backgroundColor: ['#6366f1', '#06b6d4', '#10b981'],
@@ -1889,3 +1897,39 @@ function renderRentWidget() {
     html += '</div>';
     return html;
 }
+
+// Interactive Electric Shock Animation for Donut Center Value
+window.triggerElectricShock = function(container) {
+    if (!container) return;
+    container.classList.remove('electric-shock');
+    // Force DOM reflow
+    void container.offsetWidth;
+    container.classList.add('electric-shock');
+
+    // Create 6-8 flying lightning spark particles
+    var sparkCount = 7;
+    for (var i = 0; i < sparkCount; i++) {
+        var spark = document.createElement('span');
+        spark.className = 'electric-particle';
+        spark.innerHTML = '⚡';
+        var baseAngle = (i * (360 / sparkCount));
+        var angle = baseAngle + (Math.random() * 24 - 12);
+        var dist = 48 + Math.random() * 26;
+        var rad = angle * (Math.PI / 180);
+        var tx = Math.cos(rad) * dist;
+        var ty = Math.sin(rad) * dist;
+        spark.style.setProperty('--tx', tx.toFixed(1) + 'px');
+        spark.style.setProperty('--ty', ty.toFixed(1) + 'px');
+        container.appendChild(spark);
+        (function(el) {
+            setTimeout(function() {
+                if (el && el.parentNode) el.parentNode.removeChild(el);
+            }, 680);
+        })(spark);
+    }
+
+    // Optional subtle haptic feedback if supported on mobile
+    if (window.navigator && window.navigator.vibrate) {
+        try { window.navigator.vibrate([30, 20, 40]); } catch (e) {}
+    }
+};
