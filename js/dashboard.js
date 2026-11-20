@@ -1188,15 +1188,18 @@ function showDashboard() {
                     <path class="cable-base" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#334155" stroke-width="1.4" fill="none"/>
                     <path class="cable-base" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#334155" stroke-width="1.2" fill="none" opacity="0.75"/>
 
-                    <!-- Continuous Flowing Electricity Pulses Across Cables -->
-                    <path class="cable-electric-pulse cyan" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-                    <path class="cable-electric-pulse gold" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                    <!-- Continuous Flowing Electricity Pulses Across 3 Cables (Sequential Staggered 3-Phase Flow) -->
+                    <!-- CABLE 1 (Top Cable) -->
+                    <path class="cable-pulse-cyan cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-gold cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
 
-                    <path class="cable-electric-pulse cyan offset-1" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-                    <path class="cable-electric-pulse gold offset-1" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                    <!-- CABLE 2 (Middle Cable) -->
+                    <path class="cable-pulse-cyan cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-gold cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
 
-                    <path class="cable-electric-pulse cyan offset-2" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#38bdf8" stroke-width="2.0" stroke-linecap="round" fill="none"/>
-                    <path class="cable-electric-pulse gold offset-2" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                    <!-- CABLE 3 (Bottom Cable) -->
+                    <path class="cable-pulse-cyan cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#38bdf8" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-gold cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
 
                     <!-- Tower 1 (Left Pylon at x=80) -->
                     <path d="M 80 10 L 64 85 L 96 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
@@ -1243,12 +1246,6 @@ function showDashboard() {
                     <circle cx="720" cy="40" r="2.5" class="insulator-spark"/>
                     <circle cx="1040" cy="28" r="2.5" class="insulator-spark"/>
                     <circle cx="1040" cy="42" r="2.5" class="insulator-spark"/>
-
-                    <!-- Aircraft Warning Beacon Lights on Spires -->
-                    <circle cx="80" cy="9" r="2.2" class="pylon-beacon" fill="#ef4444"/>
-                    <circle cx="400" cy="7" r="2.4" class="pylon-beacon" fill="#ef4444"/>
-                    <circle cx="720" cy="9" r="2.2" class="pylon-beacon" fill="#ef4444"/>
-                    <circle cx="1040" cy="11" r="2.2" class="pylon-beacon" fill="#ef4444"/>
 
                     <!-- Rolling Green Landscape Base (Continuous across 1200px) -->
                     <path d="M 0,85 C 100,75 200,82 300,78 C 400,74 500,80 600,76 C 700,72 800,80 900,75 C 1000,70 1100,78 1200,76 L 1200,85 L 0,85 Z" fill="#86efac" opacity="0.85"/>
@@ -1806,14 +1803,19 @@ function initDashboardRealTimeClock() {
             day: 'numeric'
         });
 
-        var tzName = '';
+        var cityName = 'Dhaka';
         try {
-            tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+            var rawTz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+            if (rawTz.includes('/')) {
+                cityName = rawTz.split('/').pop().replace(/_/g, ' ');
+            } else if (rawTz) {
+                cityName = rawTz.replace(/_/g, ' ');
+            }
         } catch(e) {
-            tzName = 'Local';
+            cityName = 'Dhaka';
         }
 
-        var tzDisplay = tzName ? (tzName.replace('_', ' ')) : 'Local';
+        var cityDisplay = (L === 'bn' && cityName === 'Dhaka') ? 'ঢাকা' : cityName;
 
         // Dynamic Period Label
         var periodLabel = '';
@@ -1841,7 +1843,7 @@ function initDashboardRealTimeClock() {
         if (timeEl) timeEl.textContent = timeStr;
         if (dateEl) dateEl.textContent = dateStr;
         if (pillEl) pillEl.innerHTML = `${periodIcon} ${periodLabel}`;
-        if (tzEl) tzEl.textContent = '🌐 ' + tzDisplay;
+        if (tzEl) tzEl.textContent = '📍 ' + cityDisplay;
 
         // 2. Real-Time Sky Layers Opacity
         var dayOpacity = 0;

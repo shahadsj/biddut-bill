@@ -3462,42 +3462,43 @@ html, body {
     filter: drop-shadow(0 0 4px #fef08a) drop-shadow(0 0 8px #f59e0b);
 }
 
-/* Aircraft Warning Beacon Lights on Pylon Spires */
-.pylon-beacon,
-.sidebar-pylon-beacon {
-    animation: pylonBeaconBlink 2.2s ease-in-out infinite;
-}
-@keyframes pylonBeaconBlink {
-    0%, 100% { opacity: 0.2; transform: scale(0.85); }
-    50% { opacity: 1; transform: scale(1.3); filter: drop-shadow(0 0 5px #ef4444) drop-shadow(0 0 8px #f43f5e); }
-}
-
-/* Continuous High-Voltage Electricity Cable Flow - Smooth & Soothing Speed */
-.cable-electric-pulse {
-    stroke-dasharray: 10 50;
-    animation: flowElectricity 5.5s linear infinite;
+/* ============================================================
+   SEQUENTIAL 3-TIER ELECTRICITY FLOW (Cable 1 -> Cable 2 -> Cable 3)
+   ============================================================ */
+.cable-pulse-cyan,
+.cable-pulse-gold {
     pointer-events: none;
 }
-.cable-electric-pulse.gold {
-    stroke-dasharray: 6 54;
-    animation: flowElectricity 6.2s linear infinite;
-    filter: drop-shadow(0 0 2px #fef08a) drop-shadow(0 0 6px #f59e0b);
-}
-.cable-electric-pulse.cyan {
+.cable-pulse-cyan {
+    stroke-dasharray: 22 178;
     filter: drop-shadow(0 0 3px #38bdf8) drop-shadow(0 0 8px #0284c7);
 }
-.cable-electric-pulse.offset-1 {
-    animation-delay: -1.8s;
-    animation-duration: 5.8s;
+.cable-pulse-gold {
+    stroke-dasharray: 10 190;
+    filter: drop-shadow(0 0 3px #fef08a) drop-shadow(0 0 6px #f59e0b);
 }
-.cable-electric-pulse.offset-2 {
+
+/* Cable 1 goes 1st (0s) */
+.cable-seq-1 {
+    animation: flowElectricity 5.4s linear infinite;
+    animation-delay: 0s;
+}
+
+/* Cable 2 follows 2nd (staggered by 1.8s) */
+.cable-seq-2 {
+    animation: flowElectricity 5.4s linear infinite;
     animation-delay: -3.6s;
-    animation-duration: 5.2s;
+}
+
+/* Cable 3 follows 3rd (staggered by another 1.8s) */
+.cable-seq-3 {
+    animation: flowElectricity 5.4s linear infinite;
+    animation-delay: -1.8s;
 }
 
 @keyframes flowElectricity {
     0% { stroke-dashoffset: 0; }
-    100% { stroke-dashoffset: -520; }
+    100% { stroke-dashoffset: -600; }
 }
 
 /* Insulator Spark Pulses at Towers - Gentle & Calming */
@@ -3529,9 +3530,6 @@ html, body {
     100% { stroke-dashoffset: 240; }
 }
 
-/* ============================================================
-   LIVE REGIONAL DATE & TIME CARD IN HERO BANNER
-   ============================================================ */
 /* ============================================================
    TOP APP HEADER: LIVE REGIONAL DATE & TIME CENTER PILL
    ============================================================ */
@@ -3613,27 +3611,86 @@ html, body {
     color: #94a3b8;
 }
 .header-datetime-tz {
-    font-size: 10px;
-    font-weight: 600;
-    background: #e2e8f0;
-    color: #334155;
-    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 2px 8px;
     border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
 }
 [data-theme="dark"] .header-datetime-tz {
-    background: #334155;
-    color: #cbd5e1;
+    background: rgba(59, 130, 246, 0.2);
+    color: #bfdbfe;
 }
 
 @media (max-width: 992px) {
     .header-datetime-date,
-    .header-datetime-tz,
     .header-datetime-divider {
         display: none;
     }
 }
+
+/* Mobile Adaptive Live Clock */
 @media (max-width: 768px) {
+    .app-header {
+        flex-wrap: wrap !important;
+        padding: 8px 12px 10px !important;
+        gap: 6px 0 !important;
+    }
     .header-datetime-wrap {
+        display: flex !important;
+        order: 10 !important;
+        width: 100% !important;
+        margin: 6px 0 0 !important;
+        justify-content: center !important;
+    }
+    .header-datetime-pill {
+        width: 100% !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.16) !important;
+        border: 1px solid rgba(255, 255, 255, 0.28) !important;
+        color: #ffffff !important;
+        padding: 4px 10px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+        gap: 6px !important;
+    }
+    .header-datetime-time {
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+    }
+    .header-datetime-period {
+        background: rgba(255, 255, 255, 0.24) !important;
+        color: #fef08a !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding: 1px 6px !important;
+    }
+    .header-datetime-divider {
+        display: inline !important;
+        color: rgba(255, 255, 255, 0.45) !important;
+        font-size: 10px !important;
+    }
+    .header-datetime-date {
+        display: inline !important;
+        color: rgba(255, 255, 255, 0.92) !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+    }
+    .header-datetime-tz {
+        display: inline-flex !important;
+        background: rgba(255, 255, 255, 0.24) !important;
+        color: #ffffff !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding: 1px 7px !important;
+    }
+}
+@media (max-width: 420px) {
+    .header-datetime-date {
         display: none !important;
     }
 }
