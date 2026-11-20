@@ -1,3 +1,13 @@
+function formatToBengaliNumerals(num) {
+    if (num === undefined || num === null) return '';
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    if (L === 'en') return String(num);
+    var bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(num).replace(/[0-9]/g, function(d) {
+        return bnDigits[d];
+    });
+}
+
 function escapeHtml(s) {
     if (!s) return "";
     return s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#039;").replace(/"/g, "&quot;");

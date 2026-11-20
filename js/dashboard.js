@@ -1,5 +1,15 @@
 // ==================== DASHBOARD ====================
 
+function formatToBengaliNumerals(num) {
+    if (num === undefined || num === null) return '';
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    if (L === 'en') return String(num);
+    var bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(num).replace(/[0-9]/g, function(d) {
+        return bnDigits[d];
+    });
+}
+
 // ✅ ব্যালেন্স প্রগ্রেস - উন্নত লজিক (১০ স্তর)
 function getBalanceProgress(balance) {
     if (balance >= 1000) return 100;
