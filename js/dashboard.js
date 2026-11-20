@@ -1810,23 +1810,43 @@ function initDashboardRealTimeClock() {
 
         var cityDisplay = (L === 'bn' && cityName === 'Dhaka') ? 'ঢাকা' : cityName;
 
-        // Dynamic Period Label
+        // Dynamic Seasonal Solar Cycle for Dhaka / Regional Latitude (~23.8° N)
+        // Accurate sunset & sunrise times for every month of the year
+        var m = now.getMonth();
+        var nextM = (m + 1) % 12;
+        var dayFrac = now.getDate() / 31;
+        var monthlySunset = [17.50, 17.85, 18.15, 18.38, 18.65, 18.82, 18.78, 18.45, 17.92, 17.48, 17.18, 17.20];
+        var monthlySunrise = [6.72, 6.55, 6.18, 5.70, 5.28, 5.18, 5.32, 5.55, 5.75, 5.95, 6.25, 6.58];
+
+        var sunsetHour = monthlySunset[m] + (monthlySunset[nextM] - monthlySunset[m]) * dayFrac;
+        var sunriseHour = monthlySunrise[m] + (monthlySunrise[nextM] - monthlySunrise[m]) * dayFrac;
+
+        // Dynamic Period Classification
+        // ভোর (Dawn): 5:00 AM to sunrise + 15m
+        // সকাল (Morning): sunrise + 15m to 11:30 AM
+        // দুপুর (Noon): 11:30 AM to 3:30 PM
+        // বিকেল (Afternoon): 3:30 PM to Sunset / Maghrib (e.g. 5:11 PM in Nov, 6:49 PM in Jun)
+        // সন্ধ্যা (Evening / Dusk / Maghrib): Sunset to Sunset + 2 hours (e.g. 5:11 PM to 7:11 PM in winter)
+        // রাত্রি (Night): Sunset + 2 hours to 5:00 AM
+        var dawnEnd = sunriseHour + 0.25;
+        var duskEnd = sunsetHour + 2.0;
+
         var periodLabel = '';
         var periodIcon = '☀️';
-        if (decimalHour >= 5.0 && decimalHour < 6.5) {
+        if (decimalHour >= 5.0 && decimalHour < dawnEnd) {
             periodLabel = L === 'en' ? 'Dawn' : 'ভোর';
             periodIcon = '🌅';
-        } else if (decimalHour >= 6.5 && decimalHour < 12.0) {
+        } else if (decimalHour >= dawnEnd && decimalHour < 11.5) {
             periodLabel = L === 'en' ? 'Morning' : 'সকাল';
             periodIcon = '☀️';
-        } else if (decimalHour >= 12.0 && decimalHour < 15.5) {
+        } else if (decimalHour >= 11.5 && decimalHour < 15.5) {
             periodLabel = L === 'en' ? 'Noon' : 'দুপুর';
             periodIcon = '🌤️';
-        } else if (decimalHour >= 15.5 && decimalHour < 17.5) {
+        } else if (decimalHour >= 15.5 && decimalHour < sunsetHour) {
             periodLabel = L === 'en' ? 'Afternoon' : 'বিকেল';
             periodIcon = '🌇';
-        } else if (decimalHour >= 17.5 && decimalHour < 19.5) {
-            periodLabel = L === 'en' ? 'Dusk' : 'সন্ধ্যা';
+        } else if (decimalHour >= sunsetHour && decimalHour < duskEnd) {
+            periodLabel = L === 'en' ? 'Evening' : 'সন্ধ্যা';
             periodIcon = '🌆';
         } else {
             periodLabel = L === 'en' ? 'Night' : 'রাত্রি';
@@ -1838,46 +1858,41 @@ function initDashboardRealTimeClock() {
         if (pillEl) pillEl.innerHTML = `${periodIcon} ${periodLabel}`;
         if (tzEl) tzEl.textContent = '📍 ' + cityDisplay;
 
-        // 2. Real-Time Sky Layers Opacity
+        // 2. Real-Time Sky Layers Opacity (Driven by seasonal sunsetHour & sunriseHour)
         var dayOpacity = 0;
         var sunsetOpacity = 0;
         var nightOpacity = 0;
         var starsOpacity = 0;
         var nightLightsOpacity = 0;
 
-        if (decimalHour >= 6.5 && decimalHour < 17.0) {
+        var sunsetStart = sunsetHour - 0.4; // Sunset colors start ~25 mins before sunset
+        var twilightEnd = sunsetHour + 1.2; // Twilight ends and night settles in
+
+        if (decimalHour >= dawnEnd && decimalHour < sunsetStart) {
             // Full Daytime
             dayOpacity = 1;
             sunsetOpacity = 0;
             nightOpacity = 0;
             starsOpacity = 0;
             nightLightsOpacity = 0;
-        } else if (decimalHour >= 17.0 && decimalHour < 18.5) {
-            // Sunset transition (17:00 -> 18:30)
-            var p = (decimalHour - 17.0) / 1.5;
-            dayOpacity = Math.max(0, 1 - p * 1.4);
+        } else if (decimalHour >= sunsetStart && decimalHour < twilightEnd) {
+            // Sunset & Maghrib transition
+            var p = (decimalHour - sunsetStart) / (twilightEnd - sunsetStart);
+            dayOpacity = Math.max(0, 1 - p * 1.5);
             sunsetOpacity = Math.sin(p * Math.PI);
             nightOpacity = Math.min(1, Math.max(0, (p - 0.3) / 0.7));
-            starsOpacity = Math.max(0, (p - 0.5) / 0.5);
-            nightLightsOpacity = Math.max(0, (p - 0.2) / 0.8);
-        } else if (decimalHour >= 18.5 && decimalHour < 20.0) {
-            // Twilight to Deep Night (18:30 -> 20:00)
-            var p = (decimalHour - 18.5) / 1.5;
-            dayOpacity = 0;
-            sunsetOpacity = Math.max(0, (1 - p) * 0.5);
-            nightOpacity = 1;
-            starsOpacity = 1;
-            nightLightsOpacity = 1;
-        } else if (decimalHour >= 20.0 || decimalHour < 5.0) {
-            // Full Deep Night (20:00 -> 05:00)
+            starsOpacity = Math.max(0, (p - 0.4) / 0.6);
+            nightLightsOpacity = Math.max(0, (p - 0.15) / 0.85);
+        } else if (decimalHour >= twilightEnd || decimalHour < 4.8) {
+            // Full Deep Night
             dayOpacity = 0;
             sunsetOpacity = 0;
             nightOpacity = 1;
             starsOpacity = 1;
             nightLightsOpacity = 1;
-        } else if (decimalHour >= 5.0 && decimalHour < 6.5) {
-            // Dawn / Sunrise (05:00 -> 06:30)
-            var p = (decimalHour - 5.0) / 1.5;
+        } else if (decimalHour >= 4.8 && decimalHour < dawnEnd) {
+            // Dawn / Sunrise
+            var p = (decimalHour - 4.8) / (dawnEnd - 4.8);
             nightOpacity = Math.max(0, 1 - p * 1.3);
             sunsetOpacity = Math.sin(p * Math.PI) * 0.9;
             dayOpacity = Math.min(1, Math.max(0, (p - 0.3) / 0.7));
@@ -1891,10 +1906,13 @@ function initDashboardRealTimeClock() {
         if (starsGroup) starsGroup.style.opacity = starsOpacity.toFixed(3);
         if (nightLightsGroup) nightLightsGroup.style.opacity = nightLightsOpacity.toFixed(3);
 
-        // 3. Sun Real-Time Path (Daytime: 05:30 to 18:30)
+        // 3. Sun Real-Time Path (Rises at sunriseHour - 0.4, sets at sunsetHour + 0.3)
         if (sunGroup) {
-            if (decimalHour >= 5.5 && decimalHour <= 18.5) {
-                var pSun = (decimalHour - 5.5) / 13.0;
+            var sunStart = sunriseHour - 0.4;
+            var sunEnd = sunsetHour + 0.3;
+            var sunTotal = sunEnd - sunStart;
+            if (decimalHour >= sunStart && decimalHour <= sunEnd) {
+                var pSun = (decimalHour - sunStart) / sunTotal;
                 var xSun = 80 + pSun * 1040;
                 var ySun = 16 + 56 * Math.pow(2 * pSun - 1, 2);
                 sunGroup.setAttribute('transform', `translate(${xSun.toFixed(1)}, ${ySun.toFixed(1)})`);
@@ -1908,11 +1926,15 @@ function initDashboardRealTimeClock() {
             }
         }
 
-        // 4. Moon Real-Time Path (Nighttime: 17:30 to 06:30)
+        // 4. Moon Real-Time Path (Rises around sunsetHour - 0.3, sets at sunriseHour + 0.4)
         if (moonGroup) {
-            if (decimalHour >= 17.5 || decimalHour <= 6.5) {
-                var nightH = decimalHour >= 17.5 ? (decimalHour - 17.5) : (decimalHour + 6.5);
-                var pMoon = nightH / 13.0;
+            var moonStart = sunsetHour - 0.3;
+            var moonEnd = sunriseHour + 0.4;
+            var isMoonTime = (decimalHour >= moonStart || decimalHour <= moonEnd);
+            if (isMoonTime) {
+                var moonTotal = (24 - moonStart) + moonEnd;
+                var moonElapsed = decimalHour >= moonStart ? (decimalHour - moonStart) : (24 - moonStart + decimalHour);
+                var pMoon = Math.min(1, Math.max(0, moonElapsed / moonTotal));
                 var xMoon = 80 + pMoon * 1040;
                 var yMoon = 18 + 52 * Math.pow(2 * pMoon - 1, 2);
                 moonGroup.setAttribute('transform', `translate(${xMoon.toFixed(1)}, ${yMoon.toFixed(1)})`);
@@ -1929,6 +1951,15 @@ function initDashboardRealTimeClock() {
 
     updateClockAndSky();
     _dashboardClockTimer = setInterval(updateClockAndSky, 1000);
+
+    if (!window._clockVisibilityListenerAttached) {
+        window._clockVisibilityListenerAttached = true;
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && typeof updateClockAndSky === 'function') {
+                updateClockAndSky();
+            }
+        });
+    }
 }
 
 // ============================================================
