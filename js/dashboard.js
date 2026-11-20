@@ -581,12 +581,28 @@ function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExp
     ];
 
     // 1. ব্যবহারকারীর বাস্তবসম্মত দৈনিক ইউনিট খরচ (Daily KWh consumption)
-    // প্রিপেইড মিটারে স্বাভাবিক পরিবারের দৈনিক ব্যবহার ৩.০ থেকে ৪.০ ইউনিট (৳ ৩০-৩৫/দিন)
-    var dailyUnits = 3.5; // ডিফল্ট বাস্তবসম্মত ৩.৫ ইউনিট/দিন
-    if (monthUnits > 0 && now.getDate() > 0) {
+    // ব্যবহারকারীর সাম্প্রতিক দৈনিক এন্ট্রিগুলো থেকে স্বয়ংক্রিয়ভাবে গড় ইউনিট বিশ্লেষণ
+    var recentUnitsList = [];
+    (transactions || []).forEach(function(t) {
+        if ((t.type === 'bill' || t.type === 'electricity_bill') && Number(t.units) > 0) {
+            var d = new Date(t.date || t.timestamp);
+            if (!isNaN(d.getTime()) && (now.getTime() - d.getTime()) <= 14 * 24 * 60 * 60 * 1000) {
+                recentUnitsList.push(Number(t.units));
+            }
+        }
+    });
+
+    var dailyUnits = 3.5; // ডিফল্ট বেঞ্চমার্ক
+    if (recentUnitsList.length > 0) {
+        var sumRecent = recentUnitsList.reduce(function(a, b) { return a + b; }, 0);
+        var avgRecentUnits = sumRecent / recentUnitsList.length;
+        if (avgRecentUnits >= 1.5 && avgRecentUnits <= 20.0) {
+            dailyUnits = Math.round(avgRecentUnits * 100) / 100;
+        }
+    } else if (monthUnits > 0 && now.getDate() > 0) {
         var calculatedDaily = monthUnits / now.getDate();
-        if (calculatedDaily >= 2.0 && calculatedDaily <= 12.0) {
-            dailyUnits = calculatedDaily;
+        if (calculatedDaily >= 1.5 && calculatedDaily <= 15.0) {
+            dailyUnits = Math.round(calculatedDaily * 100) / 100;
         }
     }
 
