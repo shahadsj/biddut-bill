@@ -105,7 +105,7 @@ function showSettings() {
                             '<div style="font-weight: 700; font-size: 16px; color: #1e293b;">'+(L==='en'?'Electricity Bill System':'বিদ্যুৎ বিল সিস্টেম')+'</div>',
                             '<div style="font-size: 13px; color: #64748b;">'+(L==='en'?'Smart Prepaid Meter & Expense Tracker':'স্মার্ট প্রিপেইড মিটার ও খরচ ট্র্যাকার')+'</div>',
                         '</div>',
-                        '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; box-shadow: 0 2px 8px rgba(102,126,234,0.3);">v2.3.5</span>',
+                        '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; box-shadow: 0 2px 8px rgba(102,126,234,0.3);">v2.4.0</span>',
                     '</div>',
                     '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 13px;">',
                         '<div><span style="color: #64748b;">'+(L==='en'?'Release Status: ':'রিলিজ স্ট্যাটাস: ')+'</span><strong style="color: #10b981;">'+(L==='en'?'Up to date (Latest)':'আপ-টু-ডেট (সর্বশেষ সংস্করণ)')+'</strong></div>',

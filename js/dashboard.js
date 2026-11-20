@@ -552,6 +552,206 @@ function createExpenseSummaryCards(L) {
 }
 
 // ============================================================
+// 🔮 ১. স্মার্ট ব্যালেন্স পূর্বাভাস ও রিচার্জ ক্যালকুলেটর (Smart Balance & Bill Predictor)
+// ============================================================
+function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExpense) {
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    var now = new Date();
+    balance = Math.max(0, Number(balance) || 0);
+
+    // 1. দৈনিক গড় খরচ নির্ধারণ (Daily Average Burn Rate)
+    var dailyAvg = 0;
+    var recent7DaysExpense = 0;
+    var sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    var billCountIn7Days = 0;
+
+    (transactions || []).forEach(function(t) {
+        if (t.type === 'bill' || t.type === 'electricity_bill') {
+            var d = new Date(t.date || t.timestamp);
+            if (!isNaN(d.getTime()) && d >= sevenDaysAgo) {
+                recent7DaysExpense += (Number(t.amount) || 0);
+                billCountIn7Days++;
+            }
+        }
+    });
+
+    if (recent7DaysExpense > 0 && billCountIn7Days > 0) {
+        dailyAvg = recent7DaysExpense / 7;
+    } else if (monthlyAvgExpense > 0) {
+        dailyAvg = monthlyAvgExpense / 30;
+    } else {
+        dailyAvg = 28.50; // বাস্তবসম্মত ফলব্যাক গড় দৈনিক প্রিপেইড খরচ (৳)
+    }
+    dailyAvg = Math.max(5, Math.round(dailyAvg * 100) / 100);
+
+    // 2. অবশিষ্ট ব্যালেন্স কত দিন চলবে (Estimated Days Remaining)
+    var estimatedDays = Math.floor(balance / dailyAvg);
+
+    // 3. সম্ভাব্য ব্যালেন্স শেষ হওয়ার তারিখ (Runout Date)
+    var runoutDate = new Date(now.getTime() + estimatedDays * 24 * 60 * 60 * 1000);
+    var dateLocale = L === 'en' ? 'en-US' : 'bn-BD';
+    var runoutDateFormatted = runoutDate.toLocaleDateString(dateLocale, {
+        day: 'numeric',
+        month: 'long'
+    });
+
+    // 4. চলতি মাস শেষ হতে কত দিন বাকি (Days Remaining in Month)
+    var totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    var currentDay = now.getDate();
+    var daysRemainingInMonth = Math.max(0, totalDaysInMonth - currentDay);
+
+    // 5. ঘাটতি ও অতিরিক্ত রিচার্জের পরামর্শ (Deficit & Recommended Recharge)
+    var deficitDays = Math.max(0, daysRemainingInMonth - estimatedDays);
+    var recommendedRecharge = 0;
+    if (deficitDays > 0) {
+        recommendedRecharge = Math.ceil((deficitDays * dailyAvg) / 50) * 50;
+        if (recommendedRecharge < 100) recommendedRecharge = 100;
+    }
+
+    var bnDigits = function(n) {
+        return (typeof formatToBengaliNumerals === 'function') ? formatToBengaliNumerals(n) : n;
+    };
+
+    var status = 'healthy';
+    var statusTitle = '';
+    var statusPill = '';
+    var message = '';
+
+    if (balance <= 100 || estimatedDays <= 2) {
+        status = 'critical';
+        statusTitle = L === 'en' ? 'Critical Balance Warning!' : 'জরুরি ব্যালেন্স সতর্কতা!';
+        statusPill = L === 'en' ? `🚨 Only ${estimatedDays} Days Left` : `🚨 মাত্র ${bnDigits(estimatedDays)} দিন বাকি`;
+        message = L === 'en'
+            ? `Warning! Your remaining balance of ৳${balance.toFixed(2)} will last only ${estimatedDays} days (until ${runoutDateFormatted}). Recharge at least ৳${recommendedRecharge || 300} immediately to avoid power disruption!`
+            : `সতর্কতা! আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স মাত্র ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। সংযোগ বিচ্ছিন্ন এড়াতে অবিলম্বে কমপক্ষে ৳${bnDigits(recommendedRecharge || 300)} রিচার্জ করুন!`;
+    } else if (deficitDays > 0) {
+        status = 'warning';
+        statusTitle = L === 'en' ? 'Smart Balance & Recharge Advice' : 'স্মার্ট ব্যালেন্স ও রিচার্জ পরামর্শ';
+        statusPill = L === 'en' ? `⏳ ${estimatedDays} Days Left` : `⏳ ${bnDigits(estimatedDays)} দিন চলবে`;
+        message = L === 'en'
+            ? `Based on your daily average usage (৳${dailyAvg.toFixed(2)}/day), your remaining ৳${balance.toFixed(2)} balance will last ${estimatedDays} days (until ${runoutDateFormatted}). ${daysRemainingInMonth} days remain in this month, so ৳${recommendedRecharge} additional recharge is advised.`
+            : `বর্তমান ব্যবহারের গতি অনুযায়ী আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স আগামী ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। মাস শেষ হতে আরও ${bnDigits(daysRemainingInMonth)} দিন বাকি, তাই ৳${bnDigits(recommendedRecharge)} অতিরিক্ত রিচার্জের পরামর্শ দেওয়া হচ্ছে।`;
+    } else {
+        status = 'healthy';
+        statusTitle = L === 'en' ? 'Balance is Sufficient for Month' : 'মাসিক ব্যালেন্স সন্তোষজনক';
+        statusPill = L === 'en' ? `✅ Safe (${estimatedDays} Days)` : `✅ নিরাপদ (${bnDigits(estimatedDays)} দিন)`;
+        message = L === 'en'
+            ? `Great! Your balance of ৳${balance.toFixed(2)} will last approximately ${estimatedDays} days (until ${runoutDateFormatted}), comfortably covering the rest of this month.`
+            : `চমৎকার! বর্তমান খরচের গতি অনুযায়ী আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স আগামী ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে, যা চলতি মাস পার করার জন্য পর্যাপ্ত!`;
+    }
+
+    return {
+        balance: balance,
+        dailyAvg: dailyAvg,
+        estimatedDays: estimatedDays,
+        runoutDateFormatted: runoutDateFormatted,
+        daysRemainingInMonth: daysRemainingInMonth,
+        deficitDays: deficitDays,
+        recommendedRecharge: recommendedRecharge,
+        status: status,
+        statusTitle: statusTitle,
+        statusPill: statusPill,
+        message: message
+    };
+}
+
+// ============================================================
+// ⚠️ ২. ট্যারিফ স্ল্যাব জাম্প অ্যালার্ট (Slab Threshold Warning Engine)
+// ============================================================
+function getSmartSlabJumpStatus(currentUnits, meterId, tariffRates) {
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    tariffRates = tariffRates || (APP && APP.tariffRates) || [
+        { range: [0, 50], rate: 4.63, name: "Lifeline", nameBn: "লাইফলাইন" },
+        { range: [51, 75], rate: 5.26, name: "1st Slab", nameBn: "১ম স্ল্যাব" },
+        { range: [76, 200], rate: 8.50, name: "2nd Slab", nameBn: "২য় স্ল্যাব" },
+        { range: [201, 300], rate: 9.10, name: "3rd Slab", nameBn: "৩য় স্ল্যাব" },
+        { range: [301, 400], rate: 9.62, name: "4th Slab", nameBn: "৪র্থ স্ল্যাব" },
+        { range: [401, 600], rate: 15.01, name: "5th Slab", nameBn: "৫ম স্ল্যাব" },
+        { range: [601, null], rate: 17.35, name: "6th Slab", nameBn: "৬ষ্ঠ স্ল্যাব" }
+    ];
+
+    currentUnits = Math.max(0, Number(currentUnits) || 0);
+
+    var bnDigits = function(n) {
+        return (typeof formatToBengaliNumerals === 'function') ? formatToBengaliNumerals(n) : n;
+    };
+
+    var activeSlabIndex = 0;
+    for (var i = 0; i < tariffRates.length; i++) {
+        var s = tariffRates[i];
+        var min = s.range[0];
+        var max = s.range[1];
+        if (max === null || max === undefined) {
+            if (currentUnits >= min) {
+                activeSlabIndex = i;
+                break;
+            }
+        } else if (currentUnits <= max) {
+            activeSlabIndex = i;
+            break;
+        }
+    }
+
+    var currSlab = tariffRates[activeSlabIndex];
+    var nextSlab = (activeSlabIndex + 1 < tariffRates.length) ? tariffRates[activeSlabIndex + 1] : null;
+
+    var slabMin = currSlab.range[0];
+    var slabMax = currSlab.range[1];
+    var unitsRemaining = (slabMax !== null && slabMax !== undefined) ? Math.max(0, slabMax - currentUnits) : 999;
+    var slabSpan = (slabMax !== null && slabMax !== undefined) ? (slabMax - (slabMin === 0 ? 0 : (slabMin - 1))) : 100;
+    var usedInSlab = currentUnits - (slabMin === 0 ? 0 : (slabMin - 1));
+    var fillPct = Math.min(100, Math.max(0, (usedInSlab / slabSpan) * 100));
+
+    var slabNameBn = currSlab.nameBn || (currSlab.name === 'Lifeline' ? 'লাইফলাইন' : (currSlab.name === '1st Slab' ? '১ম স্ল্যাব' : (currSlab.name === '2nd Slab' ? '২য় স্ল্যাব' : (currSlab.name === '3rd Slab' ? '৩য় স্ল্যাব' : (currSlab.name === '4th Slab' ? '৪র্থ স্ল্যাব' : (currSlab.name === '5th Slab' ? '৫ম স্ল্যাব' : currSlab.name))))));
+    var nextSlabNameBn = nextSlab ? (nextSlab.nameBn || (nextSlab.name === '1st Slab' ? '১ম স্ল্যাব' : (nextSlab.name === '2nd Slab' ? '২য় স্ল্যাব' : (nextSlab.name === '3rd Slab' ? '৩য় স্ল্যাব' : (nextSlab.name === '4th Slab' ? '৪র্থ স্ল্যাব' : (nextSlab.name === '5th Slab' ? '৫ম স্ল্যাব' : (nextSlab.name === '6th Slab' ? '৬ষ্ঠ স্ল্যাব' : nextSlab.name))))))) : '';
+
+    var isWarning = (nextSlab && unitsRemaining <= 20);
+    var isCritical = (nextSlab && unitsRemaining <= 8);
+
+    var status = isCritical ? 'critical' : (isWarning ? 'warning' : 'info');
+    var statusPill = '';
+    var message = '';
+
+    if (nextSlab) {
+        if (isWarning || isCritical) {
+            statusPill = L === 'en'
+                ? `⚡ Only ${unitsRemaining.toFixed(1)} kWh Left!`
+                : `⚡ আর মাত্র ${bnDigits(unitsRemaining.toFixed(1))} ইউনিট বাকি!`;
+            message = L === 'en'
+                ? `Alert! Your electricity usage this month is ${currentUnits.toFixed(1)} kWh. In just ${unitsRemaining.toFixed(1)} units, you will enter ${nextSlab.name} (৳${nextSlab.rate.toFixed(2)}/unit). Be energy-efficient to save on your bill!`
+                : `সতর্কতা! চলতি মাসে আপনার খরচ ${bnDigits(currentUnits.toFixed(1))} KWh। আর মাত্র ${bnDigits(unitsRemaining.toFixed(1))} ইউনিট ব্যবহার করলেই আপনি ${nextSlabNameBn}ে (৳${bnDigits(nextSlab.rate.toFixed(2))}/ইউনিট) প্রবেশ করবেন। বিদ্যুৎ ব্যবহারে সাশ্রয়ী হোন!`;
+        } else {
+            statusPill = L === 'en'
+                ? `📊 ${currSlab.name} (৳${currSlab.rate.toFixed(2)}/u)`
+                : `📊 ${slabNameBn} (৳${bnDigits(currSlab.rate.toFixed(2))}/ইউনিট)`;
+            message = L === 'en'
+                ? `Current month usage: ${currentUnits.toFixed(1)} kWh in ${currSlab.name} (৳${currSlab.rate.toFixed(2)}/kWh). ${unitsRemaining.toFixed(1)} units remaining before reaching ${nextSlab.name} (৳${nextSlab.rate.toFixed(2)}/kWh).`
+                : `চলতি মাসে আপনার খরচ ${bnDigits(currentUnits.toFixed(1))} KWh। আপনি ${slabNameBn}ে (৳${bnDigits(currSlab.rate.toFixed(2))}/ইউনিট) আছেন। পরবর্তী স্ল্যাবে (৳${bnDigits(nextSlab.rate.toFixed(2))}) যেতে আরও ${bnDigits(unitsRemaining.toFixed(1))} ইউনিট বাকি।`;
+        }
+    } else {
+        statusPill = L === 'en' ? `⚠️ Highest Tier (6th Slab)` : `⚠️ সর্বোচ্চ স্ল্যাব (৬ষ্ঠ স্ল্যাব)`;
+        message = L === 'en'
+            ? `You are in the highest tariff slab (৳${currSlab.rate.toFixed(2)}/unit). Maximum energy conservation is strongly advised!`
+            : `আপনি সর্বোচ্চ ট্যারিফ স্ল্যাবে (৳${bnDigits(currSlab.rate.toFixed(2))}/ইউনিট) অবস্থান করছেন। বিদ্যুৎ ব্যবহারে সর্বোচ্চ মিতব্যয়ী হওয়ার অনুরোধ করা হচ্ছে!`;
+    }
+
+    return {
+        currentUnits: currentUnits,
+        currSlab: currSlab,
+        nextSlab: nextSlab,
+        unitsRemaining: unitsRemaining,
+        fillPct: fillPct,
+        isWarning: isWarning,
+        isCritical: isCritical,
+        status: status,
+        statusPill: statusPill,
+        message: message,
+        slabNameBn: slabNameBn,
+        nextSlabNameBn: nextSlabNameBn
+    };
+}
+
+// ============================================================
 // ✅ প্রধান ড্যাশবোর্ড ফাংশন (রি-অর্ডার করা) - সম্পূর্ণ
 // ============================================================
 function showDashboard() {
@@ -815,6 +1015,24 @@ function showDashboard() {
     if (todayExpense === 0 && lastExpense > 0) todayExpense = lastExpense;
     if (weekExpense === 0 && todayExpense > 0) weekExpense = todayExpense;
     if (monthExpense === 0 && totalExpense > 0) monthExpense = totalExpense;
+
+    // Calculate Month Units for Slab Tracking
+    var monthUnits = 0;
+    (transactions || []).forEach(function(t) {
+        if (t.type === 'bill' || t.type === 'electricity_bill') {
+            var d = new Date(t.date || t.timestamp);
+            if (!isNaN(d.getTime()) && d >= monthStart) {
+                monthUnits += (Number(t.units) || 0);
+            }
+        }
+    });
+    if (monthUnits === 0 && totalKWH > 0) {
+        monthUnits = totalKWH;
+    }
+
+    // 🔮 স্মার্ট ব্যালেন্স পূর্বাভাস ও ট্যারিফ স্ল্যাব ট্র্যাকার ক্যালকুলেশন
+    var smartPrediction = getSmartBalancePrediction(balance, APP.activeMeterId, transactions, monthlyAvgExpense);
+    var slabStatus = getSmartSlabJumpStatus(monthUnits, APP.activeMeterId, APP.tariffRates);
 
     function createStatCard(iconName, label, value, gradient, trend) {
         trend = trend || { value: '0.0', direction: 'up' };
@@ -1312,6 +1530,113 @@ function showDashboard() {
             ${createStatCard('chart', L === 'en' ? 'Monthly Avg Expense' : 'মাসিক গড় খরচ', `৳ ${monthlyAvgExpense.toFixed(2)}`, 'linear-gradient(135deg, #10b981, #059669)', trends.monthlyAvgExpense)}
             ${createStatCard('zap', L === 'en' ? 'Total KWH' : 'মোট KWH', `${totalKWH.toFixed(2)}`, 'linear-gradient(135deg, #f59e0b, #ea580c)', trends.totalKWH)}
             ${createStatCard('layers', L === 'en' ? 'Monthly Avg KWH' : 'গড় মাসিক KWH', `${monthlyAvgKWH.toFixed(2)}`, 'linear-gradient(135deg, #8b5cf6, #7c3aed)', trends.monthlyAvgKWH)}
+        </div>
+
+        <!-- ============================================================
+        🔮 SMART AI INSIGHTS: ব্যালেন্স পূর্বাভাস & ট্যারিফ স্ল্যাব অ্যালার্ট
+        ============================================================ -->
+        <div class="smart-insights-grid">
+            <!-- 1. স্মার্ট ব্যালেন্স পূর্বাভাস ও রিচার্জ রিমাইন্ডার -->
+            <div class="smart-insight-card predictor-card status-${smartPrediction.status}">
+                <div class="smart-card-header">
+                    <div class="smart-badge-title predictor">
+                        <span class="smart-icon">🔮</span>
+                        <span>${L === 'en' ? 'Smart Balance & Bill Predictor' : 'স্মার্ট ব্যালেন্স পূর্বাভাস ও রিমাইন্ডার'}</span>
+                    </div>
+                    <div class="smart-status-pill ${smartPrediction.status}">
+                        ${smartPrediction.statusPill}
+                    </div>
+                </div>
+
+                <div class="smart-stats-row">
+                    <div class="smart-stat-box">
+                        <div class="smart-stat-sub">${L === 'en' ? 'Estimated Duration' : 'চলবে আনুমানিক'}</div>
+                        <div class="smart-stat-val primary-purple">${formatToBengaliNumerals(smartPrediction.estimatedDays)} ${L === 'en' ? 'Days' : 'দিন'}</div>
+                        <div class="smart-stat-date">📅 ${smartPrediction.runoutDateFormatted} ${L === 'en' ? 'until' : 'পর্যন্ত'}</div>
+                    </div>
+                    <div class="smart-stat-box">
+                        <div class="smart-stat-sub">${L === 'en' ? 'Daily Burn Rate' : 'দৈনিক গড় খরচ'}</div>
+                        <div class="smart-stat-val">৳ ${formatToBengaliNumerals(smartPrediction.dailyAvg.toFixed(2))}</div>
+                        <div class="smart-stat-date">${L === 'en' ? 'Per Day Usage' : 'প্রতিদিনের স্বাভাবিক খরচ'}</div>
+                    </div>
+                </div>
+
+                <div class="smart-callout-box predictor-callout">
+                    <div class="callout-icon">💡</div>
+                    <div class="callout-text">
+                        <strong>${L === 'en' ? 'Dashboard Alert' : 'ড্যাশবোর্ড পূর্বাভাস'}:</strong>
+                        <span>"${smartPrediction.message}"</span>
+                    </div>
+                </div>
+
+                <div class="smart-progress-wrap">
+                    <div class="smart-progress-label">
+                        <span>${L === 'en' ? 'Month Coverage:' : 'মাসিক কভারেজ:'} ${formatToBengaliNumerals(smartPrediction.estimatedDays)} / ${formatToBengaliNumerals(smartPrediction.daysRemainingInMonth + (now.getDate()))} ${L === 'en' ? 'days' : 'দিন'}</span>
+                        <span>${smartPrediction.deficitDays > 0 ? (L === 'en' ? `Shortfall: ${smartPrediction.deficitDays} days` : `ঘাটতি: ${formatToBengaliNumerals(smartPrediction.deficitDays)} দিন`) : (L === 'en' ? 'Full Month Covered ✓' : 'পুরো মাস কভার্ড ✓')}</span>
+                    </div>
+                    <div class="smart-progress-track">
+                        <div class="smart-progress-fill predictor-fill" style="width: ${Math.min(100, Math.max(10, (smartPrediction.estimatedDays / Math.max(smartPrediction.daysRemainingInMonth, 1)) * 100))}%;"></div>
+                    </div>
+                </div>
+
+                <div class="smart-card-footer">
+                    <span class="smart-tip-text">🛡️ ${L === 'en' ? 'Safe from sudden midnight or holiday blackouts' : 'হুট করে মাঝরাতে বা ছুটির দিনে বিদ্যুৎ চলে যাওয়ার ঝুঁকি থাকবে না'}</span>
+                    <button class="smart-action-btn recharge-btn" onclick="navigateTo('transactions')">
+                        <span>⚡ ${L === 'en' ? 'Recharge' : 'রিচার্জ করুন'}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. ট্যারিফ স্ল্যাব জাম্প অ্যালার্ট -->
+            <div class="smart-insight-card slab-card status-${slabStatus.status}">
+                <div class="smart-card-header">
+                    <div class="smart-badge-title slab">
+                        <span class="smart-icon">⚠️</span>
+                        <span>${L === 'en' ? 'Tariff Slab Jump Warning' : 'ট্যারিফ স্ল্যাব জাম্প অ্যালার্ট'}</span>
+                    </div>
+                    <div class="smart-status-pill ${slabStatus.status}">
+                        ${slabStatus.statusPill}
+                    </div>
+                </div>
+
+                <div class="smart-stats-row">
+                    <div class="smart-stat-box">
+                        <div class="smart-stat-sub">${L === 'en' ? 'This Month Usage' : 'চলতি মাসে খরচ'}</div>
+                        <div class="smart-stat-val primary-amber">${formatToBengaliNumerals(slabStatus.currentUnits.toFixed(1))} <span style="font-size: 13px; font-weight: 600;">KWh</span></div>
+                        <div class="smart-stat-date">📍 ${slabStatus.slabNameBn} (${L === 'en' ? 'Active' : 'চলমান'})</div>
+                    </div>
+                    <div class="smart-stat-box">
+                        <div class="smart-stat-sub">${L === 'en' ? 'Slab Upper Limit' : 'স্ল্যাব সীমা'}</div>
+                        <div class="smart-stat-val">${slabStatus.currSlab.range[1] !== null ? formatToBengaliNumerals(slabStatus.currSlab.range[1]) : '∞'} <span style="font-size: 13px; font-weight: 600;">KWh</span></div>
+                        <div class="smart-stat-date">${slabStatus.nextSlab ? (L === 'en' ? `Next: ৳${slabStatus.nextSlab.rate.toFixed(2)}/u` : `পরবর্তী: ৳${formatToBengaliNumerals(slabStatus.nextSlab.rate.toFixed(2))}/ইউনিট`) : (L === 'en' ? 'Max Tier' : 'সর্বোচ্চ স্তর')}</div>
+                    </div>
+                </div>
+
+                <div class="smart-callout-box slab-callout ${slabStatus.isWarning ? 'warning-glow' : ''}">
+                    <div class="callout-icon">${slabStatus.isWarning ? '⚡' : '💡'}</div>
+                    <div class="callout-text">
+                        <strong>${slabStatus.isWarning ? (L === 'en' ? 'Slab Warning:' : 'স্ল্যাব ওয়ার্নিং:') : (L === 'en' ? 'Slab Status:' : 'স্ল্যাব স্ট্যাটাস:')}</strong>
+                        <span>"${slabStatus.message}"</span>
+                    </div>
+                </div>
+
+                <div class="smart-progress-wrap">
+                    <div class="smart-progress-label">
+                        <span>${L === 'en' ? 'Current Slab Progress:' : 'স্ল্যাব অগ্রগতি:'} ${formatToBengaliNumerals(slabStatus.fillPct.toFixed(0))}%</span>
+                        <span>${slabStatus.nextSlab ? (L === 'en' ? `${slabStatus.unitsRemaining.toFixed(1)} kWh to jump` : `আর ${formatToBengaliNumerals(slabStatus.unitsRemaining.toFixed(1))} ইউনিট বাকি`) : ''}</span>
+                    </div>
+                    <div class="smart-progress-track">
+                        <div class="smart-progress-fill slab-fill ${slabStatus.isWarning ? 'warning-fill' : ''}" style="width: ${slabStatus.fillPct.toFixed(1)}%;"></div>
+                    </div>
+                </div>
+
+                <div class="smart-card-footer">
+                    <span class="smart-tip-text">⚡ ${L === 'en' ? 'Be conscious to avoid higher tier electricity billing shocks' : 'অতিরিক্ত বিলের ধাক্কা থেকে সচেতন হতে পারবেন'}</span>
+                    <button class="smart-action-btn slab-btn" onclick="navigateTo('calculator')">
+                        <span>📋 ${L === 'en' ? 'Slab Rates' : 'ট্যারিফ স্ল্যাব রেট'}</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- ============================================================

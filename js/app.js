@@ -425,8 +425,23 @@ function getActiveNotifications() {
     var meter = (typeof getActiveMeter === 'function') ? getActiveMeter() : (APP.meters ? APP.meters.find(function(m) { return m.id === APP.activeMeterId; }) : null);
     var balance = meterData ? (Number(meterData.currentBalance) || 0) : 0;
 
-    // 1. Balance Alerts
-    if (balance <= 200) {
+    // 1. Smart Balance & Bill Predictor Alert
+    if (typeof getSmartBalancePrediction === 'function') {
+        var rawTx = (meterData && meterData.transactions) ? meterData.transactions : [];
+        var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
+        var monthlyAvg = (typeof getMonthlyAvgExpense === 'function') ? getMonthlyAvgExpense(APP.activeMeterId) : 0;
+        var pred = getSmartBalancePrediction(balance, APP.activeMeterId, txList, monthlyAvg);
+        if (pred) {
+            notifs.push({
+                id: 'smart_balance_predictor',
+                type: pred.status === 'critical' ? 'critical' : (pred.status === 'warning' ? 'warning' : 'success'),
+                icon: '🔮',
+                title: L === 'en' ? 'Smart Balance Forecast' : '🔮 স্মার্ট ব্যালেন্স পূর্বাভাস',
+                msg: pred.message,
+                time: pred.statusPill
+            });
+        }
+    } else if (balance <= 200) {
         notifs.push({
             id: 'low_bal_critical',
             type: 'critical',
@@ -455,7 +470,7 @@ function getActiveNotifications() {
         });
     }
 
-    // 2. Current Month Slab Alert
+    // 2. Current Month Slab Alert & Jump Warning
     if (meterData && meterData.transactions) {
         var now = new Date();
         var curMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -475,7 +490,19 @@ function getActiveNotifications() {
             }
         });
 
-        if (monthUnits > 50) {
+        if (typeof getSmartSlabJumpStatus === 'function') {
+            var slabStat = getSmartSlabJumpStatus(monthUnits, APP.activeMeterId, APP.tariffRates);
+            if (slabStat) {
+                notifs.push({
+                    id: 'smart_slab_warning',
+                    type: slabStat.isCritical ? 'critical' : (slabStat.isWarning ? 'warning' : 'info'),
+                    icon: slabStat.isWarning ? '⚠️' : '⚡',
+                    title: slabStat.isWarning ? (L === 'en' ? '⚠️ Tariff Slab Jump Warning' : '⚠️ স্ল্যাব জাম্প সতর্কতা') : (L === 'en' ? '⚡ Tariff Slab Monitor' : '⚡ ট্যারিফ স্ল্যাব মনিটর'),
+                    msg: slabStat.message,
+                    time: slabStat.statusPill
+                });
+            }
+        } else if (monthUnits > 50) {
             notifs.push({
                 id: 'slab_overflow',
                 type: 'info',
@@ -503,7 +530,7 @@ function getActiveNotifications() {
         id: 'system_ver',
         type: 'info',
         icon: 'ℹ️',
-        title: L === 'en' ? 'App Version v2.3.5' : 'অ্যাপ সংস্করণ v2.3.5',
+        title: L === 'en' ? 'App Version v2.4.0' : 'অ্যাপ সংস্করণ v2.4.0',
         msg: L === 'en' ? 'Smart prepaid meter tracking is fully active and synchronized.' : 'স্মার্ট প্রিপেইড মিটার ট্র্যাকার এবং সরকারি ট্যারিফ রেট কার্যকর আছে।',
         time: L === 'en' ? 'Latest' : 'আপ-টু-ডেট'
     });
