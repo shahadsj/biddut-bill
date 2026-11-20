@@ -425,12 +425,33 @@ function getActiveNotifications() {
     var meter = (typeof getActiveMeter === 'function') ? getActiveMeter() : (APP.meters ? APP.meters.find(function(m) { return m.id === APP.activeMeterId; }) : null);
     var balance = meterData ? (Number(meterData.currentBalance) || 0) : 0;
 
+    // Pre-calculate month units & recharges
+    var now = new Date();
+    var curMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    var monthUnits = 0;
+    var monthRecharges = 0;
+
+    if (meterData && meterData.transactions) {
+        meterData.transactions.forEach(function(t) {
+            var d = new Date(t.date || t.timestamp);
+            if (isNaN(d.getTime())) return;
+            var tMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (tMonth === curMonth) {
+                if (t.type === 'electricity_bill' || t.type === 'bill') {
+                    monthUnits += (Number(t.units) || 0);
+                } else if (t.type === 'recharge' || t.deductions) {
+                    monthRecharges += (Number(t.amount) || 0);
+                }
+            }
+        });
+    }
+
     // 1. Smart Balance & Bill Predictor Alert
     if (typeof getSmartBalancePrediction === 'function') {
         var rawTx = (meterData && meterData.transactions) ? meterData.transactions : [];
         var txList = Array.isArray(rawTx) ? rawTx : (typeof rawTx === 'object' ? Object.values(rawTx) : []);
         var monthlyAvg = (typeof getMonthlyAvgExpense === 'function') ? getMonthlyAvgExpense(APP.activeMeterId) : 0;
-        var pred = getSmartBalancePrediction(balance, APP.activeMeterId, txList, monthlyAvg);
+        var pred = getSmartBalancePrediction(balance, APP.activeMeterId, txList, monthlyAvg, monthUnits, APP.tariffRates);
         if (pred) {
             notifs.push({
                 id: 'smart_balance_predictor',
@@ -530,7 +551,7 @@ function getActiveNotifications() {
         id: 'system_ver',
         type: 'info',
         icon: 'ℹ️',
-        title: L === 'en' ? 'App Version v2.4.1' : 'অ্যাপ সংস্করণ v2.4.1',
+        title: L === 'en' ? 'App Version v2.4.2' : 'অ্যাপ সংস্করণ v2.4.2',
         msg: L === 'en' ? 'Smart prepaid meter tracking is fully active and synchronized.' : 'স্মার্ট প্রিপেইড মিটার ট্র্যাকার এবং সরকারি ট্যারিফ রেট কার্যকর আছে।',
         time: L === 'en' ? 'Latest' : 'আপ-টু-ডেট'
     });

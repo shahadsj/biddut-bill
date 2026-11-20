@@ -562,40 +562,76 @@ function createExpenseSummaryCards(L) {
 }
 
 // ============================================================
-// 🔮 ১. স্মার্ট ব্যালেন্স পূর্বাভাস ও রিচার্জ ক্যালকুলেটর (Smart Balance & Bill Predictor)
+// 🔮 ১. স্ল্যাব-সচেতন স্মার্ট ব্যালেন্স পূর্বাভাস (Slab-Aware Dynamic Forward Simulator)
 // ============================================================
-function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExpense) {
+function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExpense, monthUnits, tariffRates) {
     var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
     var now = new Date();
     balance = Math.max(0, Number(balance) || 0);
+    monthUnits = Math.max(0, Number(monthUnits) || 0);
 
-    // 1. দৈনিক গড় খরচ নির্ধারণ (Daily Average Burn Rate)
-    var dailyAvg = 0;
-    var recent7DaysExpense = 0;
-    var sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    var billCountIn7Days = 0;
+    tariffRates = tariffRates || (APP && APP.tariffRates) || [
+        { range: [0, 50], rate: 4.63, name: "Lifeline" },
+        { range: [51, 75], rate: 5.26, name: "1st Slab" },
+        { range: [76, 200], rate: 8.50, name: "2nd Slab" },
+        { range: [201, 300], rate: 9.10, name: "3rd Slab" },
+        { range: [301, 400], rate: 9.62, name: "4th Slab" },
+        { range: [401, 600], rate: 15.01, name: "5th Slab" },
+        { range: [601, null], rate: 17.35, name: "6th Slab" }
+    ];
 
-    (transactions || []).forEach(function(t) {
-        if (t.type === 'bill' || t.type === 'electricity_bill') {
-            var d = new Date(t.date || t.timestamp);
-            if (!isNaN(d.getTime()) && d >= sevenDaysAgo) {
-                recent7DaysExpense += (Number(t.amount) || 0);
-                billCountIn7Days++;
+    // 1. ব্যবহারকারীর বাস্তবসম্মত দৈনিক ইউনিট খরচ (Daily KWh consumption)
+    // প্রিপেইড মিটারে স্বাভাবিক পরিবারের দৈনিক ব্যবহার ৩.০ থেকে ৪.০ ইউনিট (৳ ৩০-৩৫/দিন)
+    var dailyUnits = 3.5; // ডিফল্ট বাস্তবসম্মত ৩.৫ ইউনিট/দিন
+    if (monthUnits > 0 && now.getDate() > 0) {
+        var calculatedDaily = monthUnits / now.getDate();
+        if (calculatedDaily >= 2.0 && calculatedDaily <= 12.0) {
+            dailyUnits = calculatedDaily;
+        }
+    }
+
+    var vatRate = (APP.settings && APP.settings.vatRate) ? (Number(APP.settings.vatRate) / 100) : 0.05;
+    var demandCharge = (APP.settings && APP.settings.demandCharge) ? Number(APP.settings.demandCharge) : 42;
+    var dailyDemand = demandCharge / 30;
+
+    // 2. দিনভিত্তিক ডায়নামিক স্ল্যাব জাম্প সিমুলেশন (Day-by-Day Forward Simulation)
+    var simBalance = balance;
+    var simDays = 0;
+    var simDate = new Date(now.getTime());
+    var simMonthUnits = monthUnits;
+    var dailyCosts = [];
+
+    while (simBalance > 0 && simDays < 180) {
+        simDays++;
+        simDate.setDate(simDate.getDate() + 1);
+
+        // নতুন মাস শুরু হলে (১লা তারিখ) ইউনিট রিসেট ও মাসিক ডিমান্ড চার্জ কর্তন
+        if (simDate.getDate() === 1) {
+            simMonthUnits = 0;
+            simBalance -= demandCharge;
+            if (simBalance <= 0) break;
+        }
+
+        // ঐ দিনের স্ল্যাব রেট নির্ধারণ
+        var slabRate = 4.63;
+        for (var s = 0; s < tariffRates.length; s++) {
+            var slb = tariffRates[s];
+            if (slb.range[1] === null || simMonthUnits < slb.range[1]) {
+                slabRate = Number(slb.rate);
+                break;
             }
         }
-    });
 
-    if (recent7DaysExpense > 0 && billCountIn7Days > 0) {
-        dailyAvg = recent7DaysExpense / 7;
-    } else if (monthlyAvgExpense > 0) {
-        dailyAvg = monthlyAvgExpense / 30;
-    } else {
-        dailyAvg = 28.50; // বাস্তবসম্মত ফলব্যাক গড় দৈনিক প্রিপেইড খরচ (৳)
+        // ১ দিনের মোট খরচ (বিদ্যুৎ চার্জ + ভ্যাট + দৈনিক ডিমান্ড চার্জ)
+        var dayCost = (dailyUnits * slabRate * (1 + vatRate)) + dailyDemand;
+        dailyCosts.push(dayCost);
+        simBalance -= dayCost;
+        simMonthUnits += dailyUnits;
     }
-    dailyAvg = Math.max(5, Math.round(dailyAvg * 100) / 100);
 
-    // 2. অবশিষ্ট ব্যালেন্স কত দিন চলবে (Estimated Days Remaining)
-    var estimatedDays = Math.floor(balance / dailyAvg);
+    var estimatedDays = Math.max(0, simDays);
+    var avgDailyBurn = dailyCosts.length > 0 ? (dailyCosts.reduce(function(a, b) { return a + b; }, 0) / dailyCosts.length) : 31.00;
+    avgDailyBurn = Math.round(avgDailyBurn * 100) / 100;
 
     // 3. সম্ভাব্য ব্যালেন্স শেষ হওয়ার তারিখ (Runout Date)
     var runoutDate = new Date(now.getTime() + estimatedDays * 24 * 60 * 60 * 1000);
@@ -605,18 +641,21 @@ function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExp
         month: 'long'
     });
 
-    // 4. চলতি মাস শেষ হতে কত দিন বাকি (Days Remaining in Month)
+    // 4. চলতি মাস শেষ হতে কত দিন বাকি
     var totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     var currentDay = now.getDate();
     var daysRemainingInMonth = Math.max(0, totalDaysInMonth - currentDay);
 
-    // 5. ঘাটতি ও অতিরিক্ত রিচার্জের পরামর্শ (Deficit & Recommended Recharge)
+    // 5. ঘাটতি ও অতিরিক্ত রিচার্জের পরামর্শ
     var deficitDays = Math.max(0, daysRemainingInMonth - estimatedDays);
     var recommendedRecharge = 0;
     if (deficitDays > 0) {
-        recommendedRecharge = Math.ceil((deficitDays * dailyAvg) / 50) * 50;
+        recommendedRecharge = Math.ceil((deficitDays * avgDailyBurn) / 50) * 50;
         if (recommendedRecharge < 100) recommendedRecharge = 100;
     }
+
+    // অতিরিক্ত দিন যদি চলতি মাস পার হয়ে পরের মাসে যায়
+    var extraDaysNextMonth = Math.max(0, estimatedDays - daysRemainingInMonth);
 
     var bnDigits = function(n) {
         return (typeof formatToBengaliNumerals === 'function') ? formatToBengaliNumerals(n) : n;
@@ -632,30 +671,32 @@ function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExp
         statusTitle = L === 'en' ? 'Critical Balance Warning!' : 'জরুরি ব্যালেন্স সতর্কতা!';
         statusPill = L === 'en' ? `🚨 Only ${estimatedDays} Days Left` : `🚨 মাত্র ${bnDigits(estimatedDays)} দিন বাকি`;
         message = L === 'en'
-            ? `Warning! Your remaining balance of ৳${balance.toFixed(2)} will last only ${estimatedDays} days (until ${runoutDateFormatted}). Recharge at least ৳${recommendedRecharge || 300} immediately to avoid power disruption!`
-            : `সতর্কতা! আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স মাত্র ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। সংযোগ বিচ্ছিন্ন এড়াতে অবিলম্বে কমপক্ষে ৳${bnDigits(recommendedRecharge || 300)} রিচার্জ করুন!`;
+            ? `Warning! At current usage (~৳${avgDailyBurn.toFixed(2)}/day with slab escalations), your remaining ৳${balance.toFixed(2)} balance will last only ${estimatedDays} days (until ${runoutDateFormatted}). Recharge at least ৳${recommendedRecharge || 300} immediately to avoid power disruption!`
+            : `সতর্কতা! স্ল্যাব বৃদ্ধির কারণে দৈনিক খরচ বৃদ্ধি (গড়ে ~৳${bnDigits(avgDailyBurn.toFixed(2))}/দিন) বিবেচনায় আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স মাত্র ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। সংযোগ বিচ্ছিন্ন এড়াতে অবিলম্বে কমপক্ষে ৳${bnDigits(recommendedRecharge || 300)} রিচার্জ করুন!`;
     } else if (deficitDays > 0) {
         status = 'warning';
         statusTitle = L === 'en' ? 'Smart Balance & Recharge Advice' : 'স্মার্ট ব্যালেন্স ও রিচার্জ পরামর্শ';
         statusPill = L === 'en' ? `⏳ ${estimatedDays} Days Left` : `⏳ ${bnDigits(estimatedDays)} দিন চলবে`;
         message = L === 'en'
-            ? `Based on your daily average usage (৳${dailyAvg.toFixed(2)}/day), your remaining ৳${balance.toFixed(2)} balance will last ${estimatedDays} days (until ${runoutDateFormatted}). ${daysRemainingInMonth} days remain in this month, so ৳${recommendedRecharge} additional recharge is advised.`
-            : `বর্তমান ব্যবহারের গতি অনুযায়ী আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স আগামী ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। মাস শেষ হতে আরও ${bnDigits(daysRemainingInMonth)} দিন বাকি, তাই ৳${bnDigits(recommendedRecharge)} অতিরিক্ত রিচার্জের পরামর্শ দেওয়া হচ্ছে।`;
+            ? `Accounting for slab rate increases (averaging ~৳${avgDailyBurn.toFixed(2)}/day), your remaining ৳${balance.toFixed(2)} balance will last ${estimatedDays} days (until ${runoutDateFormatted}). ${daysRemainingInMonth} days remain in this month, so ৳${recommendedRecharge} additional recharge is advised.`
+            : `স্ল্যাব বৃদ্ধির প্রভাব (গড়ে ~৳${bnDigits(avgDailyBurn.toFixed(2))}/দিন) অন্তর্ভুক্ত করে আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স আগামী ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। মাস শেষ হতে আরও ${bnDigits(daysRemainingInMonth)} দিন বাকি, তাই ৳${bnDigits(recommendedRecharge)} অতিরিক্ত রিচার্জের পরামর্শ দেওয়া হচ্ছে।`;
     } else {
         status = 'healthy';
         statusTitle = L === 'en' ? 'Balance is Sufficient for Month' : 'মাসিক ব্যালেন্স সন্তোষজনক';
         statusPill = L === 'en' ? `✅ Safe (${estimatedDays} Days)` : `✅ নিরাপদ (${bnDigits(estimatedDays)} দিন)`;
         message = L === 'en'
-            ? `Great! Your balance of ৳${balance.toFixed(2)} will last approximately ${estimatedDays} days (until ${runoutDateFormatted}), comfortably covering the rest of this month.`
-            : `চমৎকার! বর্তমান খরচের গতি অনুযায়ী আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স আগামী ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে, যা চলতি মাস পার করার জন্য পর্যাপ্ত!`;
+            ? `Accounting for future slab price changes (averaging ~৳${avgDailyBurn.toFixed(2)}/day), your ৳${balance.toFixed(2)} balance will last ${estimatedDays} days (until ${runoutDateFormatted}), comfortably covering this month with ${extraDaysNextMonth} days into next month.`
+            : `পরবর্তী স্ল্যাব বৃদ্ধির খরচ (গড়ে ~৳${bnDigits(avgDailyBurn.toFixed(2))}/দিন) হিসাব করে আপনার অবশিষ্ট ৳${bnDigits(balance.toFixed(2))} ব্যালেন্স আগামী ${bnDigits(estimatedDays)} দিন (${runoutDateFormatted} পর্যন্ত) চলবে। চলতি মাসের বাকি ${bnDigits(daysRemainingInMonth)} দিন শেষ হয়েও আগামী মাসের ${bnDigits(extraDaysNextMonth)} দিন কভার করবে!`;
     }
 
     return {
         balance: balance,
-        dailyAvg: dailyAvg,
+        dailyAvg: avgDailyBurn,
+        dailyUnits: dailyUnits,
         estimatedDays: estimatedDays,
         runoutDateFormatted: runoutDateFormatted,
         daysRemainingInMonth: daysRemainingInMonth,
+        extraDaysNextMonth: extraDaysNextMonth,
         deficitDays: deficitDays,
         recommendedRecharge: recommendedRecharge,
         status: status,
@@ -1041,7 +1082,7 @@ function showDashboard() {
     }
 
     // 🔮 স্মার্ট ব্যালেন্স পূর্বাভাস ও ট্যারিফ স্ল্যাব ট্র্যাকার ক্যালকুলেশন
-    var smartPrediction = getSmartBalancePrediction(balance, APP.activeMeterId, transactions, monthlyAvgExpense);
+    var smartPrediction = getSmartBalancePrediction(balance, APP.activeMeterId, transactions, monthlyAvgExpense, monthUnits, APP.tariffRates);
     var slabStatus = getSmartSlabJumpStatus(monthUnits, APP.activeMeterId, APP.tariffRates);
 
     function createStatCard(iconName, label, value, gradient, trend) {
@@ -1567,7 +1608,7 @@ function showDashboard() {
                     <div class="smart-stat-box">
                         <div class="smart-stat-sub">${L === 'en' ? 'Daily Burn Rate' : 'দৈনিক গড় খরচ'}</div>
                         <div class="smart-stat-val">৳ ${formatToBengaliNumerals(smartPrediction.dailyAvg.toFixed(2))}</div>
-                        <div class="smart-stat-date">${L === 'en' ? 'Per Day Usage' : 'প্রতিদিনের স্বাভাবিক খরচ'}</div>
+                        <div class="smart-stat-date">${L === 'en' ? 'Slab-adjusted burn rate' : 'স্ল্যাব বৃদ্ধির প্রভাবসহ'}</div>
                     </div>
                 </div>
 
@@ -1581,8 +1622,8 @@ function showDashboard() {
 
                 <div class="smart-progress-wrap">
                     <div class="smart-progress-label">
-                        <span>${L === 'en' ? 'Month Coverage:' : 'মাসিক কভারেজ:'} ${formatToBengaliNumerals(smartPrediction.estimatedDays)} / ${formatToBengaliNumerals(smartPrediction.daysRemainingInMonth + (now.getDate()))} ${L === 'en' ? 'days' : 'দিন'}</span>
-                        <span>${smartPrediction.deficitDays > 0 ? (L === 'en' ? `Shortfall: ${smartPrediction.deficitDays} days` : `ঘাটতি: ${formatToBengaliNumerals(smartPrediction.deficitDays)} দিন`) : (L === 'en' ? 'Full Month Covered ✓' : 'পুরো মাস কভার্ড ✓')}</span>
+                        <span>${smartPrediction.deficitDays > 0 ? (L === 'en' ? `Shortfall: ${smartPrediction.deficitDays} days` : `চলতি মাসে ঘাটতি: ${formatToBengaliNumerals(smartPrediction.deficitDays)} দিন`) : (L === 'en' ? `Covers this month + ${smartPrediction.extraDaysNextMonth} days next month` : `চলতি মাসের বাকি ${formatToBengaliNumerals(smartPrediction.daysRemainingInMonth)} দিন কভার্ড + আগামী মাসের ${formatToBengaliNumerals(smartPrediction.extraDaysNextMonth)} দিন`)}</span>
+                        <span>${smartPrediction.deficitDays > 0 ? (L === 'en' ? 'Recharge Needed ⚠️' : 'রিচার্জ প্রয়োজন ⚠️') : (L === 'en' ? 'Full Month Covered ✓' : 'পুরো মাস নিরাপদ ✓')}</span>
                     </div>
                     <div class="smart-progress-track">
                         <div class="smart-progress-fill predictor-fill" style="width: ${Math.min(100, Math.max(10, (smartPrediction.estimatedDays / Math.max(smartPrediction.daysRemainingInMonth, 1)) * 100))}%;"></div>
