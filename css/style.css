@@ -3464,18 +3464,26 @@ html, body {
 
 /* ============================================================
    SEQUENTIAL 3-TIER ELECTRICITY FLOW (Cable 1 -> Cable 2 -> Cable 3)
+   Authentic High-Voltage Plasma Bolt (Cyan Aura + Pure White Core + Golden Spark)
    ============================================================ */
-.cable-pulse-cyan,
-.cable-pulse-gold {
+.cable-pulse-aura,
+.cable-pulse-core,
+.cable-pulse-spark {
     pointer-events: none;
 }
-.cable-pulse-cyan {
-    stroke-dasharray: 28 332;
-    filter: drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 10px #0284c7);
+.cable-pulse-aura {
+    stroke-dasharray: 48 312;
+    filter: drop-shadow(0 0 5px #00f0ff) drop-shadow(0 0 12px #0284c7) drop-shadow(0 0 20px rgba(56, 189, 248, 0.7));
 }
-.cable-pulse-gold {
+.cable-pulse-core {
+    stroke-dasharray: 26 334;
+    stroke-dashoffset: -11;
+    filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 8px #a5f3fc);
+}
+.cable-pulse-spark {
     stroke-dasharray: 12 348;
-    filter: drop-shadow(0 0 3px #fef08a) drop-shadow(0 0 6px #f59e0b);
+    stroke-dashoffset: -18;
+    filter: drop-shadow(0 0 3px #fef08a) drop-shadow(0 0 7px #f59e0b);
 }
 
 /* Cable 1 (Top Cable): Starts at offset 0 */
@@ -3503,16 +3511,6 @@ html, body {
 @keyframes flowCable3 {
     0% { stroke-dashoffset: -240; }
     100% { stroke-dashoffset: -600; }
-}
-
-/* Insulator Spark Pulses at Towers - Gentle & Calming */
-.insulator-spark {
-    animation: sparkPulse 2.5s ease-in-out infinite alternate;
-    transform-origin: center;
-}
-@keyframes sparkPulse {
-    0% { opacity: 0.35; transform: scale(0.85); fill: #38bdf8; }
-    100% { opacity: 0.9; transform: scale(1.25); fill: #fef08a; filter: drop-shadow(0 0 4px #38bdf8); }
 }
 
 /* Sidebar Pylon Cable Electricity Flow - Relaxed Rhythm */
@@ -3565,13 +3563,7 @@ html, body {
     height: 8px;
     border-radius: 50%;
     background: #10b981;
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    animation: clockPulseDot 2s infinite;
-}
-@keyframes clockPulseDot {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
 }
 .header-datetime-time {
     font-size: 13.5px;

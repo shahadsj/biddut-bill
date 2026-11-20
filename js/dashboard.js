@@ -1188,18 +1188,21 @@ function showDashboard() {
                     <path class="cable-base" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#334155" stroke-width="1.4" fill="none"/>
                     <path class="cable-base" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#334155" stroke-width="1.2" fill="none" opacity="0.75"/>
 
-                    <!-- Continuous Flowing Electricity Pulses Across 3 Cables (Sequential Staggered 3-Phase Flow) -->
+                    <!-- Continuous Flowing Electricity Pulses Across 3 Cables (Sequential Staggered 3-Phase Plasma Flow) -->
                     <!-- CABLE 1 (Top Cable) -->
-                    <path class="cable-pulse-cyan cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-                    <path class="cable-pulse-gold cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-aura cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#00f0ff" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-core cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-spark cable-seq-1" d="M 0,38 Q 40,48 80,26 Q 240,54 400,24 Q 560,54 720,26 Q 880,56 1040,28 Q 1120,48 1200,40" stroke="#fde047" stroke-width="1.8" stroke-linecap="round" fill="none"/>
 
                     <!-- CABLE 2 (Middle Cable) -->
-                    <path class="cable-pulse-cyan cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-                    <path class="cable-pulse-gold cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-aura cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#00f0ff" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-core cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-spark cable-seq-2" d="M 0,48 Q 40,58 80,40 Q 240,68 400,38 Q 560,68 720,40 Q 880,70 1040,42 Q 1120,60 1200,52" stroke="#fde047" stroke-width="1.8" stroke-linecap="round" fill="none"/>
 
                     <!-- CABLE 3 (Bottom Cable) -->
-                    <path class="cable-pulse-cyan cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#38bdf8" stroke-width="2.0" stroke-linecap="round" fill="none"/>
-                    <path class="cable-pulse-gold cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#fef08a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-aura cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#00f0ff" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-core cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                    <path class="cable-pulse-spark cable-seq-3" d="M 0,58 Q 40,68 80,52 Q 240,78 400,50 Q 560,78 720,52 Q 880,80 1040,54 Q 1120,70 1200,62" stroke="#fde047" stroke-width="1.8" stroke-linecap="round" fill="none"/>
 
                     <!-- Tower 1 (Left Pylon at x=80) -->
                     <path d="M 80 10 L 64 85 L 96 85 Z" stroke="#334155" stroke-width="2.2" fill="none"/>
@@ -1236,16 +1239,6 @@ function showDashboard() {
                     <line x1="1050" y1="34" x2="1030" y2="52" stroke="#475569" stroke-width="1.4"/>
                     <line x1="1026" y1="52" x2="1054" y2="85" stroke="#475569" stroke-width="1.4"/>
                     <line x1="1054" y1="52" x2="1026" y2="85" stroke="#475569" stroke-width="1.4"/>
-
-                    <!-- Insulator Spark Nodes -->
-                    <circle cx="80" cy="26" r="2.5" class="insulator-spark"/>
-                    <circle cx="80" cy="40" r="2.5" class="insulator-spark"/>
-                    <circle cx="400" cy="24" r="2.5" class="insulator-spark"/>
-                    <circle cx="400" cy="38" r="2.5" class="insulator-spark"/>
-                    <circle cx="720" cy="26" r="2.5" class="insulator-spark"/>
-                    <circle cx="720" cy="40" r="2.5" class="insulator-spark"/>
-                    <circle cx="1040" cy="28" r="2.5" class="insulator-spark"/>
-                    <circle cx="1040" cy="42" r="2.5" class="insulator-spark"/>
 
                     <!-- Rolling Green Landscape Base (Continuous across 1200px) -->
                     <path d="M 0,85 C 100,75 200,82 300,78 C 400,74 500,80 600,76 C 700,72 800,80 900,75 C 1000,70 1100,78 1200,76 L 1200,85 L 0,85 Z" fill="#86efac" opacity="0.85"/>
