@@ -638,8 +638,9 @@ function getSmartBalancePrediction(balance, meterId, transactions, monthlyAvgExp
             }
         }
 
-        // ১ দিনের মোট খরচ (বিদ্যুৎ চার্জ + ভ্যাট + দৈনিক ডিমান্ড চার্জ)
-        var dayCost = (dailyUnits * slabRate * (1 + vatRate)) + dailyDemand;
+        // প্রিপেইড মিটারে প্রতিদিনের বিল সরাসরি ইউনিট × প্রযোজ্য স্ল্যাব রেট অনুযায়ী কাটে
+        // (ভ্যাট ও ডিমান্ড চার্জ রিচার্জের সময় বা মাসের ১ তারিখে কাটা হয়)
+        var dayCost = dailyUnits * slabRate;
         dailyCosts.push(dayCost);
         simBalance -= dayCost;
         simMonthUnits += dailyUnits;
