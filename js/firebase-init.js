@@ -169,6 +169,10 @@ function saveAllToCloud() {
             if (expenseDataForCloud) {
                 updateData.expenseData = expenseDataForCloud;
             }
+
+            // Firebase undefined-safe sanitize (prevents Firebase crashes on undefined properties)
+            updateData = JSON.parse(JSON.stringify(updateData));
+            metersDataForCloud = JSON.parse(JSON.stringify(metersDataForCloud));
             
             appRef.update(updateData).then(function() {
                 var metersRef = database.ref('users/' + userEmail + '/meters');
@@ -189,6 +193,10 @@ function saveAllToCloud() {
         }
     });
 }
+
+// Global Alias for cross-module compatibility
+window.saveAllToCloud = saveAllToCloud;
+window.syncAllToCloud = saveAllToCloud;
 
 // ==================== LOAD FROM CLOUD ====================
 function loadFromCloud() {
@@ -223,6 +231,9 @@ function loadFromCloud() {
                 
                 if (appData.meters && Array.isArray(appData.meters)) {
                     APP.meters = appData.meters;
+                    try {
+                        localStorage.setItem('biddut_meters', JSON.stringify(APP.meters));
+                    } catch(e) {}
                 }
                 
                 // ✅✅✅ রেন্ট ডাটা লোড ✅✅✅
@@ -301,6 +312,9 @@ function loadFromCloud() {
                 });
                 try {
                     localStorage.setItem('biddut_metersData', JSON.stringify(APP.metersData));
+                    if (APP.meters && APP.meters.length > 0) {
+                        localStorage.setItem('biddut_meters', JSON.stringify(APP.meters));
+                    }
                 } catch(e) {}
             }
             
@@ -310,6 +324,9 @@ function loadFromCloud() {
                     var mInfo = metersData[key].meterInfo || { id: key, name: 'Meter ' + key, meterNumber: key };
                     APP.meters.push(mInfo);
                 });
+                try {
+                    localStorage.setItem('biddut_meters', JSON.stringify(APP.meters));
+                } catch(e) {}
             }
             
             if (!APP.activeMeterId && APP.meters && APP.meters.length > 0) {

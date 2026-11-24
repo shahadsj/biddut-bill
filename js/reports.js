@@ -87,6 +87,9 @@ function getMonths(L) {
 function showReports() {
     var L = APP.language;
     initMonthColors(L);
+    if (!APP.activeMeterId && APP.meters && APP.meters.length > 0) {
+        APP.activeMeterId = APP.meters[0].id;
+    }
     if (!APP.activeMeterId || APP.meters.length === 0) {
         showToast(L==='en'?'Please add a meter first':'প্রথমে একটি মিটার যোগ করুন', 'warning');
         navigateTo('meters');

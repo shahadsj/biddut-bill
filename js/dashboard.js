@@ -828,6 +828,34 @@ function showDashboard() {
     console.log('Meters:', APP.meters.length);
     console.log('Language:', APP.language);
     
+    // Auto-restore cached meters from localStorage if memory is empty
+    if (!APP.meters || APP.meters.length === 0) {
+        try {
+            var cached = localStorage.getItem('biddut_meters');
+            if (cached) {
+                var p = JSON.parse(cached);
+                if (Array.isArray(p) && p.length > 0) APP.meters = p;
+            }
+            if ((!APP.meters || APP.meters.length === 0) && APP.metersData) {
+                APP.meters = [];
+                Object.keys(APP.metersData).forEach(function(k) {
+                    var md = APP.metersData[k];
+                    if (md && md.meterInfo && md.meterInfo.id) {
+                        if (!APP.meters.some(function(m) { return m.id === md.meterInfo.id; })) {
+                            APP.meters.push(md.meterInfo);
+                        }
+                    }
+                });
+            }
+            var cachedActive = localStorage.getItem('biddut_activeMeterId');
+            if (cachedActive) {
+                APP.activeMeterId = cachedActive;
+            } else if (APP.meters && APP.meters.length > 0) {
+                APP.activeMeterId = APP.meters[0].id;
+            }
+        } catch(e) {}
+    }
+
     if (APP.meters.length === 0 && typeof loadFromCloud === 'function') {
         console.log('⏳ মিটার লোড হচ্ছে, অপেক্ষা করুন...');
         setTimeout(function() {

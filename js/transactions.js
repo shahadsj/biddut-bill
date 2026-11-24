@@ -1,6 +1,14 @@
 // ==================== TRANSACTIONS ====================
 
 function showTransactions() {
+    // Auto-resolve activeMeterId if meters exist
+    if (!APP.activeMeterId && APP.meters && APP.meters.length > 0) {
+        APP.activeMeterId = APP.meters[0].id;
+    } else if (!APP.activeMeterId && APP.metersData && Object.keys(APP.metersData).length > 0) {
+        var firstKey = Object.keys(APP.metersData)[0];
+        if (firstKey) APP.activeMeterId = firstKey;
+    }
+
     if (!APP.activeMeterId) {
         showToast(APP.language === 'en' ? 'Please add a meter first' : 'প্রথমে একটি মিটার যোগ করুন', 'warning');
         navigateTo('meters');

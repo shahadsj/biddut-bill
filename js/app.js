@@ -551,7 +551,7 @@ function getActiveNotifications() {
         id: 'system_ver',
         type: 'info',
         icon: 'ℹ️',
-        title: L === 'en' ? 'App Version v2.4.2' : 'অ্যাপ সংস্করণ v2.4.2',
+        title: L === 'en' ? 'App Version v2.4.3' : 'অ্যাপ সংস্করণ v2.4.3',
         msg: L === 'en' ? 'Smart prepaid meter tracking is fully active and synchronized.' : 'স্মার্ট প্রিপেইড মিটার ট্র্যাকার এবং সরকারি ট্যারিফ রেট কার্যকর আছে।',
         time: L === 'en' ? 'Latest' : 'আপ-টু-ডেট'
     });
@@ -703,16 +703,34 @@ function initApp() {
                         APP.meters = parsedMeters;
                     }
                 }
-                var cachedActiveMeterId = localStorage.getItem('biddut_activeMeterId');
-                if (cachedActiveMeterId) {
-                    APP.activeMeterId = cachedActiveMeterId;
-                }
                 var cachedMetersData = localStorage.getItem('biddut_metersData');
                 if (cachedMetersData) {
                     var parsedMD = JSON.parse(cachedMetersData);
                     if (parsedMD && typeof parsedMD === 'object') {
                         APP.metersData = Object.assign(parsedMD, APP.metersData || {});
                     }
+                }
+                // Auto-reconstruct APP.meters from APP.metersData if APP.meters is still empty
+                if ((!APP.meters || APP.meters.length === 0) && APP.metersData) {
+                    APP.meters = [];
+                    Object.keys(APP.metersData).forEach(function(k) {
+                        var md = APP.metersData[k];
+                        if (md && md.meterInfo && md.meterInfo.id) {
+                            if (!APP.meters.some(function(m) { return m.id === md.meterInfo.id; })) {
+                                APP.meters.push(md.meterInfo);
+                            }
+                        }
+                    });
+                    if (APP.meters.length > 0) {
+                        localStorage.setItem('biddut_meters', JSON.stringify(APP.meters));
+                    }
+                }
+                var cachedActiveMeterId = localStorage.getItem('biddut_activeMeterId');
+                if (cachedActiveMeterId) {
+                    APP.activeMeterId = cachedActiveMeterId;
+                } else if (APP.meters && APP.meters.length > 0) {
+                    APP.activeMeterId = APP.meters[0].id;
+                    localStorage.setItem('biddut_activeMeterId', APP.activeMeterId);
                 }
             } catch(e) {}
             
