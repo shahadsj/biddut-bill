@@ -1163,6 +1163,13 @@ body.dark-mode .nav-item:hover {
     line-height: 1.4;
 }
 
+/* Reset .meters-full-table td from table-container column styles */
+.meters-full-table td {
+    font-family: inherit;
+    color: inherit;
+    font-weight: normal;
+}
+
 .table-container td:last-child {
     text-align: center;
     white-space: nowrap;
@@ -5638,6 +5645,7 @@ html, body {
         display: block !important;
         width: 100% !important;
         min-width: 0 !important;
+        border: none !important;
     }
     .meters-full-table thead {
         display: none !important;
@@ -5645,52 +5653,131 @@ html, body {
     .meters-full-table tbody {
         display: flex !important;
         flex-direction: column !important;
-        gap: 12px !important;
+        gap: 14px !important;
         width: 100% !important;
     }
     .meters-full-table tr {
-        display: grid !important;
-        grid-template-columns: 1fr auto !important;
-        gap: 6px 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 14px !important;
-        padding: 14px 16px !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+        border-radius: 16px !important;
+        padding: 16px 18px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    }
+    .meters-full-table tr.meter-active-row {
+        border: 1.5px solid #6366f1 !important;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.12) !important;
     }
     [data-theme="dark"] .meters-full-table tr {
         background: #1e293b !important;
         border-color: #334155 !important;
     }
-    .meters-full-table td {
-        padding: 2px 0 !important;
-        border: none !important;
-        font-size: 13px !important;
+    [data-theme="dark"] .meters-full-table tr.meter-active-row {
+        border-color: #818cf8 !important;
     }
-    .meters-full-table td:nth-child(1) { /* Name */
-        grid-column: 1 / -1 !important;
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        color: #2563eb !important;
+    .meters-full-table td {
+        display: block !important;
+        padding: 0 !important;
+        border: none !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        font-size: 13px !important;
+        color: #334155 !important;
+        text-align: left !important;
+        font-family: inherit !important;
+    }
+    [data-theme="dark"] .meters-full-table td {
+        color: #94a3b8 !important;
+    }
+    .meters-full-table td.meter-cell-name {
         border-bottom: 1px dashed #e2e8f0 !important;
-        padding-bottom: 6px !important;
+        padding-bottom: 8px !important;
         margin-bottom: 4px !important;
     }
-    .meters-full-table td:nth-child(2):before { content: "মিটার নং: "; color: #64748b; font-size: 11px; }
-    .meters-full-table td:nth-child(3):before { content: "হিসাব নং: "; color: #64748b; font-size: 11px; }
-    .meters-full-table td:nth-child(6) { /* Balance */
-        font-weight: 800 !important;
-        color: #10b981 !important;
-        font-size: 15px !important;
-        text-align: right !important;
+    [data-theme="dark"] .meters-full-table td.meter-cell-name {
+        border-bottom-color: #334155 !important;
     }
-    .meters-full-table td:nth-child(7) { /* Actions */
-        grid-column: 1 / -1 !important;
+    .meter-name-wrap {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    .meter-name-text {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        color: #2563eb !important;
+    }
+    [data-theme="dark"] .meter-name-text {
+        color: #60a5fa !important;
+    }
+    .meter-active-badge {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        background: #dcfce7 !important;
+        color: #15803d !important;
+        padding: 3px 8px !important;
+        border-radius: 12px !important;
+        border: 1px solid #bbf7d0 !important;
+    }
+    .meter-cell-label {
+        font-weight: 600 !important;
+        color: #64748b !important;
+        font-size: 12px !important;
+        display: inline !important;
+        margin-right: 4px !important;
+    }
+    .meters-full-table td.meter-cell-balance {
+        background: #f0fdf4 !important;
+        border: 1px solid #bbf7d0 !important;
+        border-radius: 10px !important;
+        padding: 8px 12px !important;
+        margin: 4px 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    [data-theme="dark"] .meters-full-table td.meter-cell-balance {
+        background: rgba(16, 185, 129, 0.1) !important;
+        border-color: rgba(16, 185, 129, 0.25) !important;
+    }
+    .meters-full-table td.meter-cell-balance strong {
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        color: #15803d !important;
+    }
+    [data-theme="dark"] .meters-full-table td.meter-cell-balance strong {
+        color: #34d399 !important;
+    }
+    .meters-full-table td.meter-cell-addr {
+        line-height: 1.5 !important;
+        font-size: 12.5px !important;
+        color: #475569 !important;
+        font-family: inherit !important;
+    }
+    .meters-full-table td.meter-cell-actions {
         display: flex !important;
         gap: 8px !important;
         padding-top: 10px !important;
         border-top: 1px solid #f1f5f9 !important;
-        margin-top: 4px !important;
+        margin-top: 6px !important;
+    }
+    [data-theme="dark"] .meters-full-table td.meter-cell-actions {
+        border-top-color: #334155 !important;
+    }
+    .meters-full-table td.meter-cell-actions .btn-sm {
+        flex: 1 !important;
+        padding: 8px 10px !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 4px !important;
+        min-height: 36px !important;
     }
 }
 

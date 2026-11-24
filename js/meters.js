@@ -46,16 +46,25 @@ function showMeterManagement() {
                 '</tr></thead><tbody>',
                 (APP.meters.length > 0 ? APP.meters.map(function(m) {
                     var displayName = getMeterDisplayName(m);
-                    return '<tr>'+
-                        '<td><strong>'+escapeHtml(displayName)+'</strong></td>'+
-                        '<td>'+(m.meterNumber || m.meterNo || '-')+'</td>'+
-                        '<td>'+(m.accountNumber || m.accountNo || '-')+'</td>'+
-                        '<td>'+(m.address || '-')+'</td>'+
-                        '<td>'+(m.phone || '-')+'</td>'+
-                        '<td><strong>৳ '+calculateBalance(m.id).toFixed(2)+'</strong></td>'+
-                        '<td>'+
-                            '<button class="btn btn-sm" onclick="editMeter(\''+m.id+'\')">&#x270F;&#xFE0F; '+(L==='en'?'Edit':'এডিট')+'</button> '+
-                            '<button class="btn btn-sm" onclick="switchToMeter(\''+m.id+'\')">&#x1F504; '+(L==='en'?'Switch':'সুইচ')+'</button> '+
+                    var isActive = m.id === APP.activeMeterId;
+                    var accNo = m.accountNumber || m.accountNo;
+                    var phone = m.phone;
+                    var addr = m.address;
+                    return '<tr class="'+(isActive ? 'meter-active-row' : '')+'">'+
+                        '<td class="meter-cell-name">'+
+                            '<div class="meter-name-wrap">'+
+                                '<span class="meter-name-text">'+escapeHtml(displayName)+'</span>'+
+                                (isActive ? '<span class="meter-active-badge">✓ '+(L==='en'?'Active':'সক্রিয়')+'</span>' : '')+
+                            '</div>'+
+                        '</td>'+
+                        '<td class="meter-cell-number"><span class="meter-cell-label">'+(L==='en'?'Meter No':'মিটার নং')+':</span> '+escapeHtml(m.meterNumber || m.meterNo || '-')+'</td>'+
+                        '<td class="meter-cell-acc"><span class="meter-cell-label">'+(L==='en'?'Account No':'অ্যাকাউন্ট নং')+':</span> '+escapeHtml(accNo || '-')+'</td>'+
+                        '<td class="meter-cell-addr"><span class="meter-cell-label">'+(L==='en'?'Address':'ঠিকানা')+':</span> '+escapeHtml(addr || '-')+'</td>'+
+                        '<td class="meter-cell-phone"><span class="meter-cell-label">'+(L==='en'?'Phone':'ফোন')+':</span> '+escapeHtml(phone || '-')+'</td>'+
+                        '<td class="meter-cell-balance"><span class="meter-cell-label">'+(L==='en'?'Balance':'ব্যালেন্স')+':</span> <strong>৳ '+calculateBalance(m.id).toFixed(2)+'</strong></td>'+
+                        '<td class="meter-cell-actions">'+
+                            '<button class="btn btn-sm btn-edit" onclick="editMeter(\''+m.id+'\')">&#x270F;&#xFE0F; '+(L==='en'?'Edit':'এডিট')+'</button> '+
+                            '<button class="btn btn-sm btn-switch" onclick="switchToMeter(\''+m.id+'\')">&#x1F504; '+(L==='en'?'Switch':'সুইচ')+'</button> '+
                             '<button class="btn btn-sm btn-danger" onclick="deleteMeter(\''+m.id+'\')">&#x1F5D1;&#xFE0F; '+(L==='en'?'Delete':'ডিলিট')+'</button>'+
                         '</td>'+
                     '</tr>';
