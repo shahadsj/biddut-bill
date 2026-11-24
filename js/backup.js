@@ -597,7 +597,8 @@ function clearCurrentMeterTransactions() {
     });
     if (!meter) return;
     
-    if (!confirm(L==='en'?'Clear all transactions of "'+meter.name+'"?':'"'+meter.name+'" মিটারের সব ট্রানজেকশন মুছে ফেলবেন?')) return;
+    var mName = (typeof getMeterDisplayName === 'function') ? getMeterDisplayName(meter) : meter.name;
+    if (!confirm(L==='en'?'Clear all transactions of "'+mName+'"?':'"'+mName+'" মিটারের সব ট্রানজেকশন মুছে ফেলবেন?')) return;
     
     try {
         if (APP.metersData[APP.activeMeterId]) {

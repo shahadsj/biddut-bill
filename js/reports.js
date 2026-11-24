@@ -102,7 +102,7 @@ function showReports() {
                 '<h2>&#x1F4CA; '+(L==='en'?'Reports':'রিপোর্ট')+'</h2>',
                 '<div style="display: flex; gap: 10px; align-items: center;">',
                     '<select id="reportMeterSelect" onchange="switchReportMeter(this.value)" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border);">',
-                        APP.meters.map(function(m) { return '<option value="'+m.id+'" '+(APP.activeMeterId===m.id?'selected':'')+'>'+escapeHtml(m.name)+' - '+(m.meterNumber||m.meterNo||'')+'</option>'; }).join(''),
+                        APP.meters.map(function(m) { return '<option value="'+m.id+'" '+(APP.activeMeterId===m.id?'selected':'')+'>'+escapeHtml(getMeterDisplayName(m))+' - '+(m.meterNumber||m.meterNo||'')+'</option>'; }).join(''),
                     '</select>',
                 '</div>',
             '</div>',

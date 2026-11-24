@@ -246,9 +246,13 @@ function getIconSVG(iconName) {
 
 function getMeterDisplayName(meter) {
     if (!meter) return 'Unknown';
-    var L = APP.language || 'bn';
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
     if (L === 'en') {
-        return meter.name || 'Unknown';
+        if (meter.name && !/[\u0980-\u09FF]/.test(meter.name)) {
+            return meter.name;
+        }
+        var nameToConvert = meter.name || meter.nameBn || 'Unknown';
+        return (typeof transliterateBnToEn === 'function') ? transliterateBnToEn(nameToConvert) : nameToConvert;
     }
     return meter.nameBn || meter.name || 'Unknown';
 }
@@ -397,7 +401,7 @@ function createRentSummaryCards(L) {
             html += `
             <div style="background: ${colors.bg}; border-radius: 12px; padding: 14px 16px; color: ${colors.text}; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <div style="font-size: 13px; font-weight: 700; color: ${colors.text};">${group.meterName || 'Unknown'}</div>
+                    <div style="font-size: 13px; font-weight: 700; color: ${colors.text};">${(L === 'en' && typeof transliterateBnToEn === 'function') ? transliterateBnToEn(group.meterName || 'Unknown') : (group.meterName || 'Unknown')}</div>
                     <div style="font-size: 10px; font-weight: 600; background: rgba(0,0,0,0.08); padding: 2px 10px; border-radius: 12px; color: ${colors.text};">
                         ${group.count} ${L === 'en' ? 'rec' : 'টি'} ${monthDisplay ? '· ' + monthDisplay : ''}
                     </div>
@@ -1267,8 +1271,9 @@ function showDashboard() {
 
         var tKey = rec.meterId || rec.meterName || rec.tenantName || 'default';
         if (!tenantGroups[tKey]) {
+            var rawName = rec.meterName || rec.tenantName || (L === 'en' ? 'Tenant' : 'ভাড়াটিয়া');
             tenantGroups[tKey] = {
-                name: rec.meterName || rec.tenantName || (L === 'en' ? 'Tenant' : 'ভাড়াটিয়া'),
+                name: (L === 'en' && typeof transliterateBnToEn === 'function') ? transliterateBnToEn(rawName) : rawName,
                 totalRent: 0,
                 totalService: 0,
                 totalParking: 0,
@@ -1930,6 +1935,9 @@ function showDashboard() {
                         var isPaid = (rec.status === 'paid' || rec.status === 'পরিশোধিত');
                         var monthLbl = formatMonthLabel(rec.month);
                         var tName = rec.meterName || rec.tenantName || (L === 'en' ? 'Tenant' : 'ভাড়াটিয়া');
+                        if (L === 'en' && typeof transliterateBnToEn === 'function') {
+                            tName = transliterateBnToEn(tName);
+                        }
 
                         return `
                             <div class="tenant-card ${cClass}">
@@ -2679,7 +2687,7 @@ function renderRentWidget() {
             
             html += '<div style="background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.06);">';
             html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
-            html += '<div style="font-size: 11px; font-weight: 600; color: ' + bgColor + ';">' + (group.meterName || 'Unknown') + '</div>';
+            html += '<div style="font-size: 11px; font-weight: 600; color: ' + bgColor + ';">' + ((L === 'en' && typeof transliterateBnToEn === 'function') ? transliterateBnToEn(group.meterName || 'Unknown') : (group.meterName || 'Unknown')) + '</div>';
             html += '<span style="font-size: 9px; opacity: 0.4;">' + group.count + 'x</span>';
             html += '</div>';
             html += '<div style="font-size: 18px; font-weight: 700; color: #fff;">৳ ' + group.totalOverall.toFixed(0) + '</div>';

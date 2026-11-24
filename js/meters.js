@@ -45,8 +45,7 @@ function showMeterManagement() {
                     '<th>'+(L==='en'?'Actions':'অ্যাকশন')+'</th>',
                 '</tr></thead><tbody>',
                 (APP.meters.length > 0 ? APP.meters.map(function(m) {
-                    // ✅ বাংলা নাম দেখান (nameBn থাকলে সেটা, না হলে name)
-                    var displayName = m.nameBn || m.name;
+                    var displayName = getMeterDisplayName(m);
                     return '<tr>'+
                         '<td><strong>'+escapeHtml(displayName)+'</strong></td>'+
                         '<td>'+(m.meterNumber || m.meterNo || '-')+'</td>'+

@@ -8,6 +8,117 @@ function formatToBengaliNumerals(num) {
     });
 }
 
+// ==================== BENGALI TO ENGLISH NUMERAL CONVERTER ====================
+function convertBengaliToEnglishNumerals(str) {
+    if (str === undefined || str === null) return '';
+    var bnToEn = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+    return String(str).replace(/[০-৯]/g, function(d) {
+        return bnToEn[d] || d;
+    });
+}
+
+// ==================== BENGALI TO ENGLISH TRANSLITERATOR ====================
+var bnNameMap = {
+    // Titles & Honorifics
+    'এমডি.': 'Md.', 'এমডি': 'Md.', 'মোঃ': 'Md.', 'মো:': 'Md.', 'মো.': 'Md.',
+    'মুহাম্মদ': 'Muhammad', 'মোহাম্মদ': 'Mohammad',
+    'জনাব': 'Mr.', 'জনাবা': 'Mrs.',
+    'বেগম': 'Begum', 'খান': 'Khan', 'আক্তার': 'Akter', 'খাতুন': 'Khatun',
+    'চৌধুরী': 'Chowdhury', 'মিয়া': 'Miah', 'মোল্লা': 'Molla', 'শেখ': 'Sheikh', 'সৈয়দ': 'Syed',
+    
+    // Common Given / Family Names
+    'মশিউর': 'Mashiur', 'রহমান': 'Rahman', 'হাবিবুর': 'Habibur', 'মকসুদা': 'Maksuda',
+    'আব্দুল': 'Abdul', 'মালেক': 'Malek', 'সিদ্দিক': 'Siddek', 'আবু বক্কর': 'Abu Bakkar',
+    'আবু': 'Abu', 'বক্কর': 'Bakkar', 'শাহেদ': 'Shahed', 'হাসান': 'Hasan',
+    'হোসেন': 'Hossain', 'আলী': 'Ali', 'আহমেদ': 'Ahmed', 'করিম': 'Karim',
+    'রফিক': 'Rafiq', 'শফিক': 'Shafiq', 'শরীফ': 'Sharif', 'সাকিব': 'Sakib',
+    'তানভীর': 'Tanvir', 'ফারুক': 'Faruk', 'তারেক': 'Tarek', 'কামাল': 'Kamal',
+    'জামাল': 'Jamal', 'আলম': 'Alam', 'জাহাঙ্গীর': 'Jahangir', 'ফাতেমা': 'Fatema',
+    'আয়েশা': 'Ayesha', 'নাসরিন': 'Nasrin', 'সালমা': 'Salma', 'রুমানা': 'Rumana',
+    'শাবানা': 'Shabana', 'ইয়াসমিন': 'Yasmin', 'রোজী': 'Rozy', 'নাহার': 'Nahar',
+    'জাহান': 'Jahan', 'কবির': 'Kabir', 'মাহমুদ': 'Mahmud', 'রাশেদ': 'Rashed',
+    'সাইফুল': 'Saiful', 'ইসলাম': 'Islam', 'শহিদুল': 'Shahidul', 'মনিরুল': 'Monirul',
+    'আরিফ': 'Arif', 'নাজমুল': 'Nazmul', 'জাকির': 'Zakir', 'মাসুম': 'Masum',
+    'ইমরান': 'Imran', 'সোহেল': 'Sohel', 'রুবেল': 'Rubel', 'সুমন': 'Sumon',
+    
+    // Common Meter / Place Labels
+    'বাড়ি': 'Home', 'বাসা': 'Home', 'দোকান': 'Shop', 'অফিস': 'Office',
+    'ফ্ল্যাট': 'Flat', 'তলা': 'Floor', 'মিটার': 'Meter',
+    '১ম': '1st', '২য়': '2nd', '২য়': '2nd', '৩য়': '3rd', '৩য়': '3rd', '৪র্থ': '4th', '৫ম': '5th',
+    'ভাড়াটিয়া': 'Tenant', 'ভাড়া': 'Rent'
+};
+
+function phoneticBengaliToEnglish(word) {
+    if (!/[\u0980-\u09FF]/.test(word)) return word;
+    var vowels = { 'অ':'o','আ':'a','ই':'i','ঈ':'i','উ':'u','ঊ':'u','ঋ':'ri','এ':'e','ঐ':'oi','ও':'o','ঔ':'ou' };
+    var kars = { 'া':'a','ি':'i','ী':'i','ু':'u','ূ':'u','ৃ':'ri','ে':'e','ৈ':'oi','ো':'o','ৌ':'ou','্':'' };
+    var consonants = {
+        'ক':'k','খ':'kh','গ':'g','ঘ':'gh','ঙ':'ng','চ':'ch','ছ':'chh','জ':'j','ঝ':'jh','ঞ':'n',
+        'ট':'t','ঠ':'th','ড':'d','ঢ':'dh','ণ':'n','ত':'t','থ':'th','দ':'d','ধ':'dh','ন':'n',
+        'প':'p','ফ':'f','ব':'b','ভ':'bh','ম':'m','য':'j','র':'r','ল':'l','শ':'sh','ষ':'sh','স':'s','হ':'h',
+        'ড়':'r','ঢ়':'rh','য়':'y','ৎ':'t','ং':'ng','ঃ':'h','ঁ':''
+    };
+    var res = '';
+    for (var i = 0; i < word.length; i++) {
+        var ch = word[i];
+        var next = word[i + 1];
+        if (vowels[ch]) {
+            res += vowels[ch];
+        } else if (consonants[ch]) {
+            var c = consonants[ch];
+            if (next && kars[next] !== undefined) {
+                res += c + kars[next];
+                i++;
+            } else if (next === '্') {
+                res += c;
+                i++;
+            } else {
+                res += c + (i === word.length - 1 ? '' : 'a');
+            }
+        } else if (kars[ch]) {
+            res += kars[ch];
+        } else {
+            res += ch;
+        }
+    }
+    return res.charAt(0).toUpperCase() + res.slice(1);
+}
+
+function transliterateBnToEn(text) {
+    if (!text || typeof text !== 'string') return text || '';
+    if (!/[\u0980-\u09FF]/.test(text)) return text;
+    var words = text.split(/(\s+)/);
+    var translatedWords = words.map(function(word) {
+        var clean = word.trim();
+        if (!clean) return word;
+        var hasDot = clean.endsWith('.');
+        var base = hasDot ? clean.slice(0, -1) : clean;
+        if (bnNameMap[clean]) {
+            return bnNameMap[clean];
+        } else if (bnNameMap[base]) {
+            var val = bnNameMap[base];
+            return (hasDot && !val.endsWith('.')) ? val + '.' : val;
+        } else {
+            return phoneticBengaliToEnglish(clean);
+        }
+    });
+    return translatedWords.join('');
+}
+
+// ==================== UNIFIED METER DISPLAY NAME ====================
+function getMeterDisplayName(meter) {
+    if (!meter) return 'Unknown';
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    if (L === 'en') {
+        if (meter.name && !/[\u0980-\u09FF]/.test(meter.name)) {
+            return meter.name;
+        }
+        var nameToConvert = meter.name || meter.nameBn || 'Unknown';
+        return transliterateBnToEn(nameToConvert);
+    }
+    return meter.nameBn || meter.name || 'Unknown';
+}
+
 function escapeHtml(s) {
     if (!s) return "";
     return s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#039;").replace(/"/g, "&quot;");
@@ -848,6 +959,8 @@ function formatTxDescription(desc, tx) {
     // দশমিক ক্লিন করুন
     desc = desc.replace(/(\d+)\.(\d{2})\d+/g, '$1.$2');
     
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    
     // অটো-এনরিচ: যদি পুরোনো বিল ট্রানজেকশনে স্ল্যাব ও রেট না থাকে তবে তা স্বয়ংক্রিয়ভাবে স্ল্যাব ডিটেক্ট করে যুক্ত করুন
     if (desc.indexOf('|') === -1 && (desc.indexOf('খরচ') !== -1 || desc.indexOf('Expense') !== -1 || (tx && (tx.type === 'bill' || tx.type === 'electricity_bill')))) {
         var amt = (tx && tx.amount) ? tx.amount : 0;
@@ -863,26 +976,80 @@ function formatTxDescription(desc, tx) {
         
         if (u > 0 && amt > 0) {
             var calculatedRate = amt / u;
-            var matchedSlab = 'লাইফলাইন (০-৫০ kWh)';
+            var matchedSlab = L === 'en' ? 'Lifeline (0-50 kWh)' : 'লাইফলাইন (০-৫০ kWh)';
             var tariffRates = APP.tariffRates || [];
             for (var i = 0; i < tariffRates.length; i++) {
                 var s = tariffRates[i];
                 if (Math.abs(s.rate - calculatedRate) < 0.15) {
                     var rangeStr = s.range[1] ? (s.range[0] + '-' + s.range[1]) : (s.range[0] + '+');
-                    var sName = s.name === 'Lifeline' ? 'লাইফলাইন' : s.name;
+                    var sName = L === 'en' ? (s.name || s.nameBn) : (s.nameBn || s.name);
                     matchedSlab = sName + ' (' + rangeStr + ' kWh)';
                     calculatedRate = s.rate;
                     break;
                 }
             }
             
-            var newBalMatch = desc.match(/নতুন ব্যালেন্স:\s*([\d.]+)\s*টাকা/);
+            var newBalMatch = desc.match(/(?:নতুন ব্যালেন্স|New Balance|ব্যালেন্স|Balance):\s*([\d.]+)/i);
             var newBal = newBalMatch ? newBalMatch[1] : (tx && tx.balanceAfter ? tx.balanceAfter.toFixed(2) : '');
             var dateMatch = desc.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
             var dateStr = dateMatch ? dateMatch[1] : '';
             
-            desc = '📊 বিদ্যুৎ বিল - ' + amt.toFixed(2) + ' টাকা | ⚡ ইউনিট: ' + u.toFixed(2) + ' kWh | 🏷️ স্ল্যাব: ' + matchedSlab + ' | 💲 রেট: ৳ ' + calculatedRate.toFixed(2) + '/ইউনিট' + (newBal ? ' | 💰 ব্যালেন্স: ' + newBal + ' টাকা' : '') + (dateStr ? ' | 📅 ' + dateStr : '');
+            if (L === 'en') {
+                desc = '📊 Electricity Bill - ' + amt.toFixed(2) + ' Tk | ⚡ Units: ' + u.toFixed(2) + ' kWh | 🏷️ Slab: ' + matchedSlab + ' | 💲 Rate: ৳ ' + calculatedRate.toFixed(2) + '/Unit' + (newBal ? ' | 💰 New Balance: ' + newBal + ' Tk' : '') + (dateStr ? ' | 📅 ' + dateStr : '');
+            } else {
+                desc = '📊 বিদ্যুৎ বিল - ' + amt.toFixed(2) + ' টাকা | ⚡ ইউনিট: ' + u.toFixed(2) + ' kWh | 🏷️ স্ল্যাব: ' + matchedSlab + ' | 💲 রেট: ৳ ' + calculatedRate.toFixed(2) + '/ইউনিট' + (newBal ? ' | 💰 নতুন ব্যালেন্স: ' + newBal + ' টাকা' : '') + (dateStr ? ' | 📅 ' + dateStr : '');
+            }
         }
+    }
+    
+    // ভাষা অনুযায়ী বিবরণীর শব্দ ও সংখ্যা রূপান্তর করুন
+    if (L === 'en') {
+        desc = convertBengaliToEnglishNumerals(desc);
+        desc = desc
+            .replace(/বিদ্যুৎ বিল/g, 'Electricity Bill')
+            .replace(/মাসিক রিচার্জ/g, 'Monthly Recharge')
+            .replace(/ডিমান্ড চার্জ/g, 'Demand Charge')
+            .replace(/ভ্যাট/g, 'VAT')
+            .replace(/রিবেট/g, 'Rebate')
+            .replace(/\(ছাড়\)|\(ছাড়\)/g, '(Discount)')
+            .replace(/নেট/g, 'Net')
+            .replace(/নতুন ব্যালেন্স/g, 'New Balance')
+            .replace(/ব্যালেন্স/g, 'Balance')
+            .replace(/\/ইউনিট/g, '/Unit')
+            .replace(/ইউনিট/g, 'Units')
+            .replace(/স্ল্যাব/g, 'Slab')
+            .replace(/লাইফলাইন/g, 'Lifeline')
+            .replace(/১ম স্ল্যাব/g, '1st Slab')
+            .replace(/২য় স্ল্যাব|২য় স্ল্যাব/g, '2nd Slab')
+            .replace(/৩য় স্ল্যাব|৩য় স্ল্যাব/g, '3rd Slab')
+            .replace(/৪র্থ স্ল্যাব/g, '4th Slab')
+            .replace(/৫ম স্ল্যাব/g, '5th Slab')
+            .replace(/৬ষ্ঠ স্ল্যাব/g, '6th Slab')
+            .replace(/রেট/g, 'Rate')
+            .replace(/\bটাকা\b/g, 'Tk');
+    } else {
+        desc = desc
+            .replace(/Electricity Bill/gi, 'বিদ্যুৎ বিল')
+            .replace(/Monthly Recharge/gi, 'মাসিক রিচার্জ')
+            .replace(/Demand Charge/gi, 'ডিমান্ড চার্জ')
+            .replace(/VAT/gi, 'ভ্যাট')
+            .replace(/Rebate/gi, 'রিবেট')
+            .replace(/\(Discount\)/gi, '(ছাড়)')
+            .replace(/\bNet\b/gi, 'নেট')
+            .replace(/New Balance/gi, 'নতুন ব্যালেন্স')
+            .replace(/\bBalance\b/gi, 'ব্যালেন্স')
+            .replace(/\/Unit/gi, '/ইউনিট')
+            .replace(/\bUnits\b/gi, 'ইউনিট')
+            .replace(/\bSlab\b/gi, 'স্ল্যাব')
+            .replace(/Lifeline/gi, 'লাইফলাইন')
+            .replace(/1st Slab/gi, '১ম স্ল্যাব')
+            .replace(/2nd Slab/gi, '২য় স্ল্যাব')
+            .replace(/3rd Slab/gi, '৩য় স্ল্যাব')
+            .replace(/4th Slab/gi, '৪র্থ স্ল্যাব')
+            .replace(/5th Slab/gi, '৫ম স্ল্যাব')
+            .replace(/6th Slab/gi, '৬ষ্ঠ স্ল্যাব')
+            .replace(/\bRate\b/gi, 'রেট')
+            .replace(/\bTk\b/gi, 'টাকা');
     }
     
     // পাইপ '|' বিভাজক থাকলে ব্যাজ/চিপ হিসেবে সাজান
@@ -892,7 +1059,7 @@ function formatTxDescription(desc, tx) {
             var chipClass = 'tx-chip';
             if (part.indexOf('মাসিক রিচার্জ') !== -1 || part.indexOf('Monthly Recharge') !== -1) {
                 chipClass += ' tx-chip-primary';
-            } else if (part.indexOf('বিদ্যুৎ বিল') !== -1 || part.indexOf('বিল') !== -1 || part.indexOf('খরচ') !== -1 || part.indexOf('Expense') !== -1) {
+            } else if (part.indexOf('বিদ্যুৎ বিল') !== -1 || part.indexOf('Electricity Bill') !== -1 || part.indexOf('বিল') !== -1 || part.indexOf('Bill') !== -1 || part.indexOf('খরচ') !== -1 || part.indexOf('Expense') !== -1) {
                 chipClass += ' tx-chip-orange';
             } else if (part.indexOf('ডিমান্ড চার্জ') !== -1 || part.indexOf('Demand Charge') !== -1) {
                 chipClass += ' tx-chip-orange';

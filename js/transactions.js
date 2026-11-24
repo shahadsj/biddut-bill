@@ -51,7 +51,7 @@ function showTransactions() {
                 </div>
                 ${(APP.meters && APP.meters.length > 1) ? `
                     <select onchange="switchMeter(this.value); showTransactions();" class="form-control" style="width: auto; padding: 6px 12px; font-size: 13px;">
-                        ${APP.meters.map(function(m) { return `<option value="${m.id}" ${m.id === APP.activeMeterId ? 'selected' : ''}>${m.name} (${m.meterNumber})</option>`; }).join('')}
+                        ${APP.meters.map(function(m) { return `<option value="${m.id}" ${m.id === APP.activeMeterId ? 'selected' : ''}>${getMeterDisplayName(m)} (${m.meterNumber || m.meterNo})</option>`; }).join('')}
                     </select>
                 ` : ''}
             </div>

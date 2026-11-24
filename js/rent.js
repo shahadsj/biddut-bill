@@ -37,6 +37,14 @@ function formatNumberWithComma(num) {
 // ============================================================
 function getMeterDisplayName(meter) {
     if (!meter) return 'Unknown';
+    var L = (typeof APP !== 'undefined' && APP.language) ? APP.language : 'bn';
+    if (L === 'en') {
+        if (meter.name && !/[\u0980-\u09FF]/.test(meter.name)) {
+            return meter.name;
+        }
+        var nameToConvert = meter.name || meter.nameBn || 'Unknown';
+        return (typeof transliterateBnToEn === 'function') ? transliterateBnToEn(nameToConvert) : nameToConvert;
+    }
     if (meter.nameBn && meter.nameBn.trim() !== '') {
         return meter.nameBn;
     }
@@ -477,7 +485,7 @@ function showRentReport() {
             var grad = 'linear-gradient(135deg, ' + colors[colorIdx] + ', ' + colors[(colorIdx + 1) % colors.length] + ')';
             
             html += '<div style="background: ' + grad + '; border-radius: 14px; padding: 16px 18px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">';
-            html += '<div style="font-size: 13px; font-weight: 600; opacity: 0.9; margin-bottom: 8px;">' + (group.meterName || 'Unknown') + '</div>';
+            html += '<div style="font-size: 13px; font-weight: 600; opacity: 0.9; margin-bottom: 8px;">' + ((L === 'en' && typeof transliterateBnToEn === 'function') ? transliterateBnToEn(group.meterName || 'Unknown') : (group.meterName || 'Unknown')) + '</div>';
             html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px;">';
             html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Rent' : 'ভাড়া') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalRent) + '</div>';
             html += '<div style="opacity: 0.7;">' + (L === 'en' ? 'Service' : 'সার্ভিস') + ':</div><div style="font-weight: 700; text-align: right;">৳ ' + formatNumberWithComma(group.totalService) + '</div>';
@@ -531,7 +539,7 @@ function showRentReport() {
             var parkingValue = record.parkingCharge > 0 ? '৳ ' + formatNumberWithComma(record.parkingCharge) : '—';
 
             html += '<tr style="' + (index % 2 === 0 ? 'background: var(--bg-primary);' : '') + '">';
-            html += '<td style="padding: 10px 16px; font-weight: 600;">' + (record.meterName || 'N/A') + '</td>';
+            html += '<td style="padding: 10px 16px; font-weight: 600;">' + ((L === 'en' && typeof transliterateBnToEn === 'function') ? transliterateBnToEn(record.meterName || 'N/A') : (record.meterName || 'N/A')) + '</td>';
             html += '<td style="padding: 10px 16px;">' + monthName + '</td>';
             html += '<td style="padding: 10px 16px; text-align: right; font-weight: 600; color: #f59e0b;">৳ ' + formatNumberWithComma(record.rentAmount) + '</td>';
             html += '<td style="padding: 10px 16px; text-align: right; color: #059669;">৳ ' + formatNumberWithComma(record.serviceCharge) + '</td>';
@@ -555,7 +563,7 @@ function showRentReport() {
         meterKeys.forEach(function(meterId) {
             var group = meterGroups[meterId];
             html += '<div style="text-align: center;">';
-            html += '<div style="font-size: 11px; color: #64748b; font-weight: 500;">' + (group.meterName || 'Unknown') + '</div>';
+            html += '<div style="font-size: 11px; color: #64748b; font-weight: 500;">' + ((L === 'en' && typeof transliterateBnToEn === 'function') ? transliterateBnToEn(group.meterName || 'Unknown') : (group.meterName || 'Unknown')) + '</div>';
             html += '<div style="font-size: 18px; font-weight: 700; color: #0f172a;">৳ ' + formatNumberWithComma(group.totalOverall) + '</div>';
             html += '<div style="font-size: 10px; color: #94a3b8;">' + group.records.length + ' ' + (L === 'en' ? 'records' : 'রেকর্ড') + '</div>';
             html += '</div>';
