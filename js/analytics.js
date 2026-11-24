@@ -140,7 +140,7 @@ function showAnalytics() {
         </div>
         ` : `
         <!-- 4 COLUMN STATS GRID -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+        <div class="analytics-stats-grid">
             <div style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 14px; padding: 20px; color: white; text-align: center;">
                 <div style="font-size: 12px; opacity: 0.8;">${L === 'en' ? 'Avg Monthly Recharge' : 'গড় মাসিক রিচার্জ'}</div>
                 <div style="font-size: 28px; font-weight: 700; margin: 5px 0;">${taka} ${avgRecharge.toFixed(2)}</div>
@@ -164,7 +164,7 @@ function showAnalytics() {
         </div>
 
         <!-- 2x2 GRID FOR CHARTS -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div class="analytics-charts-2col">
 
             <!-- ROW 1 COL 1: MONTHLY TREND -->
             <div style="background: white; border-radius: 14px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-top: 4px solid #667eea;">
@@ -245,7 +245,7 @@ function showAnalytics() {
         </div>
 
         <!-- BOTTOM STATS -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px;">
+        <div class="analytics-stats-grid-bottom">
             <div style="background: #f0faf0; border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #d4edda;">
                 <div style="font-size: 12px; color: #666;">${L === 'en' ? 'Total Recharge' : 'সর্বমোট রিচার্জ'}</div>
                 <div style="font-size: 24px; font-weight: 700; color: #27ae60;">${taka} ${totalRecharge.toFixed(2)}</div>

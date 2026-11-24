@@ -5418,3 +5418,289 @@ html, body {
         gap: 14px;
     }
 }
+
+/* ============================================================
+   📱 COMPREHENSIVE RESPONSIVE MOBILE STYLES FOR ALL PAGES
+   ============================================================ */
+
+/* 1. Transactions Page Quick Forms Grid */
+.tx-forms-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+@media (max-width: 768px) {
+    .tx-forms-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+        margin-bottom: 18px !important;
+    }
+}
+
+/* 2. Transactions Page Table -> Mobile Native Card View */
+@media (max-width: 768px) {
+    .transactions-full-table {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .transactions-full-table thead {
+        display: none !important;
+    }
+    .transactions-full-table tbody {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    .transactions-full-table tr {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        grid-template-areas: 
+            "date amount"
+            "type balance"
+            "desc desc"
+            "actions actions" !important;
+        gap: 6px 10px !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+        align-items: center !important;
+    }
+    [data-theme="dark"] .transactions-full-table tr {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    .transactions-full-table td {
+        padding: 0 !important;
+        border: none !important;
+    }
+    .transactions-full-table td.tx-cell-date,
+    .transactions-full-table td:nth-child(1) {
+        grid-area: date !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+    }
+    [data-theme="dark"] .transactions-full-table td.tx-cell-date,
+    [data-theme="dark"] .transactions-full-table td:nth-child(1) {
+        color: #f1f5f9 !important;
+    }
+    .transactions-full-table td.tx-cell-type,
+    .transactions-full-table td:nth-child(2) {
+        grid-area: type !important;
+    }
+    .transactions-full-table td.tx-cell-amt,
+    .transactions-full-table td:nth-child(3) {
+        grid-area: amount !important;
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        text-align: right !important;
+    }
+    .transactions-full-table td.tx-cell-units,
+    .transactions-full-table td:nth-child(4) {
+        display: none !important;
+    }
+    .transactions-full-table td.tx-cell-balance,
+    .transactions-full-table td:nth-child(5) {
+        grid-area: balance !important;
+        font-size: 12px !important;
+        color: #64748b !important;
+        text-align: right !important;
+        font-weight: 600 !important;
+    }
+    [data-theme="dark"] .transactions-full-table td.tx-cell-balance,
+    [data-theme="dark"] .transactions-full-table td:nth-child(5) {
+        color: #94a3b8 !important;
+    }
+    .transactions-full-table td.tx-cell-desc,
+    .transactions-full-table td:nth-child(6) {
+        grid-area: desc !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        margin-top: 6px !important;
+        padding-top: 8px !important;
+        border-top: 1px dashed #e2e8f0 !important;
+    }
+    [data-theme="dark"] .transactions-full-table td.tx-cell-desc,
+    [data-theme="dark"] .transactions-full-table td:nth-child(6) {
+        border-top-color: #334155 !important;
+    }
+    .transactions-full-table td.tx-cell-actions,
+    .transactions-full-table td:nth-child(7) {
+        grid-area: actions !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        padding-top: 8px !important;
+        border-top: 1px solid #f1f5f9 !important;
+        margin-top: 4px !important;
+    }
+    [data-theme="dark"] .transactions-full-table td.tx-cell-actions,
+    [data-theme="dark"] .transactions-full-table td:nth-child(7) {
+        border-top-color: #334155 !important;
+    }
+    .transactions-full-table .tx-desc-chips {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+    .transactions-full-table .tx-chip {
+        font-size: 10.5px !important;
+        padding: 2px 7px !important;
+        border-radius: 6px !important;
+    }
+}
+
+/* 3. Analytics Page Responsive Grids */
+.analytics-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.analytics-charts-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.analytics-stats-grid-bottom {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+@media (max-width: 900px) {
+    .analytics-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+    .analytics-charts-2col {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+    .analytics-stats-grid-bottom {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+}
+@media (max-width: 480px) {
+    .analytics-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    .analytics-stats-grid > div {
+        padding: 14px 8px !important;
+        border-radius: 12px !important;
+    }
+    .analytics-stats-grid > div > div:nth-child(2) {
+        font-size: 20px !important;
+    }
+    .analytics-stats-grid-bottom {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    .analytics-stats-grid-bottom > div {
+        padding: 12px 8px !important;
+    }
+    .analytics-stats-grid-bottom > div > div:nth-child(2) {
+        font-size: 18px !important;
+    }
+}
+
+/* 4. Expenses Page Responsive Grid */
+.expense-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+}
+@media (max-width: 900px) {
+    .expense-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+}
+@media (max-width: 480px) {
+    .expense-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+}
+
+/* 5. Meter Management Table -> Mobile Cards */
+@media (max-width: 768px) {
+    .meters-full-table {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .meters-full-table thead {
+        display: none !important;
+    }
+    .meters-full-table tbody {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+    .meters-full-table tr {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        gap: 6px 10px !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    }
+    [data-theme="dark"] .meters-full-table tr {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    .meters-full-table td {
+        padding: 2px 0 !important;
+        border: none !important;
+        font-size: 13px !important;
+    }
+    .meters-full-table td:nth-child(1) { /* Name */
+        grid-column: 1 / -1 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #2563eb !important;
+        border-bottom: 1px dashed #e2e8f0 !important;
+        padding-bottom: 6px !important;
+        margin-bottom: 4px !important;
+    }
+    .meters-full-table td:nth-child(2):before { content: "মিটার নং: "; color: #64748b; font-size: 11px; }
+    .meters-full-table td:nth-child(3):before { content: "হিসাব নং: "; color: #64748b; font-size: 11px; }
+    .meters-full-table td:nth-child(6) { /* Balance */
+        font-weight: 800 !important;
+        color: #10b981 !important;
+        font-size: 15px !important;
+        text-align: right !important;
+    }
+    .meters-full-table td:nth-child(7) { /* Actions */
+        grid-column: 1 / -1 !important;
+        display: flex !important;
+        gap: 8px !important;
+        padding-top: 10px !important;
+        border-top: 1px solid #f1f5f9 !important;
+        margin-top: 4px !important;
+    }
+}
+
+/* 6. Calculator Page Inputs */
+.calc-inputs-grid {
+    grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 640px) {
+    .calc-inputs-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}

@@ -2,7 +2,7 @@
 // Biddut Bill - PWA Service Worker
 // Version: 2.0.0
 
-const CACHE_NAME = 'biddut-bill-v2.4.4';
+const CACHE_NAME = 'biddut-bill-v2.4.5';
 const OFFLINE_URL = './index.html';
 
 // Files to cache

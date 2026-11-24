@@ -463,7 +463,7 @@ function showExpenseReport() {
     html += '</div>';
 
     // Stats - 8 টি কার্ড
-    html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">';
+    html += '<div class="expense-stats-grid">';
     
     var expenseTypes = [
         { key: 'bazar', label: '🛒 ' + (L === 'en' ? 'Bazar' : 'বাজার') },

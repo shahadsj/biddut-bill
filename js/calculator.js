@@ -6,7 +6,7 @@ function showCalculator() {
             '<h2>&#x1F4B0; '+(L==='en'?'Electricity Cost Calculator':'ইলেকট্রিসিটি কস্ট ক্যালকুলেটর')+'</h2>',
             '<p>'+(L==='en'?'Enter units consumed or amount to calculate:':'ইউনিট বা টাকার পরিমাণ দিন হিসাব করতে:')+'</p>',
             
-            '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">',
+            '<div class="calc-inputs-grid" style="display: grid; gap: 20px; margin-top: 20px;">',
                 '<div class="form-group">',
                     '<label>'+(L==='en'?'Units (kWh)':'ইউনিট (kWh)')+'</label>',
                     '<input type="number" class="form-control" id="calcUnits" placeholder="'+(L==='en'?'e.g. 200':'যেমন: ২০০')+'" step="0.01" oninput="calcFromUnits()">',

@@ -259,7 +259,28 @@ function switchReportTab(tab) {
         var sortedMonths = Object.keys(monthlyData).sort().reverse();
         
         content.innerHTML = [
-            '<style>.monthly-card{background:#fff;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,0.07);overflow:hidden;transition:transform 0.2s ease,box-shadow 0.2s ease;margin-bottom:16px}.monthly-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12)}.monthly-header{padding:25px 18px;display:flex;justify-content:space-between;align-items:center}.monthly-header-left,.monthly-header-right{display:flex;align-items:center;gap:8px}.monthly-tiles{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#fff}.monthly-tile{background:#fff;padding:16px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}.monthly-tile-left{display:flex;align-items:center;gap:7px;font-size:13px;color:#555}.monthly-tile-right{font-size:17px;font-weight:700;white-space:nowrap}.monthly-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#f9fafb}.monthly-footer-left{display:flex;align-items:center;gap:6px;font-size:13px;color:#666}.monthly-pill{display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:14px 14px;border-radius:40px;background:#000;font-size:18px;font-weight:600;color:#fff}</style>',
+            '<style>' +
+            '.monthly-card{background:#fff;border-radius:18px;box-shadow:0 2px 14px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s ease,box-shadow 0.2s ease;margin-bottom:16px;border:1px solid #e2e8f0;}' +
+            '.monthly-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.1);}' +
+            '.monthly-header{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}' +
+            '.monthly-header-left,.monthly-header-right{display:flex;align-items:center;gap:8px;}' +
+            '.monthly-tiles{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f1f5f9;}' +
+            '.monthly-tile{background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;}' +
+            '.monthly-tile-left{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#334155;font-weight:600;}' +
+            '.monthly-tile-right{font-size:16px;font-weight:800;white-space:nowrap;}' +
+            '.monthly-footer{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#f8fafc;border-top:1px solid #f1f5f9;}' +
+            '.monthly-footer-left{display:flex;align-items:center;gap:6px;font-size:13px;color:#64748b;font-weight:600;}' +
+            '.monthly-pill{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:6px 12px;border-radius:20px;background:#0f172a;font-size:14px;font-weight:700;color:#fff;}' +
+            '@media (max-width: 640px) {' +
+            '  .monthly-header{padding:14px 16px !important;}' +
+            '  .monthly-header-left{font-size:14px !important;}' +
+            '  .monthly-header-right{font-size:16px !important;}' +
+            '  .monthly-tiles{grid-template-columns:1fr !important;gap:1px !important;}' +
+            '  .monthly-tile{padding:12px 14px !important;}' +
+            '  .monthly-tile-left{font-size:12.5px !important;}' +
+            '  .monthly-tile-right{font-size:15px !important;}' +
+            '}' +
+            '</style>',
             '<div style="margin-top: 10px;">',
             sortedMonths.map(function(key) {
                 var m = monthlyData[key];
@@ -313,10 +334,10 @@ function switchReportTab(tab) {
                         '<div class="card" style="background:#fff;border:1px solid #e0e0e0;overflow:hidden;">',
                             '<div style="background:linear-gradient(135deg,'+mc.grad1+','+mc.grad2+');color:white;padding:20px;margin:-20px -20px 0 -20px;">',
                                 '<h4 style="margin:0 0 15px 0;">&#x1F4C5; '+m.displayMonth+'</h4>',
-                                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">',
-                                    '<div><div style="font-size:12px;opacity:0.7;">'+(L==='en'?'Monthly Units':'মাসিক ইউনিট')+'</div><div style="font-size:24px;font-weight:bold;">'+m.totalUnits.toFixed(2)+'</div></div>',
-                                    '<div><div style="font-size:12px;opacity:0.7;">'+(L==='en'?'Monthly Cost':'মাসিক খরচ')+'</div><div style="font-size:24px;font-weight:bold;">'+(L==='en'?'Tk':'৳')+' '+m.totalBill.toFixed(2)+'</div></div>',
-                                    '<div><div style="font-size:12px;opacity:0.7;">'+(L==='en'?'Per Unit':'গড়/ইউনিট')+'</div><div style="font-size:24px;font-weight:bold;">'+(L==='en'?'Tk':'৳')+' '+avgRate.toFixed(2)+'</div></div>',
+                                '<div class="report-slab-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;text-align:center;">',
+                                    '<div><div style="font-size:12px;opacity:0.7;">'+(L==='en'?'Monthly Units':'মাসিক ইউনিট')+'</div><div style="font-size:22px;font-weight:bold;">'+m.totalUnits.toFixed(2)+'</div></div>',
+                                    '<div><div style="font-size:12px;opacity:0.7;">'+(L==='en'?'Monthly Cost':'মাসিক খরচ')+'</div><div style="font-size:22px;font-weight:bold;">'+(L==='en'?'Tk':'৳')+' '+m.totalBill.toFixed(2)+'</div></div>',
+                                    '<div><div style="font-size:12px;opacity:0.7;">'+(L==='en'?'Per Unit':'গড়/ইউনিট')+'</div><div style="font-size:22px;font-weight:bold;">'+(L==='en'?'Tk':'৳')+' '+avgRate.toFixed(2)+'</div></div>',
                                 '</div>',
                                 '<div style="margin-top:10px;font-size:13px;opacity:0.9;text-align:center;">&#x1F4CC; '+m.billCount+' '+(L==='en'?'bills':'টি বিল')+' | &#x1F4B0; '+m.rechargeCount+' '+(L==='en'?'recharges':'টি রিচার্জ')+'</div>',
                             '</div>',
@@ -326,8 +347,8 @@ function switchReportTab(tab) {
                                     var units = m.slabData[slabKey];
                                     var rate = m.slabRates[slabKey];
                                     var cost = m.slabCost[slabKey];
-                                    return '<div style="margin-bottom:6px;padding:8px 12px;background:#f8f9fa;border-radius:6px;border-left:4px solid '+slabColors[idx%slabColors.length]+';font-size:14px;">'+
-                                        '<strong>'+slabKey+'</strong><span style="float:right;">'+units.toFixed(2)+' kWh &times; '+rate+' '+(L==='en'?'Taka':'টাকা')+' = <strong style="color:'+slabColors[idx%slabColors.length]+';">'+(L==='en'?'Tk':'৳')+' '+cost.toFixed(2)+'</strong></span></div>';
+                                    return '<div style="margin-bottom:6px;padding:10px 12px;background:#f8f9fa;border-radius:8px;border-left:4px solid '+slabColors[idx%slabColors.length]+';font-size:13px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">'+
+                                        '<strong>'+slabKey+'</strong><span>'+units.toFixed(2)+' kWh &times; '+rate+' '+(L==='en'?'Taka':'টাকা')+' = <strong style="color:'+slabColors[idx%slabColors.length]+';">'+(L==='en'?'Tk':'৳')+' '+cost.toFixed(2)+'</strong></span></div>';
                                 }).join(''),
                                 (activeSlabs.length===0?'<p style="color:var(--text-light);padding:10px;">'+(L==='en'?'No slab data':'কোনো স্ল্যাব ডাটা নেই')+'</p>':''),
                             '</div>',

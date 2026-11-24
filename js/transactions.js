@@ -62,7 +62,7 @@ function showTransactions() {
             </div>
 
             <!-- Quick Recharge & Balance Update Forms -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+            <div class="tx-forms-grid">
                 
                 <!-- Monthly Recharge -->
                 <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
@@ -97,8 +97,8 @@ function showTransactions() {
 
             <!-- All Transactions Table -->
             <h3 style="margin-bottom: 15px; color: var(--text); font-size: 18px;">📋 ${L==='en'?'All Transactions':'সব ট্রানজেকশন'}</h3>
-            <div class="table-container">
-                <table>
+            <div class="table-container table-scroll-container">
+                <table class="transactions-full-table">
                     <thead>
                         <tr>
                             <th>${L==='en'?'Date':'তারিখ'}</th>
@@ -133,15 +133,20 @@ function showTransactions() {
                             // 44.620000000000005 → 44.62
                             description = description.replace(/(\d+)\.(\d{2})\d+/g, '$1.$2');
                             
+                            var isBill = t.type !== 'recharge';
+                            var typeLabel = isBill ? (L==='en'?'Bill':'বিল') : (L==='en'?'Recharge':'রিচার্জ');
+                            var badgeClass = isBill ? 'badge-warning tx-badge-amber' : 'badge-success tx-badge-green';
+                            var amountClass = isBill ? 'tx-amount-bill' : 'tx-amount-recharge';
+                            
                             return `
                             <tr>
-                                <td>${displayDate}</td>
-                                <td><span class="badge ${t.type === 'recharge' ? 'badge-success' : 'badge-warning'}">${t.type === 'recharge' ? (L==='en'?'Recharge':'রিচার্জ') : (L==='en'?'Bill':'বিল')}</span></td>
-                                <td>${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
-                                <td>${unitsDisplay}</td>
-                                <td>${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
-                                <td class="tx-cell-desc" style="max-width: none; min-width: 250px;" title="${(description || '').replace(/"/g, '&quot;')}">${formatTxDescription(description, t)}</td>
-                                <td>
+                                <td class="tx-cell-date">${displayDate}</td>
+                                <td class="tx-cell-type"><span class="badge ${badgeClass}">${typeLabel}</span></td>
+                                <td class="tx-cell-amt ${amountClass}">${__('taka')} ${(t.amount || 0).toFixed(2)}</td>
+                                <td class="tx-cell-units">${unitsDisplay}</td>
+                                <td class="tx-cell-balance">${__('taka')} ${(t.balanceAfter || 0).toFixed(2)}</td>
+                                <td class="tx-cell-desc" title="${(description || '').replace(/"/g, '&quot;')}">${formatTxDescription(description, t)}</td>
+                                <td class="tx-cell-actions">
                                     <button class="btn btn-sm" onclick="editTransaction('${t.id}')">${L==='en'?'Edit':'এডিট'}</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteTransaction('${t.id}')">${L==='en'?'Delete':'ডিলিট'}</button>
                                 </td>
